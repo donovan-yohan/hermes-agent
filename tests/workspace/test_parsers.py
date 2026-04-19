@@ -1,9 +1,15 @@
+import subprocess
 import sys
 import types
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+try:
+    import chonkie  # noqa: F401 — force early import to avoid xdist C-extension race
+except ImportError:
+    pass
 
 from workspace.constants import BINARY_SUFFIXES, CODE_SUFFIXES, MARKDOWN_SUFFIXES, PARSEABLE_SUFFIXES
 
@@ -411,29 +417,18 @@ class TestDefaultIndexerParsing:
         assert len(results) > 0
         assert any("report.pdf" in r.path for r in results)
 
-    def test_parse_failure_counts_as_error(self, make_workspace_config):
+    def test_parse_failure_counts_as_error(self, make_workspace_config, mock_markitdown):
         cfg = make_workspace_config()
         pdf = cfg.workspace_root / "docs" / "broken.pdf"
         pdf.parent.mkdir(parents=True, exist_ok=True)
         pdf.write_bytes(b"%PDF-1.4 fake")
 
-        import types
-        module = types.ModuleType("markitdown")
-        from unittest.mock import MagicMock
-        mock_class = MagicMock(
-            return_value=MagicMock(
-                convert=MagicMock(side_effect=RuntimeError("corrupt PDF"))
-            )
-        )
-        module.MarkItDown = mock_class
+        mock_markitdown.convert.side_effect = RuntimeError("corrupt PDF")
 
-        import sys
-        from unittest.mock import patch
-        with patch.dict(sys.modules, {"markitdown": module}):
-            from workspace.default import DefaultIndexer
+        from workspace.default import DefaultIndexer
 
-            indexer = DefaultIndexer(cfg)
-            summary = indexer.index()
+        indexer = DefaultIndexer(cfg)
+        summary = indexer.index()
 
         assert summary.files_errored == 1
         assert summary.files_indexed == 0
