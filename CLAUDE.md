@@ -5,6 +5,7 @@ repo discipline for donovan-yohan/hermes-agent fork:
 - `upstream/main` is the canonical Nous branch.
 - local/fork `main` is the upstream-sync lane. keep it as clean as possible and do **not** land Kyle-specific customizations directly on it unless Kyle explicitly decides to abandon that pattern.
 - `dy-main` is the default customized branch for Donovan/Kyle-specific Hermes behavior.
+- in normal conversation inside this fork, `main` should be interpreted as `dy-main` unless the speaker explicitly says `upstream/main`, `Nous main`, or otherwise clearly refers to the upstream Hermes branch.
 - new feature branches should normally branch from `dy-main` and PR back into `dy-main`.
 - when syncing upstream changes, update `main` from `upstream/main` first, then rebase/merge `dy-main` onto the refreshed `main`.
 
