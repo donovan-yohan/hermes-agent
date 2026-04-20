@@ -9,6 +9,14 @@ repo discipline for donovan-yohan/hermes-agent fork:
 - new feature branches should normally branch from `dy-main` and PR back into `dy-main`.
 - when syncing upstream changes, update `main` from `upstream/main` first, then rebase/merge `dy-main` onto the refreshed `main`.
 
+runtime vs development checkout:
+
+- do not develop directly inside `~/.hermes/hermes-agent` unless there is a very explicit reason.
+- use a separate development clone at `~/Documents/Programs/personal/hermes-agent` for code edits, tests, branch work, and agent-driven coding sessions.
+- treat `~/.hermes/hermes-agent` as the live runtime install that current Hermes CLI and gateway processes execute.
+- after validating changes in the development clone and landing them on `dy-main`, update the live runtime copy by pulling the desired branch there and restarting affected long-running processes.
+- this separation matters because Hermes may be editing its own source tree; do not mutate the live runtime install casually while it is actively running.
+
 sidecar / browser-extension coordination:
 
 - companion sidecar repo lives at `~/Documents/Programs/personal/hermes-browser-sidecar`.
