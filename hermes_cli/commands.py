@@ -97,6 +97,8 @@ COMMAND_REGISTRY: list[CommandDef] = [
     CommandDef("profile", "Show active profile name and home directory", "Info"),
     CommandDef("sethome", "Set this chat as the home channel", "Session",
                gateway_only=True, aliases=("set-home",)),
+    CommandDef("repo", "Show or bind the default repo context for this chat/thread", "Session",
+               gateway_only=True, args_hint="[show|set <owner/repo>|clear] [scope=thread|chat] [path=...] [branch=...] [notes=...]"),
     CommandDef("resume", "Resume a previously-named session", "Session",
                args_hint="[name]"),
 

@@ -279,6 +279,7 @@ from gateway.session import (
     build_session_context,
     build_session_context_prompt,
     build_session_key,
+    resolve_repo_context,
 )
 from gateway.delivery import DeliveryRouter
 from gateway.platforms.base import (
@@ -493,6 +494,60 @@ def _load_gateway_config() -> dict:
     except Exception:
         logger.debug("Could not load gateway config from %s", _hermes_home / 'config.yaml')
     return {}
+
+
+def _repo_binding_scope(source: SessionSource, scope: str) -> tuple[str, str | None]:
+    scope = (scope or "").strip().lower() or ("thread" if source.thread_id else "chat")
+    if scope == "chat":
+        chat_id = source.parent_chat_id or source.chat_id
+        return str(chat_id), None
+    return str(source.chat_id), str(source.thread_id) if source.thread_id else None
+
+
+def _upsert_repo_binding(cfg: dict, binding: dict) -> list[dict]:
+    bindings = cfg.get("repo_context_bindings")
+    if not isinstance(bindings, list):
+        bindings = []
+    filtered: list[dict] = []
+    for entry in bindings:
+        if not isinstance(entry, dict):
+            continue
+        same_platform = str(entry.get("platform", "")) == str(binding.get("platform", ""))
+        same_chat = str(entry.get("chat_id", "")) == str(binding.get("chat_id", ""))
+        same_thread = str(entry.get("thread_id", "") or "") == str(binding.get("thread_id", "") or "")
+        if same_platform and same_chat and same_thread:
+            continue
+        filtered.append(entry)
+    filtered.append(binding)
+    cfg["repo_context_bindings"] = filtered
+    return filtered
+
+
+def _clear_repo_binding(cfg: dict, source: SessionSource, scope: str) -> int:
+    bindings = cfg.get("repo_context_bindings")
+    if not isinstance(bindings, list):
+        cfg["repo_context_bindings"] = []
+        return 0
+    chat_id, thread_id = _repo_binding_scope(source, scope)
+    filtered: list[dict] = []
+    removed = 0
+    for entry in bindings:
+        if not isinstance(entry, dict):
+            continue
+        same_platform = str(entry.get("platform", "")) == source.platform.value
+        same_chat = str(entry.get("chat_id", "")) == str(chat_id)
+        same_thread = str(entry.get("thread_id", "") or "") == str(thread_id or "")
+        if same_platform and same_chat and same_thread:
+            removed += 1
+            continue
+        filtered.append(entry)
+    cfg["repo_context_bindings"] = filtered
+    return removed
+
+
+def _resolve_repo_binding_for_source(source: SessionSource, cfg: dict) -> dict | None:
+    config = GatewayConfig.from_dict({"repo_context_bindings": cfg.get("repo_context_bindings", [])})
+    return resolve_repo_context(source, config)
 
 
 def _resolve_gateway_model(config: dict | None = None) -> str:
@@ -3527,6 +3582,9 @@ class GatewayRunner:
         if canonical == "sethome":
             return await self._handle_set_home_command(event)
 
+        if canonical == "repo":
+            return await self._handle_repo_command(event)
+
         if canonical == "compress":
             return await self._handle_compress_command(event)
 
@@ -5863,6 +5921,100 @@ class GatewayRunner:
             f"✅ Home channel set to **{chat_name}** (ID: {chat_id}).\n"
             f"Cron jobs and cross-platform messages will be delivered here."
         )
+
+    async def _handle_repo_command(self, event: MessageEvent) -> str:
+        """Handle /repo show|set|clear for chat/thread-scoped repo bindings."""
+        raw_args = event.get_command_args().strip()
+        try:
+            tokens = shlex.split(raw_args) if raw_args else []
+        except ValueError as e:
+            return f"Invalid /repo arguments: {e}"
+
+        action = "show"
+        if tokens and tokens[0].lower() in {"show", "set", "clear"}:
+            action = tokens.pop(0).lower()
+        elif tokens:
+            action = "set"
+
+        config_path = _hermes_home / 'config.yaml'
+        user_config = _load_gateway_config()
+        source = event.source
+
+        if action == "show":
+            binding = _resolve_repo_binding_for_source(source, user_config)
+            if not binding:
+                return (
+                    "No repo context is bound for this location.\n"
+                    "Use `/repo set owner/name [scope=thread|chat] [path=...] [branch=...] [notes=...]`"
+                )
+            lines = [f"Repo context: `{binding['repo']}`"]
+            if binding.get("local_path"):
+                lines.append(f"Local path: `{binding['local_path']}`")
+            if binding.get("default_branch"):
+                lines.append(f"Default branch: `{binding['default_branch']}`")
+            if binding.get("notes"):
+                lines.append(f"Notes: {binding['notes']}")
+            scope_label = "thread" if binding.get("thread_id") else "chat"
+            lines.append(f"Scope: {scope_label}")
+            return "\n".join(lines)
+
+        opts: dict[str, str] = {}
+        repo = ""
+        for token in tokens:
+            if "=" in token:
+                key, value = token.split("=", 1)
+                opts[key.strip().lower()] = value.strip()
+            elif not repo:
+                repo = token.strip()
+            else:
+                return (
+                    "Too many positional args for /repo.\n"
+                    "Usage: `/repo set owner/name [scope=thread|chat] [path=...] [branch=...] [notes=...]`"
+                )
+
+        scope = opts.get("scope", "")
+
+        if action == "clear":
+            removed = _clear_repo_binding(user_config, source, scope)
+            atomic_yaml_write(config_path, user_config)
+            if removed:
+                scope_label = (scope or ("thread" if source.thread_id else "chat")).lower()
+                return f"Cleared repo context binding for this {scope_label}."
+            return "No repo context binding was set for this location."
+
+        if not repo:
+            return (
+                "Repo is required.\n"
+                "Usage: `/repo set owner/name [scope=thread|chat] [path=...] [branch=...] [notes=...]`"
+            )
+        if repo.count("/") != 1:
+            return "Repo must be in `owner/name` format."
+
+        chat_id, thread_id = _repo_binding_scope(source, scope)
+        binding = {
+            "platform": source.platform.value,
+            "chat_id": chat_id,
+            "repo": repo,
+        }
+        if thread_id:
+            binding["thread_id"] = thread_id
+        if opts.get("path"):
+            binding["local_path"] = opts["path"]
+        if opts.get("branch"):
+            binding["default_branch"] = opts["branch"]
+        if opts.get("notes"):
+            binding["notes"] = opts["notes"]
+
+        _upsert_repo_binding(user_config, binding)
+        atomic_yaml_write(config_path, user_config)
+
+        scope_label = "thread" if thread_id else "chat"
+        lines = [f"Bound `{repo}` to this {scope_label}.", f"Scope: {scope_label}"]
+        if binding.get("local_path"):
+            lines.append(f"Local path: `{binding['local_path']}`")
+        if binding.get("default_branch"):
+            lines.append(f"Default branch: `{binding['default_branch']}`")
+        return "\n".join(lines)
     
     @staticmethod
     def _get_guild_id(event: MessageEvent) -> Optional[int]:

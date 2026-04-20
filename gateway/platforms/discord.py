@@ -2353,6 +2353,7 @@ class DiscordAdapter(BasePlatformAdapter):
             user_id=str(interaction.user.id),
             user_name=interaction.user.display_name,
             thread_id=thread_id,
+            parent_chat_id=self._get_parent_channel_id(interaction.channel) if is_thread else None,
             chat_topic=chat_topic,
         )
 
@@ -2432,6 +2433,7 @@ class DiscordAdapter(BasePlatformAdapter):
             user_id=str(interaction.user.id),
             user_name=interaction.user.display_name,
             thread_id=thread_id,
+            parent_chat_id=_parent_id or None,
             chat_topic=chat_topic,
         )
 
@@ -3077,6 +3079,7 @@ class DiscordAdapter(BasePlatformAdapter):
             user_id=str(message.author.id),
             user_name=message.author.display_name,
             thread_id=thread_id,
+            parent_chat_id=parent_channel_id,
             chat_topic=chat_topic,
             is_bot=getattr(message.author, "bot", False),
         )

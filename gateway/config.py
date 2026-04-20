@@ -238,6 +238,9 @@ class GatewayConfig:
 
     # User-defined quick commands (slash commands that bypass the agent loop)
     quick_commands: Dict[str, Any] = field(default_factory=dict)
+
+    # Route chat/thread locations to default repository context
+    repo_context_bindings: List[Dict[str, Any]] = field(default_factory=list)
     
     # Storage paths
     sessions_dir: Path = field(default_factory=lambda: get_hermes_home() / "sessions")
@@ -365,6 +368,7 @@ class GatewayConfig:
             },
             "reset_triggers": self.reset_triggers,
             "quick_commands": self.quick_commands,
+            "repo_context_bindings": self.repo_context_bindings,
             "sessions_dir": str(self.sessions_dir),
             "always_log_local": self.always_log_local,
             "stt_enabled": self.stt_enabled,
@@ -409,6 +413,10 @@ class GatewayConfig:
         if not isinstance(quick_commands, dict):
             quick_commands = {}
 
+        repo_context_bindings = data.get("repo_context_bindings", [])
+        if not isinstance(repo_context_bindings, list):
+            repo_context_bindings = []
+
         stt_enabled = data.get("stt_enabled")
         if stt_enabled is None:
             stt_enabled = data.get("stt", {}).get("enabled") if isinstance(data.get("stt"), dict) else None
@@ -434,6 +442,7 @@ class GatewayConfig:
             reset_by_platform=reset_by_platform,
             reset_triggers=data.get("reset_triggers", ["/new", "/reset"]),
             quick_commands=quick_commands,
+            repo_context_bindings=repo_context_bindings,
             sessions_dir=sessions_dir,
             always_log_local=data.get("always_log_local", True),
             stt_enabled=_coerce_bool(stt_enabled, True),
@@ -506,6 +515,17 @@ def load_gateway_config() -> GatewayConfig:
                         "Ignoring invalid quick_commands in config.yaml "
                         "(expected mapping, got %s)",
                         type(qc).__name__,
+                    )
+
+            repo_bindings = yaml_cfg.get("repo_context_bindings")
+            if repo_bindings is not None:
+                if isinstance(repo_bindings, list):
+                    gw_data["repo_context_bindings"] = repo_bindings
+                else:
+                    logger.warning(
+                        "Ignoring invalid repo_context_bindings in config.yaml "
+                        "(expected list, got %s)",
+                        type(repo_bindings).__name__,
                     )
 
             stt_cfg = yaml_cfg.get("stt")
