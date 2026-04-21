@@ -42,6 +42,26 @@ def _ensure_discord_mock():
 _ensure_discord_mock()
 
 from gateway.platforms.discord import DiscordAdapter  # noqa: E402
+from gateway.platforms.base import SendResult  # noqa: E402
+
+
+def test_discord_ping_exec_approval_defaults_true(monkeypatch):
+    monkeypatch.delenv("DISCORD_MENTION_EXEC_APPROVAL", raising=False)
+    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="***"))
+    assert adapter._discord_ping_exec_approval() is True
+
+
+def test_discord_ping_exec_approval_can_disable_via_config():
+    adapter = DiscordAdapter(
+        PlatformConfig(enabled=True, token="***", extra={"mention_exec_approval": False})
+    )
+    assert adapter._discord_ping_exec_approval() is False
+
+
+def test_discord_ping_exec_approval_env_fallback(monkeypatch):
+    monkeypatch.setenv("DISCORD_MENTION_EXEC_APPROVAL", "false")
+    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="***"))
+    assert adapter._discord_ping_exec_approval() is False
 
 
 @pytest.mark.asyncio
@@ -257,6 +277,101 @@ async def test_send_to_forum_sends_remaining_chunks():
     assert result.message_id == "500"
     # Should have sent at least one follow-up chunk
     assert thread_ch.send.await_count >= 1
+
+
+@pytest.mark.asyncio
+async def test_send_exec_approval_mentions_requesting_user_in_thread(monkeypatch):
+    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="***"))
+    adapter._allowed_user_ids = {"42"}
+    monkeypatch.setattr(
+        "gateway.platforms.discord.ExecApprovalView",
+        lambda *args, **kwargs: SimpleNamespace(session_key=kwargs.get("session_key")),
+    )
+
+    sent_msg = SimpleNamespace(id=777)
+    channel = SimpleNamespace(send=AsyncMock(return_value=sent_msg))
+    adapter._client = SimpleNamespace(
+        get_channel=lambda _chat_id: channel,
+        fetch_channel=AsyncMock(),
+    )
+
+    result = await adapter.send_exec_approval(
+        chat_id="123",
+        command="rm -rf /tmp/test",
+        session_key="sess-1",
+        description="recursive delete",
+        metadata={"thread_id": "456", "requester_user_id": "42"},
+    )
+
+    assert result == SendResult(success=True, message_id="777")
+    channel.send.assert_awaited_once()
+    kwargs = channel.send.await_args.kwargs
+    assert kwargs["content"] == "<@42> command approval needed"
+    assert kwargs["embed"].title == "⚠️ Command Approval Required"
+    assert kwargs["embed"].add_field.call_args.kwargs == {
+        "name": "Reason",
+        "value": "recursive delete",
+        "inline": False,
+    }
+
+
+@pytest.mark.asyncio
+async def test_send_exec_approval_omits_mention_without_requester_metadata(monkeypatch):
+    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="***"))
+    adapter._allowed_user_ids = set()
+    monkeypatch.setattr(
+        "gateway.platforms.discord.ExecApprovalView",
+        lambda *args, **kwargs: SimpleNamespace(session_key=kwargs.get("session_key")),
+    )
+
+    sent_msg = SimpleNamespace(id=778)
+    channel = SimpleNamespace(send=AsyncMock(return_value=sent_msg))
+    adapter._client = SimpleNamespace(
+        get_channel=lambda _chat_id: channel,
+        fetch_channel=AsyncMock(),
+    )
+
+    result = await adapter.send_exec_approval(
+        chat_id="123",
+        command="echo hi",
+        session_key="sess-2",
+        metadata={"thread_id": "456"},
+    )
+
+    assert result == SendResult(success=True, message_id="778")
+    kwargs = channel.send.await_args.kwargs
+    assert kwargs["content"] is None
+
+
+@pytest.mark.asyncio
+async def test_send_exec_approval_omits_mention_when_ping_disabled(monkeypatch):
+    adapter = DiscordAdapter(
+        PlatformConfig(enabled=True, token="***", extra={"mention_exec_approval": False})
+    )
+    adapter._allowed_user_ids = {"42"}
+    monkeypatch.setattr(
+        "gateway.platforms.discord.ExecApprovalView",
+        lambda *args, **kwargs: SimpleNamespace(session_key=kwargs.get("session_key")),
+    )
+
+    sent_msg = SimpleNamespace(id=779)
+    channel = SimpleNamespace(send=AsyncMock(return_value=sent_msg))
+    adapter._client = SimpleNamespace(
+        get_channel=lambda _chat_id: channel,
+        fetch_channel=AsyncMock(),
+    )
+
+    result = await adapter.send_exec_approval(
+        chat_id="123",
+        command="rm -rf /tmp/test",
+        session_key="sess-3",
+        description="recursive delete",
+        metadata={"thread_id": "456", "requester_user_id": "42"},
+    )
+
+    assert result == SendResult(success=True, message_id="779")
+    kwargs = channel.send.await_args.kwargs
+    assert kwargs["content"] is None
 
 
 @pytest.mark.asyncio

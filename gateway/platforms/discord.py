@@ -2490,6 +2490,17 @@ class DiscordAdapter(BasePlatformAdapter):
             return bool(configured)
         return os.getenv("DISCORD_REQUIRE_MENTION", "true").lower() not in ("false", "0", "no", "off")
 
+    def _discord_ping_exec_approval(self) -> bool:
+        """Return whether Discord exec approval prompts should @mention the requester."""
+        configured = self.config.extra.get("mention_exec_approval")
+        if configured is not None:
+            if isinstance(configured, str):
+                return configured.lower() not in ("false", "0", "no", "off")
+            return bool(configured)
+        return os.getenv("DISCORD_MENTION_EXEC_APPROVAL", "true").lower() not in (
+            "false", "0", "no", "off"
+        )
+
     def _discord_free_response_channels(self) -> set:
         """Return Discord channel IDs where no bot mention is required."""
         raw = self.config.extra.get("free_response_channels")
@@ -2678,7 +2689,12 @@ class DiscordAdapter(BasePlatformAdapter):
                 allowed_user_ids=self._allowed_user_ids,
             )
 
-            msg = await channel.send(embed=embed, view=view)
+            mention_user_id = None
+            if self._discord_ping_exec_approval() and metadata and metadata.get("requester_user_id"):
+                mention_user_id = str(metadata["requester_user_id"]).strip()
+            mention_text = f"<@{mention_user_id}> command approval needed" if mention_user_id else None
+
+            msg = await channel.send(content=mention_text, embed=embed, view=view)
             return SendResult(success=True, message_id=str(msg.id))
 
         except Exception as e:

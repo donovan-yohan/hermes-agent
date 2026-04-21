@@ -339,6 +339,21 @@ def _expand_whatsapp_auth_aliases(identifier: str) -> set:
 
 logger = logging.getLogger(__name__)
 
+
+def _build_status_thread_metadata(source, progress_thread_id: str | None) -> dict | None:
+    """Build adapter metadata for status/progress/approval sends.
+
+    Most platforms only need thread routing. Discord approval prompts also need
+    the requester's user ID so the adapter can @mention the right person when a
+    dangerous command is waiting on approval.
+    """
+    metadata = {"thread_id": progress_thread_id} if progress_thread_id else {}
+    if getattr(source, "platform", None) == Platform.DISCORD and getattr(source, "user_id", None):
+        metadata["requester_user_id"] = str(source.user_id)
+        if getattr(source, "user_name", None):
+            metadata["requester_user_name"] = source.user_name
+    return metadata or None
+
 # Sentinel placed into _running_agents immediately when a session starts
 # processing, *before* any await.  Prevents a second message for the same
 # session from bypassing the "already running" guard during the async gap
@@ -9582,7 +9597,7 @@ class GatewayRunner:
         # Bridge sync status_callback → async adapter.send for context pressure
         _status_adapter = self.adapters.get(source.platform)
         _status_chat_id = source.chat_id
-        _status_thread_metadata = {"thread_id": _progress_thread_id} if _progress_thread_id else None
+        _status_thread_metadata = _build_status_thread_metadata(source, _progress_thread_id)
 
         def _status_callback_sync(event_type: str, message: str) -> None:
             if not _status_adapter or not _run_still_current():

@@ -67,6 +67,39 @@ def _make_runner():
     return runner
 
 
+def test_build_status_thread_metadata_includes_discord_requester():
+    from gateway.run import _build_status_thread_metadata
+
+    source = SessionSource(
+        platform=Platform.DISCORD,
+        chat_id="c1",
+        user_id="42",
+        user_name="Kyle",
+        chat_type="thread",
+        thread_id="t1",
+    )
+
+    assert _build_status_thread_metadata(source, "thread-99") == {
+        "thread_id": "thread-99",
+        "requester_user_id": "42",
+        "requester_user_name": "Kyle",
+    }
+
+
+def test_build_status_thread_metadata_skips_requester_for_non_discord():
+    from gateway.run import _build_status_thread_metadata
+
+    source = SessionSource(
+        platform=Platform.TELEGRAM,
+        chat_id="c1",
+        user_id="42",
+        user_name="Kyle",
+        chat_type="dm",
+    )
+
+    assert _build_status_thread_metadata(source, "thread-99") == {"thread_id": "thread-99"}
+
+
 def _clear_approval_state():
     """Reset all module-level approval state between tests."""
     from tools import approval as mod
