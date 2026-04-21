@@ -79,6 +79,7 @@ class SessionSource:
     user_id: Optional[str] = None
     user_name: Optional[str] = None
     thread_id: Optional[str] = None  # For forum topics, Discord threads, etc.
+    parent_chat_id: Optional[str] = None  # Parent channel/chat ID for threaded platforms
     chat_topic: Optional[str] = None  # Channel topic/description (Discord, Slack)
     user_id_alt: Optional[str] = None  # Signal UUID (alternative to phone number)
     chat_id_alt: Optional[str] = None  # Signal group internal ID
@@ -114,6 +115,7 @@ class SessionSource:
             "user_id": self.user_id,
             "user_name": self.user_name,
             "thread_id": self.thread_id,
+            "parent_chat_id": self.parent_chat_id,
             "chat_topic": self.chat_topic,
         }
         if self.user_id_alt:
@@ -132,6 +134,7 @@ class SessionSource:
             user_id=data.get("user_id"),
             user_name=data.get("user_name"),
             thread_id=data.get("thread_id"),
+            parent_chat_id=data.get("parent_chat_id"),
             chat_topic=data.get("chat_topic"),
             user_id_alt=data.get("user_id_alt"),
             chat_id_alt=data.get("chat_id_alt"),
@@ -159,6 +162,7 @@ class SessionContext:
     session_id: str = ""
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    repo_context: Optional[Dict[str, Any]] = None
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -184,6 +188,54 @@ _PII_SAFE_PLATFORMS = frozenset({
 """Platforms where user IDs can be safely redacted (no in-message mention system
 that requires raw IDs).  Discord is excluded because mentions use ``<@user_id>``
 and the LLM needs the real ID to tag users."""
+
+
+def resolve_repo_context(source: SessionSource, config: GatewayConfig) -> Optional[Dict[str, Any]]:
+    """Resolve the best repo-context binding for a message source.
+
+    Precedence:
+    1. Exact thread binding (platform + chat_id + thread_id)
+    2. Exact chat binding (platform + chat_id)
+    3. Parent-chat fallback (platform + parent_chat_id) for threaded platforms
+    """
+    bindings = getattr(config, "repo_context_bindings", None) or []
+    if not isinstance(bindings, list) or not source.platform:
+        return None
+
+    def _score(entry: Dict[str, Any]) -> int:
+        if not isinstance(entry, dict):
+            return -1
+        if str(entry.get("platform", "")).strip().lower() != source.platform.value:
+            return -1
+        repo = str(entry.get("repo", "")).strip()
+        if not repo:
+            return -1
+
+        entry_chat_id = str(entry.get("chat_id", "") or "").strip()
+        entry_thread_id = str(entry.get("thread_id", "") or "").strip()
+
+        if entry_thread_id:
+            if not source.thread_id or entry_thread_id != str(source.thread_id):
+                return -1
+            if entry_chat_id and entry_chat_id != str(source.chat_id):
+                return -1
+            return 300 if entry_chat_id else 250
+
+        if entry_chat_id == str(source.chat_id):
+            return 200
+        if source.parent_chat_id and entry_chat_id == str(source.parent_chat_id):
+            return 100
+        return -1
+
+    best: Optional[Dict[str, Any]] = None
+    best_score = -1
+    for entry in bindings:
+        score = _score(entry)
+        if score > best_score:
+            best = entry
+            best_score = score
+
+    return dict(best) if best else None
 
 
 def build_session_context_prompt(
@@ -261,6 +313,22 @@ def build_session_context_prompt(
         if redact_pii:
             uid = _hash_sender_id(uid)
         lines.append(f"**User ID:** {uid}")
+
+    if context.repo_context:
+        repo = context.repo_context.get("repo")
+        if repo:
+            lines.append("")
+            lines.append("**Repo Context:**")
+            lines.append(f"- Repo: `{repo}`")
+            if context.repo_context.get("local_path"):
+                lines.append(f"- Local path: `{context.repo_context['local_path']}`")
+            if context.repo_context.get("default_branch"):
+                lines.append(f"- Default branch: `{context.repo_context['default_branch']}`")
+            if context.repo_context.get("notes"):
+                lines.append(f"- Notes: {context.repo_context['notes']}")
+            lines.append(
+                "- Behavior: infer repo-scoped requests from this context unless the user explicitly overrides it."
+            )
     
     # Platform-specific behavioral notes
     if context.source.platform == Platform.SLACK:
@@ -1264,6 +1332,7 @@ def build_session_context(
             group_sessions_per_user=getattr(config, "group_sessions_per_user", True),
             thread_sessions_per_user=getattr(config, "thread_sessions_per_user", False),
         ),
+        repo_context=resolve_repo_context(source, config),
     )
     
     if session_entry:

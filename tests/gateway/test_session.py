@@ -54,6 +54,20 @@ class TestSessionSourceRoundtrip:
         assert restored.chat_topic == "Planning and coordination for Project X"
         assert restored.chat_name == "Server / #project-planning"
 
+    def test_roundtrip_with_parent_chat_id(self):
+        """parent_chat_id should survive to_dict/from_dict roundtrip."""
+        source = SessionSource(
+            platform=Platform.DISCORD,
+            chat_id="thread-123",
+            chat_name="Server / relay-ide",
+            chat_type="thread",
+            thread_id="thread-123",
+            parent_chat_id="channel-456",
+        )
+
+        restored = SessionSource.from_dict(source.to_dict())
+        assert restored.parent_chat_id == "channel-456"
+
     def test_minimal_roundtrip(self):
         source = SessionSource(platform=Platform.LOCAL, chat_id="cli")
         d = source.to_dict()
@@ -282,6 +296,69 @@ class TestBuildSessionContextPrompt:
 
         assert "Local" in prompt
         assert "machine running this agent" in prompt
+
+    def test_prompt_includes_repo_context_binding(self):
+        config = GatewayConfig(
+            platforms={
+                Platform.DISCORD: PlatformConfig(enabled=True, token="fake-discord-token"),
+            },
+            repo_context_bindings=[
+                {
+                    "platform": "discord",
+                    "chat_id": "1493815549464018974",
+                    "thread_id": "1494215934519283732",
+                    "repo": "donovan-yohan/relay-ide",
+                    "local_path": "~/src/relay-ide",
+                    "default_branch": "main",
+                    "notes": "default repo for this development thread",
+                }
+            ],
+        )
+        source = SessionSource(
+            platform=Platform.DISCORD,
+            chat_id="1493815549464018974",
+            chat_name="relay-ide dev",
+            chat_type="thread",
+            thread_id="1494215934519283732",
+            user_name="alice",
+        )
+
+        ctx = build_session_context(source, config)
+        prompt = build_session_context_prompt(ctx)
+
+        assert "Repo Context" in prompt
+        assert "donovan-yohan/relay-ide" in prompt
+        assert "~/src/relay-ide" in prompt
+        assert "main" in prompt
+        assert "infer repo-scoped requests" in prompt.lower()
+
+    def test_repo_context_binding_falls_back_to_parent_chat(self):
+        config = GatewayConfig(
+            platforms={
+                Platform.DISCORD: PlatformConfig(enabled=True, token="fake-discord-token"),
+            },
+            repo_context_bindings=[
+                {
+                    "platform": "discord",
+                    "chat_id": "parent-channel-1",
+                    "repo": "donovan-yohan/relay-ide",
+                }
+            ],
+        )
+        source = SessionSource(
+            platform=Platform.DISCORD,
+            chat_id="thread-99",
+            chat_name="relay-ide / bug triage",
+            chat_type="thread",
+            thread_id="thread-99",
+            parent_chat_id="parent-channel-1",
+            user_name="alice",
+        )
+
+        ctx = build_session_context(source, config)
+
+        assert ctx.repo_context is not None
+        assert ctx.repo_context["repo"] == "donovan-yohan/relay-ide"
 
     def test_local_delivery_path_uses_display_hermes_home(self):
         config = GatewayConfig()
