@@ -226,6 +226,24 @@ class TestLoadGatewayConfig:
 
         assert config.thread_sessions_per_user is True
 
+    def test_bridges_discord_mention_exec_approval_from_config_yaml(self, tmp_path, monkeypatch):
+        hermes_home = tmp_path / ".hermes"
+        hermes_home.mkdir()
+        config_path = hermes_home / "config.yaml"
+        config_path.write_text(
+            "discord:\n"
+            "  mention_exec_approval: false\n",
+            encoding="utf-8",
+        )
+
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.delenv("DISCORD_MENTION_EXEC_APPROVAL", raising=False)
+
+        config = load_gateway_config()
+
+        assert config.platforms[Platform.DISCORD].extra["mention_exec_approval"] is False
+        assert os.getenv("DISCORD_MENTION_EXEC_APPROVAL") == "false"
+
     def test_thread_sessions_per_user_defaults_to_false(self, tmp_path, monkeypatch):
         hermes_home = tmp_path / ".hermes"
         hermes_home.mkdir()
