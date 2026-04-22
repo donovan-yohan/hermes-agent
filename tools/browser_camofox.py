@@ -47,6 +47,13 @@ _vnc_url: Optional[str] = None  # cached from /health response
 _vnc_url_checked = False  # only probe once per process
 
 
+def load_config() -> dict:
+    """Resolve config lazily so tests can patch either import path."""
+    from hermes_cli.config import load_config as _load_config
+
+    return _load_config()
+
+
 def get_camofox_url() -> str:
     """Return the configured Camofox server URL, or empty string."""
     return os.getenv("CAMOFOX_URL", "").rstrip("/")
@@ -107,8 +114,6 @@ def _managed_persistence_enabled() -> bool:
     Controlled by ``browser.camofox.managed_persistence`` in config.yaml.
     """
     try:
-        from hermes_cli.config import load_config
-
         camofox_cfg = load_config().get("browser", {}).get("camofox", {})
     except Exception as exc:
         logger.warning("managed_persistence check failed, defaulting to disabled: %s", exc)
@@ -544,8 +549,6 @@ def camofox_vision(question: str, annotate: bool = False,
         )
 
         try:
-            from hermes_cli.config import load_config
-
             _cfg = load_config()
             _vision_cfg = _cfg.get("auxiliary", {}).get("vision", {})
             _vision_timeout = float(_vision_cfg.get("timeout", 120))
@@ -601,5 +604,4 @@ def camofox_console(clear: bool = False, task_id: Optional[str] = None) -> str:
         "note": "Console log capture is not available with the Camofox backend. "
                 "Use browser_snapshot or browser_vision to inspect page state.",
     })
-
 
