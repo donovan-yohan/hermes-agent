@@ -1,0 +1,75 @@
+name: Auto PR main -> dy-main
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: auto-pr-main-to-dy-main
+  cancel-in-progress: true
+
+jobs:
+  open-sync-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch target branches
+        run: |
+          git fetch origin main dy-main --prune
+
+      - name: Open PR when main is ahead of dy-main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          commits_ahead=$(git rev-list --count origin/dy-main..origin/main)
+          echo "commits_ahead=${commits_ahead}"
+
+          if [ "${commits_ahead}" -eq 0 ]; then
+            echo "main has no commits that dy-main lacks. nothing to do."
+            exit 0
+          fi
+
+          existing_pr_count=$(gh pr list \
+            --repo "$REPO" \
+            --base dy-main \
+            --head "${REPO_OWNER}:main" \
+            --state open \
+            --json number \
+            --jq 'length')
+
+          if [ "${existing_pr_count}" -gt 0 ]; then
+            echo "an open PR from main to dy-main already exists."
+            exit 0
+          fi
+
+          compare_url="https://github.com/${REPO}/compare/dy-main...${REPO}:main"
+          latest_main_commit=$(git log --format='%h %s' -1 origin/main)
+
+          gh pr create \
+            --repo "$REPO" \
+            --base dy-main \
+            --head main \
+            --title "sync: merge main into dy-main" \
+            --body "## Summary
+Automated sync PR because \\`main\\` is ahead of \\`dy-main\\`.
+
+- commits ahead: ${commits_ahead}
+- latest main commit: ${latest_main_commit}
+- compare: ${compare_url}
+
+This PR was opened automatically by \\`.github/workflows/auto-pr-main-to-dy-main.yml\\`."
