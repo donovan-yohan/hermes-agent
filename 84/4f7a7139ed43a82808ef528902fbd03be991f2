@@ -1,0 +1,39 @@
+tests/gateway/test_browser_bridge_attachments.py
+  662e62c7cd228613 1-91
+tests/gateway/test_browser_command.py
+  662e62c7cd228613 1-98
+tests/gateway/test_browser_bridge_timeout.py
+  662e62c7cd228613 1-39
+gateway/browser_bridge.py
+  662e62c7cd228613 1-656
+tools/browser_tool.py
+  662e62c7cd228613 213-273,328-329,335-337
+gateway/run.py
+  662e62c7cd228613 17-18,21,25,31,37-38,298-304,356-381,770-773,1142-1783,2906-2916,3283-3297,4277-4279,6840-7060
+tests/gateway/test_browser_bridge_context.py
+  662e62c7cd228613 1-66
+tests/gateway/test_browser_bridge_sidecar.py
+  662e62c7cd228613 1-140
+hermes_cli/commands.py
+  662e62c7cd228613 148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "844f7a7139ed43a82808ef528902fbd03be991f2",
+  "prompts": {
+    "662e62c7cd228613": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019db364-3759-78d0-acb1-c86c077e9169",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 2094,
+      "total_deletions": 6,
+      "accepted_lines": 2093,
+      "overriden_lines": 0
+    }
+  }
+}
