@@ -32,7 +32,6 @@ from typing import Any, Dict, Optional
 
 import requests
 
-from hermes_cli.config import load_config
 from tools.browser_camofox_state import get_camofox_identity
 from tools.registry import tool_error
 
@@ -108,6 +107,8 @@ def _managed_persistence_enabled() -> bool:
     Controlled by ``browser.camofox.managed_persistence`` in config.yaml.
     """
     try:
+        from hermes_cli.config import load_config
+
         camofox_cfg = load_config().get("browser", {}).get("camofox", {})
     except Exception as exc:
         logger.warning("managed_persistence check failed, defaulting to disabled: %s", exc)
@@ -543,6 +544,8 @@ def camofox_vision(question: str, annotate: bool = False,
         )
 
         try:
+            from hermes_cli.config import load_config
+
             _cfg = load_config()
             _vision_cfg = _cfg.get("auxiliary", {}).get("vision", {})
             _vision_timeout = float(_vision_cfg.get("timeout", 120))
@@ -598,6 +601,5 @@ def camofox_console(clear: bool = False, task_id: Optional[str] = None) -> str:
         "note": "Console log capture is not available with the Camofox backend. "
                 "Use browser_snapshot or browser_vision to inspect page state.",
     })
-
 
 

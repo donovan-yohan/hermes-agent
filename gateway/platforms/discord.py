@@ -2423,6 +2423,8 @@ class DiscordAdapter(BasePlatformAdapter):
         # Inherit forum topic when the thread was created inside a forum channel.
         _chan = getattr(interaction, "channel", None)
         chat_topic = self._get_effective_topic(_chan, is_thread=True) if _chan else None
+        _parent_channel = self._thread_parent_channel(_chan)
+        _parent_id = str(getattr(_parent_channel, "id", "") or "")
 
         source = self.build_source(
             chat_id=thread_id,
@@ -2435,8 +2437,6 @@ class DiscordAdapter(BasePlatformAdapter):
             chat_topic=chat_topic,
         )
 
-        _parent_channel = self._thread_parent_channel(getattr(interaction, "channel", None))
-        _parent_id = str(getattr(_parent_channel, "id", "") or "")
         _skills = self._resolve_channel_skills(thread_id, _parent_id or None)
         _channel_prompt = self._resolve_channel_prompt(thread_id, _parent_id or None)
         event = MessageEvent(

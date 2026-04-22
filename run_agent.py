@@ -2035,6 +2035,7 @@ class AIAgent:
         old_norm = (old_provider or "").strip().lower()
         new_norm = (new_provider or "").strip().lower()
         if old_norm and new_norm and old_norm != new_norm:
+            self._fallback_chain = list(getattr(self, "_fallback_chain", []))
             self._fallback_chain = [
                 entry for entry in self._fallback_chain
                 if (entry.get("provider") or "").strip().lower() not in {old_norm, new_norm}
@@ -3913,13 +3914,15 @@ class AIAgent:
 
         # 2. Clean terminal sandbox environments
         try:
-            cleanup_vm(task_id)
+            from tools import terminal_tool as _tt
+            _tt.cleanup_vm(task_id)
         except Exception:
             pass
 
         # 3. Clean browser daemon sessions
         try:
-            cleanup_browser(task_id)
+            from tools import browser_tool as _bt
+            _bt.cleanup_browser(task_id)
         except Exception:
             pass
 
@@ -7838,7 +7841,7 @@ class AIAgent:
                 pass
             start = time.time()
             try:
-                result = self._invoke_tool(function_name, function_args, effective_task_id, tool_call.id, messages=messages)
+                result = self._invoke_tool(function_name, function_args, effective_task_id, tool_call.id)
             except Exception as tool_error:
                 result = f"Error executing tool '{function_name}': {tool_error}"
                 logger.error("_invoke_tool raised for %s: %s", function_name, tool_error, exc_info=True)
