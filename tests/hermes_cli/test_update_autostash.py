@@ -392,6 +392,8 @@ def _make_update_side_effect(
     reset_fails=False,
     fetch_fails=False,
     fetch_stderr="",
+    current_branch_on_remote=True,
+    default_branch="main",
 ):
     """Build a subprocess.run side_effect for cmd_update tests."""
     recorded = []
@@ -405,7 +407,19 @@ def _make_update_side_effect(
             return SimpleNamespace(stdout="", stderr="", returncode=0)
         if "rev-parse" in joined and "--abbrev-ref" in joined:
             return SimpleNamespace(stdout=f"{current_branch}\n", stderr="", returncode=0)
-        if "checkout" in joined and "main" in joined:
+        if "rev-parse" in joined and "--verify" in joined:
+            return SimpleNamespace(
+                stdout="",
+                stderr="",
+                returncode=0 if current_branch_on_remote else 128,
+            )
+        if "symbolic-ref" in joined and "refs/remotes/origin/HEAD" in joined:
+            return SimpleNamespace(
+                stdout=f"refs/remotes/origin/{default_branch}\n",
+                stderr="",
+                returncode=0,
+            )
+        if "checkout" in joined:
             return SimpleNamespace(stdout="", stderr="", returncode=0)
         if "rev-list" in joined:
             return SimpleNamespace(stdout=f"{commit_count}\n", stderr="", returncode=0)
@@ -459,11 +473,11 @@ def test_cmd_update_no_reset_when_ff_only_succeeds(monkeypatch, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Non-main branch → auto-checkout main
+# Branch selection for update
 # ---------------------------------------------------------------------------
 
-def test_cmd_update_switches_to_main_from_feature_branch(monkeypatch, tmp_path, capsys):
-    """When on a feature branch, update checks out main before pulling."""
+def test_cmd_update_stays_on_current_remote_branch(monkeypatch, tmp_path, capsys):
+    """When on a branch that exists on origin, update stays on that branch."""
     _setup_update_mocks(monkeypatch, tmp_path)
     monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/uv" if name == "uv" else None)
 
@@ -472,29 +486,37 @@ def test_cmd_update_switches_to_main_from_feature_branch(monkeypatch, tmp_path, 
 
     hermes_main.cmd_update(SimpleNamespace())
 
-    checkout_calls = [c for c in recorded if "checkout" in c and "main" in c]
-    assert len(checkout_calls) == 1
+    checkout_calls = [c for c in recorded if "checkout" in c]
+    assert checkout_calls == []
+
+    pull_calls = [c for c in recorded if "pull" in c]
+    assert len(pull_calls) == 1
+    assert pull_calls[0] == ["git", "pull", "--ff-only", "origin", "fix/something"]
 
     out = capsys.readouterr().out
-    assert "fix/something" in out
-    assert "switching to main" in out
+    assert "switching to" not in out
 
 
-def test_cmd_update_switches_to_main_from_detached_head(monkeypatch, tmp_path, capsys):
-    """When in detached HEAD state, update checks out main before pulling."""
+def test_cmd_update_switches_to_origin_default_branch_from_detached_head(monkeypatch, tmp_path, capsys):
+    """When detached, update checks out origin's default branch before pulling."""
     _setup_update_mocks(monkeypatch, tmp_path)
     monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/uv" if name == "uv" else None)
 
-    side_effect, recorded = _make_update_side_effect(current_branch="HEAD")
+    side_effect, recorded = _make_update_side_effect(
+        current_branch="HEAD",
+        current_branch_on_remote=False,
+        default_branch="dy-main",
+    )
     monkeypatch.setattr(hermes_main.subprocess, "run", side_effect)
 
     hermes_main.cmd_update(SimpleNamespace())
 
-    checkout_calls = [c for c in recorded if "checkout" in c and "main" in c]
-    assert len(checkout_calls) == 1
+    checkout_calls = [c for c in recorded if "checkout" in c]
+    assert checkout_calls == [["git", "checkout", "dy-main"]]
 
     out = capsys.readouterr().out
     assert "detached HEAD" in out
+    assert "switching to dy-main" in out
 
 
 def test_cmd_update_restores_stash_and_branch_when_already_up_to_date(monkeypatch, tmp_path, capsys):
