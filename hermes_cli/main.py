@@ -4849,6 +4849,40 @@ OFFICIAL_REPO_URL = "https://github.com/NousResearch/hermes-agent.git"
 SKIP_UPSTREAM_PROMPT_FILE = ".skip_upstream_prompt"
 
 
+def _get_origin_default_branch(git_cmd: list[str], cwd: Path) -> str:
+    """Return origin's default branch name, falling back to main on error."""
+    try:
+        result = subprocess.run(
+            git_cmd + ["symbolic-ref", "refs/remotes/origin/HEAD"],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            ref = result.stdout.strip()
+            if ref.startswith("refs/remotes/origin/"):
+                branch = ref.removeprefix("refs/remotes/origin/")
+                if branch:
+                    return branch
+    except Exception:
+        pass
+    return "main"
+
+
+def _remote_branch_exists(git_cmd: list[str], cwd: Path, branch: str) -> bool:
+    """Check whether origin/<branch> exists."""
+    try:
+        result = subprocess.run(
+            git_cmd + ["rev-parse", "--verify", f"origin/{branch}"],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
 def _get_origin_url(git_cmd: list[str], cwd: Path) -> Optional[str]:
     """Get the URL of the origin remote, or None if not set."""
     try:
@@ -5521,21 +5555,27 @@ def _cmd_update_impl(args, gateway_mode: bool):
         )
         current_branch = result.stdout.strip()
 
-        # Always update against main
-        branch = "main"
+        default_branch = _get_origin_default_branch(git_cmd, PROJECT_ROOT)
+        branch = current_branch
+        if current_branch == "HEAD" or not _remote_branch_exists(
+            git_cmd, PROJECT_ROOT, current_branch
+        ):
+            branch = default_branch
 
-        # If user is on a non-main branch or detached HEAD, switch to main
-        if current_branch != "main":
+        # If user is on a different branch or detached HEAD, switch to update branch
+        if current_branch != branch:
             label = (
                 "detached HEAD"
                 if current_branch == "HEAD"
                 else f"branch '{current_branch}'"
             )
-            print(f"  ⚠ Currently on {label} — switching to main for update...")
+            print(
+                f"  ⚠ Currently on {label} — switching to {branch} for update..."
+            )
             # Stash before checkout so uncommitted work isn't lost
             auto_stash_ref = _stash_local_changes_if_needed(git_cmd, PROJECT_ROOT)
             subprocess.run(
-                git_cmd + ["checkout", "main"],
+                git_cmd + ["checkout", branch],
                 cwd=PROJECT_ROOT,
                 capture_output=True,
                 text=True,

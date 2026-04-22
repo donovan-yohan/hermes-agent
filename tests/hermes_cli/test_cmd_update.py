@@ -9,7 +9,9 @@ import pytest
 from hermes_cli.main import cmd_update, PROJECT_ROOT
 
 
-def _make_run_side_effect(branch="main", verify_ok=True, commit_count="0"):
+def _make_run_side_effect(
+    branch="main", verify_ok=True, commit_count="0", default_branch="main"
+):
     """Build a side_effect function for subprocess.run that simulates git commands."""
 
     def side_effect(cmd, **kwargs):
@@ -23,6 +25,15 @@ def _make_run_side_effect(branch="main", verify_ok=True, commit_count="0"):
         if "rev-parse" in joined and "--verify" in joined:
             rc = 0 if verify_ok else 128
             return subprocess.CompletedProcess(cmd, rc, stdout="", stderr="")
+
+        # git symbolic-ref refs/remotes/origin/HEAD  (get origin default branch)
+        if "symbolic-ref" in joined and "refs/remotes/origin/HEAD" in joined:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=f"refs/remotes/origin/{default_branch}\n",
+                stderr="",
+            )
 
         # git rev-list HEAD..origin/{branch} --count
         if "rev-list" in joined:
@@ -40,31 +51,37 @@ def mock_args():
 
 
 class TestCmdUpdateBranchFallback:
-    """cmd_update falls back to main when current branch has no remote counterpart."""
+    """cmd_update should follow the current remote branch or fall back to origin's default branch."""
 
     @patch("shutil.which", return_value=None)
     @patch("subprocess.run")
-    def test_update_falls_back_to_main_when_branch_not_on_remote(
+    def test_update_falls_back_to_origin_default_branch_when_branch_not_on_remote(
         self, mock_run, _mock_which, mock_args, capsys
     ):
         mock_run.side_effect = _make_run_side_effect(
-            branch="fix/stoicneko", verify_ok=False, commit_count="3"
+            branch="runtime-dy-main",
+            verify_ok=False,
+            commit_count="3",
+            default_branch="dy-main",
         )
 
         cmd_update(mock_args)
 
         commands = [" ".join(str(a) for a in c.args[0]) for c in mock_run.call_args_list]
 
-        # rev-list should use origin/main, not origin/fix/stoicneko
         rev_list_cmds = [c for c in commands if "rev-list" in c]
         assert len(rev_list_cmds) == 1
-        assert "origin/main" in rev_list_cmds[0]
-        assert "origin/fix/stoicneko" not in rev_list_cmds[0]
+        assert "origin/dy-main" in rev_list_cmds[0]
+        assert "origin/runtime-dy-main" not in rev_list_cmds[0]
+        assert "origin/main" not in rev_list_cmds[0]
 
-        # pull should use main, not fix/stoicneko
+        checkout_cmds = [c for c in commands if "checkout" in c]
+        assert len(checkout_cmds) == 1
+        assert checkout_cmds[0].endswith("checkout dy-main")
+
         pull_cmds = [c for c in commands if "pull" in c]
         assert len(pull_cmds) == 1
-        assert "main" in pull_cmds[0]
+        assert pull_cmds[0].endswith("origin dy-main")
 
     @patch("shutil.which", return_value=None)
     @patch("subprocess.run")
