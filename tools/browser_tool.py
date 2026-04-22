@@ -210,6 +210,67 @@ def _get_extraction_model() -> Optional[str]:
     return os.getenv("AUXILIARY_WEB_EXTRACT_MODEL", "").strip() or None
 
 
+def _get_shared_cdp_state_path() -> Path:
+    """Path for cross-process CDP runtime state shared between CLI and gateway."""
+    return get_hermes_home() / "runtime" / "browser_cdp_state.json"
+
+
+def read_shared_cdp_state() -> Dict[str, Any]:
+    """Read persisted cross-process CDP runtime state."""
+    state_path = _get_shared_cdp_state_path()
+    if not state_path.exists():
+        return {}
+    try:
+        raw = json.loads(state_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if isinstance(raw, dict):
+        return raw
+    return {}
+
+
+def persist_shared_cdp_state(cdp_url: str, browser: str = "") -> bool:
+    """Persist CDP runtime state so CLI and gateway processes can share it."""
+    cdp = str(cdp_url or "").strip()
+    if not cdp:
+        return False
+    state_path = _get_shared_cdp_state_path()
+    payload = {
+        "cdp_url": cdp,
+        "browser": str(browser or "").strip(),
+        "updated_at_unix": time.time(),
+    }
+    try:
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        return True
+    except Exception:
+        return False
+
+
+def clear_shared_cdp_state() -> None:
+    """Clear persisted cross-process CDP runtime state."""
+    state_path = _get_shared_cdp_state_path()
+    try:
+        state_path.unlink(missing_ok=True)
+    except Exception:
+        pass
+
+
+def _read_shared_cdp_url() -> str:
+    """Read a persisted CDP URL from shared runtime state."""
+    raw = read_shared_cdp_state()
+    return str(raw.get("cdp_url") or "").strip()
+
+
+def _get_raw_cdp_override() -> str:
+    """Return a configured CDP override without probing the endpoint."""
+    direct = os.environ.get("BROWSER_CDP_URL", "").strip()
+    if direct:
+        return direct
+    return _read_shared_cdp_url()
+
+
 def _resolve_cdp_override(cdp_url: str) -> str:
     """Normalize a user-supplied CDP endpoint into a concrete connectable URL.
 
@@ -264,15 +325,16 @@ def _get_cdp_override() -> str:
 
     Precedence is:
     1. ``BROWSER_CDP_URL`` env var (live override from ``/browser connect``)
-    2. ``browser.cdp_url`` in config.yaml (persistent config)
+    2. shared runtime state (persisted by ``/browser connect``)
+    3. ``browser.cdp_url`` in config.yaml (persistent config)
 
     When either is set, we skip both Browserbase and the local headless
     launcher and connect directly to the supplied Chrome DevTools Protocol
     endpoint.
     """
-    env_override = os.environ.get("BROWSER_CDP_URL", "").strip()
-    if env_override:
-        return _resolve_cdp_override(env_override)
+    raw_override = _get_raw_cdp_override()
+    if raw_override:
+        return _resolve_cdp_override(raw_override)
 
     try:
         from hermes_cli.config import read_raw_config
