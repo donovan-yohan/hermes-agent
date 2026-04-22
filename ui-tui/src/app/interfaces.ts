@@ -3,6 +3,7 @@ import type { MutableRefObject, ReactNode, RefObject, SetStateAction } from 'rea
 
 import type { PasteEvent } from '../components/textInput.js'
 import type { GatewayClient } from '../gatewayClient.js'
+import type { ImageAttachResponse } from '../gatewayTypes.js'
 import type { RpcResult } from '../lib/rpc.js'
 import type { Theme } from '../theme.js'
 import type {
@@ -52,6 +53,8 @@ export interface GatewayProviderProps {
 }
 
 export interface OverlayState {
+  agents: boolean
+  agentsInitialHistoryIndex: number
   approval: ApprovalReq | null
   clarify: ClarifyReq | null
   confirm: ConfirmReq | null
@@ -106,11 +109,13 @@ export interface ComposerPasteResult {
   value: string
 }
 
+export type MaybePromise<T> = Promise<T> | T
+
 export interface ComposerActions {
   clearIn: () => void
   dequeue: () => string | undefined
   enqueue: (text: string) => void
-  handleTextPaste: (event: PasteEvent) => ComposerPasteResult | null
+  handleTextPaste: (event: PasteEvent) => MaybePromise<ComposerPasteResult | null>
   openEditor: () => void
   pushHistory: (text: string) => void
   replaceQueue: (index: number, text: string) => void
@@ -146,6 +151,7 @@ export interface ComposerState {
 export interface UseComposerStateOptions {
   gw: GatewayClient
   onClipboardPaste: (quiet?: boolean) => Promise<void> | void
+  onImageAttached?: (info: ImageAttachResponse) => void
   submitRef: MutableRefObject<(value: string) => void>
 }
 
@@ -268,7 +274,7 @@ export interface AppLayoutComposerProps {
   compIdx: number
   completions: CompletionItem[]
   empty: boolean
-  handleTextPaste: (event: PasteEvent) => ComposerPasteResult | null
+  handleTextPaste: (event: PasteEvent) => MaybePromise<ComposerPasteResult | null>
   input: string
   inputBuf: string[]
   pagerPageSize: number
