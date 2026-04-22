@@ -1,0 +1,25 @@
+README.md
+  470dd0437d920b34 67-78
+BROWSER_SIDECAR.md
+  470dd0437d920b34 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "c70a7d7873c2b63f8d077094944629cb59c03482",
+  "prompts": {
+    "470dd0437d920b34": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019db39c-c989-76f3-95d8-c2c62b4511e8",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 91,
+      "total_deletions": 0,
+      "accepted_lines": 91,
+      "overriden_lines": 0
+    }
+  }
+}
