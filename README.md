@@ -64,6 +64,18 @@ hermes doctor       # Diagnose any issues
 
 📖 **[Full documentation →](https://hermes-agent.nousresearch.com/docs/)**
 
+## Browser Sidecar
+
+Hermes now exposes a localhost browser bridge that the separate [`hermes-browser-sidecar`](https://github.com/donovan-yohan/hermes-browser-sidecar) repo can target without hardcoding gateway internals into the extension itself.
+
+- Hermes gateway starts the browser bridge automatically on `http://127.0.0.1:8765` unless `HERMES_BROWSER_BRIDGE_ENABLED=false`
+- Bridge health is available at `GET /health`
+- Bridge session/page-context routes are `POST /session` and `POST /inject`
+- The bearer token is read from `HERMES_BROWSER_BRIDGE_TOKEN` or generated at `$HERMES_HOME/browser_bridge_token`
+- In gateway/browser-sidecar chats, `/browser connect [target]` attaches Hermes browser tools to a live local CDP endpoint
+
+Setup and pairing details live in [BROWSER_SIDECAR.md](BROWSER_SIDECAR.md).
+
 ## CLI vs Messaging Quick Reference
 
 Hermes has two entry points: start the terminal UI with `hermes`, or run the gateway and talk to it from Telegram, Discord, Slack, WhatsApp, Signal, or Email. Once you're in a conversation, many slash commands are shared across both interfaces.
