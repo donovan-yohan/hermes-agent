@@ -1,0 +1,46 @@
+cli.py
+  6e23998aa91d0632 1846-1851,9270-9294,9906-9907
+cli-config.yaml.example
+  6e23998aa91d0632 819,822-824
+gateway/run.py
+  6e23998aa91d0632 1485-1489,1501-1503,1647-1687,1690,1711-1712
+website/docs/user-guide/cli.md
+  6e23998aa91d0632 228,233,236
+tests/cli/test_cli_init.py
+  6e23998aa91d0632 112-119
+tests/gateway/test_busy_session_ack.py
+  6e23998aa91d0632 417-551
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "daae74e91ca5b71b433320137afabbe6ca0fabca",
+  "prompts": {
+    "6e23998aa91d0632": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9746b598-7967-4903-bc1c-5c291f893144",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 238,
+      "total_deletions": 16,
+      "accepted_lines": 235,
+      "overriden_lines": 0
+    },
+    "88cde6bfc41b8175": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b0fe50a1-75b1-44a9-a0d5-cd267300cd21",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 876,
+      "total_deletions": 0,
+      "accepted_lines": 876,
+      "overriden_lines": 0
+    }
+  }
+}
