@@ -1,0 +1,25 @@
+gateway/run.py
+  6e23998aa91d0632 1650-1653,1659-1660
+tests/gateway/test_busy_session_ack.py
+  6e23998aa91d0632 487-552
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "c77b78a02dae63555a096db401d16d82d28a76cb",
+  "prompts": {
+    "6e23998aa91d0632": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9746b598-7967-4903-bc1c-5c291f893144",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 4,
+      "accepted_lines": 73,
+      "overriden_lines": 0
+    }
+  }
+}
