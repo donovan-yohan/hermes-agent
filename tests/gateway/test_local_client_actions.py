@@ -36,6 +36,7 @@ def _fake_runner(running=None, transcript=None, entries=None, sessions=None):
     runner._interrupt_and_clear_session = AsyncMock(return_value=None)
     runner._session_key_for_source = lambda src: f"LOCAL:{src.chat_id}"
     runner._evict_cached_agent = MagicMock()
+    runner._invalidate_session_run_generation = MagicMock()
     return runner
 
 
@@ -223,6 +224,7 @@ class TestStateListResetInterrupt:
             key = runner.session_store.reset_session.call_args.args[0]
             assert key.startswith("LOCAL:local-client:chrome:")
             runner._evict_cached_agent.assert_called_once_with(key)
+            runner._invalidate_session_run_generation.assert_called_once_with(key, reason="session_reset")
 
     async def test_interrupt_calls_gateway_with_expected_kwargs(self):
         runner = _fake_runner()

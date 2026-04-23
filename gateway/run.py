@@ -2280,8 +2280,8 @@ class GatewayRunner:
 
         try:
             await self._local_client_bridge.start()
-        except Exception as e:
-            logger.error("Local-client bridge failed to start: %s", e)
+        except Exception:
+            logger.exception("Local-client bridge failed to start")
         
         # Emit gateway:startup hook
         hook_count = len(self.hooks.loaded_hooks)

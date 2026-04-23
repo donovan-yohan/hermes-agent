@@ -8,10 +8,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import hermes_constants
 from gateway import local_client_media
-from gateway.local_client_bridge import LocalClientBridge, _build_app
+from gateway.local_client_bridge import LocalClientBridge, _build_app, _derive_media_token
 
 
-TOKEN = "media-tok"
+TOKEN="***"
+MEDIA_TOKEN = _derive_media_token(TOKEN)
 
 # 1x1 transparent PNG (valid header so mimetypes + real MIME sniffs match).
 _PNG_BYTES = (
@@ -76,7 +77,7 @@ class TestMedia:
         async with TestClient(TestServer(_build_app(_make_bridge()))) as cli:
             resp = await cli.get(
                 "/v1/local-client/media",
-                params={"path": str(path), "token": TOKEN},
+                params={"path": str(path), "token": MEDIA_TOKEN},
             )
             assert resp.status == 200
 

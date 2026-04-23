@@ -10,6 +10,7 @@ Architecture spec: ``docs/superpowers/specs/2026-04-22-browser-sidecar-core-seam
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -122,8 +123,8 @@ def resolve_token() -> Optional[str]:
 
     Order: env var → ``$HERMES_HOME/local_client_token`` file → autogen.
     Writes a newly-generated token to disk with 0600 perms so subsequent
-    gateway runs pick it up without reconfiguring the client. Returns
-    ``None`` only if the caller explicitly opts out upstream.
+    gateway runs pick it up without reconfiguring the client. Returns the
+    configured or generated token string.
     """
     env_val = os.environ.get(ENV_TOKEN, "").strip()
     if env_val:
@@ -142,11 +143,31 @@ def resolve_token() -> Optional[str]:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(generated + "\n", encoding="utf-8")
-        os.chmod(path, 0o600)
-        logger.info("Generated new local-client bridge token at %s", path)
     except OSError as exc:
         logger.warning("Failed to persist generated token at %s: %s", path, exc)
+        return generated
+
+    try:
+        os.chmod(path, 0o600)
+    except OSError as exc:
+        logger.warning(
+            "Generated token at %s but failed to set file permissions to 0600: %s",
+            path,
+            exc,
+        )
+        return generated
+
+    logger.info("Generated new local-client bridge token at %s", path)
     return generated
+
+
+def _derive_media_token(bridge_token: str) -> str:
+    """Derive a media-scoped token from the bridge token.
+
+    Using a derived token for media requests reduces blast radius if the
+    query-string token leaks via browser history, referrers, or access logs.
+    """
+    return hashlib.sha256(f"media:{bridge_token}".encode("utf-8")).hexdigest()[:32]
 
 
 def _extract_request_token(request: web.Request) -> str:
@@ -256,10 +277,11 @@ class LocalClientBridge:
     async def _handle_media(self, request: web.Request) -> web.StreamResponse:
         if not _timing_safe_auth(request, self._token):
             query_tok = request.query.get("token", "")
+            expected_media_token = _derive_media_token(self._token) if self._token else ""
             if not (
-                self._token
+                expected_media_token
                 and query_tok
-                and secrets.compare_digest(query_tok, self._token)
+                and secrets.compare_digest(query_tok, expected_media_token)
             ):
                 return web.Response(status=401, text="unauthorized")
         return await self._media.serve(request)

@@ -117,9 +117,15 @@ class LocalClientSessionService:
             snap.update({"ok": True, "accepted": True, "running": True})
             return snap
 
+        task = asyncio.create_task(self._runner._handle_message(event))
+        bg = getattr(self._runner, "_background_tasks", None)
+        if isinstance(bg, set):
+            bg.add(task)
+            task.add_done_callback(bg.discard)
+
         try:
             await asyncio.wait_for(
-                self._runner._handle_message(event),
+                asyncio.shield(task),
                 timeout=send_timeout_seconds(),
             )
         except asyncio.TimeoutError:
@@ -163,6 +169,12 @@ class LocalClientSessionService:
                 evict(session_key)
             except Exception as exc:
                 logger.debug("_evict_cached_agent(%s) failed: %s", session_key, exc)
+        invalidate = getattr(self._runner, "_invalidate_session_run_generation", None)
+        if callable(invalidate):
+            try:
+                invalidate(session_key, reason="session_reset")
+            except Exception as exc:
+                logger.debug("_invalidate_session_run_generation(%s) failed: %s", session_key, exc)
         snap = self._snapshot(session_key, source, after_reset=True)
         snap.update({"ok": True, "detail": "Session reset."})
         return snap
