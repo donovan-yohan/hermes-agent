@@ -1,0 +1,29 @@
+tests/hermes_cli/test_update_autostash.py
+  bc2f5ea4551c781a 395-396,410-422,476,479-480,489-494,497,500-501,505-509,514-515,519
+hermes_cli/main.py
+  bc2f5ea4551c781a 4635-4668,5339-5344,5346-5347,5353-5355,5359
+AGENTS.md
+  bc2f5ea4551c781a 5-15,580-628
+tests/hermes_cli/test_cmd_update.py
+  bc2f5ea4551c781a 12-14,29-37,54,58,62-65,74-80,84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "6e82d80828637278979cca907d69f6f39d36d574",
+  "prompts": {
+    "bc2f5ea4551c781a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019db71f-d61e-7e02-8682-6ba2112c105f",
+        "model": "gpt-5.4"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 119,
+      "total_deletions": 29,
+      "accepted_lines": 167,
+      "overriden_lines": 0
+    }
+  }
+}
