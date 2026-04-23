@@ -1482,7 +1482,11 @@ class GatewayRunner:
 
     @staticmethod
     def _load_busy_input_mode() -> str:
-        """Load gateway drain-time busy-input behavior from config/env."""
+        """Load busy-input behavior from config/env.
+
+        Recognized values: ``queue`` (default), ``interrupt``, ``steer``.
+        Anything else falls back to ``queue``.
+        """
         mode = os.getenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "").strip().lower()
         if not mode:
             try:
@@ -1494,7 +1498,9 @@ class GatewayRunner:
                     mode = str(cfg.get("display", {}).get("busy_input_mode", "") or "").strip().lower()
             except Exception:
                 pass
-        return "interrupt" if mode == "interrupt" else "queue"
+        if mode in ("interrupt", "steer"):
+            return mode
+        return "queue"
 
     @staticmethod
     def _load_restart_drain_timeout() -> float:
@@ -1638,9 +1644,50 @@ class GatewayRunner:
             return False  # let default path handle it
 
         from gateway.platforms.base import merge_pending_message_event
+
+        # Steer mode: inject the user's text into the current turn via
+        # agent.steer() without interrupting and without storing the event
+        # as a pending next-turn message. Only text is delivered — photo
+        # or other non-text events degrade to queue mode so the attachment
+        # still reaches the agent on the next turn.
+        running_agent = self._running_agents.get(session_key)
+        can_steer = (
+            self._busy_input_mode == "steer"
+            and running_agent is not None
+            and running_agent is not _AGENT_PENDING_SENTINEL
+            and getattr(event, "message_type", None) != MessageType.PHOTO
+            and bool((getattr(event, "text", None) or "").strip())
+            and hasattr(running_agent, "steer")
+        )
+        if can_steer:
+            try:
+                accepted = bool(running_agent.steer(event.text))
+            except Exception as exc:
+                logger.debug("steer() raised; falling back to queue: %s", exc)
+                accepted = False
+            if accepted:
+                _BUSY_ACK_COOLDOWN = 30
+                now = time.time()
+                last_ack = self._busy_ack_ts.get(session_key, 0)
+                if now - last_ack >= _BUSY_ACK_COOLDOWN:
+                    self._busy_ack_ts[session_key] = now
+                    thread_meta = {"thread_id": event.source.thread_id} if event.source.thread_id else None
+                    try:
+                        await adapter._send_with_retry(
+                            chat_id=event.source.chat_id,
+                            content="🎯 Steering current turn.",
+                            reply_to=event.message_id,
+                            metadata=thread_meta,
+                        )
+                    except Exception as e:
+                        logger.debug("Failed to send steer-ack: %s", e)
+                return True
+            # steer rejected (empty text after strip or raised) — fall
+            # through to queue behavior so nothing is silently dropped.
+
         merge_pending_message_event(adapter._pending_messages, session_key, event)
 
-        if self._busy_input_mode == "queue":
+        if self._busy_input_mode in ("queue", "steer"):
             # Queue mode: let the current turn finish, then drain the pending
             # message automatically.  No interrupt, no abort.
             _BUSY_ACK_COOLDOWN = 30
@@ -1661,8 +1708,8 @@ class GatewayRunner:
             return True
 
         # Interrupt mode (legacy): abort in-flight tool calls and exit the
-        # agent loop at the next checkpoint.
-        running_agent = self._running_agents.get(session_key)
+        # agent loop at the next checkpoint. (running_agent is already
+        # resolved above for the steer-mode branch.)
         if running_agent and running_agent is not _AGENT_PENDING_SENTINEL:
             try:
                 running_agent.interrupt(event.text)

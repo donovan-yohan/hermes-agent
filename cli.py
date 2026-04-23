@@ -1843,9 +1843,12 @@ class HermesCLI:
         self.bell_on_complete = CLI_CONFIG["display"].get("bell_on_complete", False)
         # show_reasoning: display model thinking/reasoning before the response
         self.show_reasoning = CLI_CONFIG["display"].get("show_reasoning", False)
-        # busy_input_mode: "queue" (Enter queues for next turn, default) or "interrupt" (Enter aborts current run)
-        _bim = CLI_CONFIG["display"].get("busy_input_mode", "queue")
-        self.busy_input_mode = "interrupt" if str(_bim).strip().lower() == "interrupt" else "queue"
+        # busy_input_mode: "queue" (Enter queues for next turn, default),
+        # "interrupt" (Enter aborts current run), or "steer" (Enter injects
+        # guidance into the current turn via agent.steer() without aborting).
+        # "steer" is text-only; image attachments fall back to queue.
+        _bim = str(CLI_CONFIG["display"].get("busy_input_mode", "queue")).strip().lower()
+        self.busy_input_mode = _bim if _bim in ("interrupt", "steer") else "queue"
 
         self.verbose = verbose if verbose is not None else (self.tool_progress_mode == "verbose")
         
@@ -9264,8 +9267,31 @@ class HermesCLI:
                 # Bundle text + images as a tuple when images are present
                 payload = (text, images) if images else text
                 if self._agent_running and not (text and _looks_like_slash_command(text)):
-                    if self.busy_input_mode == "queue":
-                        # Queue for the next turn instead of interrupting
+                    # Steer mode: inject text into the current turn via
+                    # agent.steer() (mid-run, no abort). Text-only — if
+                    # images are attached fall back to queue so the
+                    # attachment still reaches the agent.
+                    steer_ok = False
+                    if (
+                        self.busy_input_mode == "steer"
+                        and not images
+                        and text
+                        and self.agent is not None
+                        and hasattr(self.agent, "steer")
+                    ):
+                        try:
+                            steer_ok = bool(self.agent.steer(text))
+                        except Exception:
+                            steer_ok = False
+                        if steer_ok:
+                            preview = text[:80] + ("..." if len(text) > 80 else "")
+                            _cprint(f"  🎯 Steering current turn: {preview}")
+                    if steer_ok:
+                        pass
+                    elif self.busy_input_mode in ("queue", "steer"):
+                        # Queue for the next turn instead of interrupting.
+                        # Steer falls through here when images are attached,
+                        # no agent is available, or steer() refused the text.
                         self._pending_input.put(payload)
                         preview = text if text else f"[{len(images)} image{'s' if len(images) != 1 else ''} attached]"
                         _cprint(f"  Queued for the next turn: {preview[:80]}{'...' if len(preview) > 80 else ''}")
@@ -9877,6 +9903,8 @@ class HermesCLI:
             if cli_ref._agent_running:
                 if cli_ref.busy_input_mode == "queue":
                     return "type a message + Enter to queue for next turn, Ctrl+C to interrupt"
+                if cli_ref.busy_input_mode == "steer":
+                    return "type a message + Enter to steer current turn, Ctrl+C to interrupt"
                 return "type a message + Enter to interrupt, Ctrl+C to cancel"
             if cli_ref._voice_mode:
                 return "type or Ctrl+B to record"

@@ -225,14 +225,15 @@ The `display.busy_input_mode` config key controls what happens when you press En
 |------|----------|
 | `"queue"` (default) | Your message is queued and sent as the next turn after the agent finishes |
 | `"interrupt"` | Your message interrupts the current operation and is processed immediately |
+| `"steer"` | Your message is injected into the current turn via `/steer` — delivered after the next tool result without aborting. Text-only; image attachments fall back to queue. |
 
 ```yaml
 # ~/.hermes/config.yaml
 display:
-  busy_input_mode: "interrupt"   # or "queue" (default)
+  busy_input_mode: "steer"   # or "queue" (default), "interrupt"
 ```
 
-Queue mode is the default — it lets you prepare follow-up messages without accidentally canceling in-flight work. Set `"interrupt"` if you prefer the legacy behavior. Unknown values fall back to `"queue"`.
+Queue mode is the default — it lets you prepare follow-up messages without accidentally canceling in-flight work. Set `"interrupt"` if you prefer the legacy behavior. Use `"steer"` to nudge the agent mid-run without losing the current turn. Unknown values fall back to `"queue"`. Ctrl+C always hard-interrupts regardless of this setting.
 
 ### Suspending to Background
 
