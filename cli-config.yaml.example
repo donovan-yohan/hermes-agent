@@ -816,9 +816,12 @@ display:
   # messages. This is independent of tool_progress and gateway streaming.
   interim_assistant_messages: true
 
-  # What Enter does when Hermes is already busy in the CLI.
+  # What Enter does when Hermes is already busy in the CLI / gateway.
   #   interrupt: Interrupt the current run and redirect Hermes
   #   queue:     Queue your message for the next turn (default)
+  #   steer:     Inject your message into the current turn via /steer
+  #              (delivered after the next tool result, no abort).
+  #              Text-only — image attachments fall back to queue.
   # Ctrl+C always interrupts regardless of this setting.
   busy_input_mode: queue
 

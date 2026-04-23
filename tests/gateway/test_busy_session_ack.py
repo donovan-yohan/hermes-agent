@@ -414,3 +414,205 @@ class TestQueueModeBusySessionAck:
 
         # Agent should NOT be interrupted in queue mode
         agent.interrupt.assert_not_called()
+
+
+class TestSteerModeBusySessionAck:
+    """Steer mode: messages are injected into the current turn via agent.steer()."""
+
+    @pytest.mark.asyncio
+    async def test_steer_mode_calls_steer_no_interrupt_no_pending(self):
+        """In steer mode, message text is delivered via agent.steer() and not queued."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = _make_event(text="please use ripgrep instead")
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.steer.return_value = True
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time() - 30
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        agent.steer.assert_called_once_with("please use ripgrep instead")
+        agent.interrupt.assert_not_called()
+        # Steer must NOT enqueue a pending next-turn message — otherwise the
+        # text would be delivered twice (once mid-run, once as next turn).
+        assert sk not in adapter._pending_messages
+
+        adapter._send_with_retry.assert_called_once()
+        content = adapter._send_with_retry.call_args.kwargs.get("content", "")
+        assert "Steering" in content or "steer" in content.lower()
+
+    @pytest.mark.asyncio
+    async def test_steer_mode_falls_back_to_queue_for_photo(self):
+        """Photo events can't be steered (text-only); should fall back to queue."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = MessageEvent(
+            text="caption",
+            message_type=MessageType.PHOTO,
+            source=_make_event().source,
+            message_id="msg-photo",
+        )
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 1, "max_iterations": 60, "current_tool": None,
+            "last_activity_ts": time.time(), "last_activity_desc": "",
+            "seconds_since_activity": 0.0,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        agent.steer.assert_not_called()
+        agent.interrupt.assert_not_called()
+        # Queue fallback: pending message stored, queue ack sent
+        assert sk in adapter._pending_messages
+        content = adapter._send_with_retry.call_args.kwargs.get("content", "")
+        assert "Queued" in content or "queued" in content
+
+    @pytest.mark.asyncio
+    async def test_steer_mode_falls_back_to_queue_for_document(self):
+        """Non-text event types (DOCUMENT) must fall back so attachments are not dropped."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = MessageEvent(
+            text="see attached",
+            message_type=MessageType.DOCUMENT,
+            source=_make_event().source,
+            message_id="msg-doc",
+            media_urls=["/tmp/fake.pdf"],
+        )
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 1, "max_iterations": 60, "current_tool": None,
+            "last_activity_ts": time.time(), "last_activity_desc": "",
+            "seconds_since_activity": 0.0,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        agent.steer.assert_not_called()
+        agent.interrupt.assert_not_called()
+        assert sk in adapter._pending_messages
+        content = adapter._send_with_retry.call_args.kwargs.get("content", "")
+        assert "Queued" in content or "queued" in content
+
+    @pytest.mark.asyncio
+    async def test_steer_mode_falls_back_when_text_event_has_media_urls(self):
+        """TEXT events carrying media_urls must fall back so media is not dropped."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = MessageEvent(
+            text="with image",
+            message_type=MessageType.TEXT,
+            source=_make_event().source,
+            message_id="msg-text-media",
+            media_urls=["/tmp/fake.png"],
+        )
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 1, "max_iterations": 60, "current_tool": None,
+            "last_activity_ts": time.time(), "last_activity_desc": "",
+            "seconds_since_activity": 0.0,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        agent.steer.assert_not_called()
+        assert sk in adapter._pending_messages
+
+    @pytest.mark.asyncio
+    async def test_steer_mode_falls_back_to_queue_when_agent_pending(self):
+        """If running_agent is the PENDING_SENTINEL we can't steer — queue instead."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = _make_event(text="nudge")
+        sk = build_session_key(event.source)
+
+        runner._running_agents[sk] = sentinel
+        runner._running_agents_ts[sk] = time.time()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        # Sentinel has no .steer / .interrupt to call. We just verify queue path ran.
+        assert sk in adapter._pending_messages
+        content = adapter._send_with_retry.call_args.kwargs.get("content", "")
+        assert "Queued" in content or "queued" in content
+
+    @pytest.mark.asyncio
+    async def test_steer_mode_falls_back_when_steer_returns_false(self):
+        """If agent.steer() refuses (e.g. empty after strip), queue instead."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = _make_event(text="something")
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.steer.return_value = False
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 1, "max_iterations": 60, "current_tool": None,
+            "last_activity_ts": time.time(), "last_activity_desc": "",
+            "seconds_since_activity": 0.0,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        agent.steer.assert_called_once()
+        agent.interrupt.assert_not_called()
+        assert sk in adapter._pending_messages
+
+
+class TestLoadBusyInputMode:
+    def test_loads_steer_from_env(self, monkeypatch):
+        from gateway.run import GatewayRunner
+        monkeypatch.setenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "steer")
+        assert GatewayRunner._load_busy_input_mode() == "steer"
+
+    def test_loads_interrupt_from_env(self, monkeypatch):
+        from gateway.run import GatewayRunner
+        monkeypatch.setenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "interrupt")
+        assert GatewayRunner._load_busy_input_mode() == "interrupt"
+
+    def test_unknown_mode_falls_back_to_queue(self, monkeypatch):
+        from gateway.run import GatewayRunner
+        monkeypatch.setenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "bogus")
+        assert GatewayRunner._load_busy_input_mode() == "queue"
