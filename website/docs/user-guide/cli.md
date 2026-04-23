@@ -208,14 +208,14 @@ There are two ways to enter multi-line messages:
 Pasting multi-line text is supported — use `Alt+Enter` or `Ctrl+J` to insert newlines, or simply paste content directly.
 :::
 
-## Interrupting the Agent
+## While the Agent is Working
 
-You can interrupt the agent at any point:
+You can interact with Hermes while it is busy:
 
-- **Type a new message + Enter** while the agent is working — it interrupts and processes your new instructions
+- **Type a new message + Enter** while the agent is working — queues for the next turn (use `/stop` or `Ctrl+C` to interrupt immediately)
 - **`Ctrl+C`** — interrupt the current operation (press twice within 2s to force exit)
 - In-progress terminal commands are killed immediately (SIGTERM, then SIGKILL after 1s)
-- Multiple messages typed during interrupt are combined into one prompt
+- Multiple messages typed while busy are combined into one prompt
 
 ### Busy Input Mode
 
@@ -223,16 +223,16 @@ The `display.busy_input_mode` config key controls what happens when you press En
 
 | Mode | Behavior |
 |------|----------|
-| `"interrupt"` (default) | Your message interrupts the current operation and is processed immediately |
-| `"queue"` | Your message is silently queued and sent as the next turn after the agent finishes |
+| `"queue"` (default) | Your message is queued and sent as the next turn after the agent finishes |
+| `"interrupt"` | Your message interrupts the current operation and is processed immediately |
 
 ```yaml
 # ~/.hermes/config.yaml
 display:
-  busy_input_mode: "queue"   # or "interrupt" (default)
+  busy_input_mode: "interrupt"   # or "queue" (default)
 ```
 
-Queue mode is useful when you want to prepare follow-up messages without accidentally canceling in-flight work. Unknown values fall back to `"interrupt"`.
+Queue mode is the default — it lets you prepare follow-up messages without accidentally canceling in-flight work. Set `"interrupt"` if you prefer the legacy behavior. Unknown values fall back to `"queue"`.
 
 ### Suspending to Background
 

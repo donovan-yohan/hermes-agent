@@ -675,7 +675,7 @@ class GatewayRunner:
     # Class-level defaults so partial construction in tests doesn't
     # blow up on attribute access.
     _running_agents_ts: Dict[str, float] = {}
-    _busy_input_mode: str = "interrupt"
+    _busy_input_mode: str = "queue"
     _restart_drain_timeout: float = DEFAULT_GATEWAY_RESTART_DRAIN_TIMEOUT
     _exit_code: Optional[int] = None
     _draining: bool = False
@@ -1488,7 +1488,7 @@ class GatewayRunner:
                     mode = str(cfg.get("display", {}).get("busy_input_mode", "") or "").strip().lower()
             except Exception:
                 pass
-        return "queue" if mode == "queue" else "interrupt"
+        return "interrupt" if mode == "interrupt" else "queue"
 
     @staticmethod
     def _load_restart_drain_timeout() -> float:
@@ -1622,24 +1622,40 @@ class GatewayRunner:
             return True
 
         # --- Normal busy case (agent actively running a task) ---
-        # The user sent a message while the agent is working.  Interrupt the
-        # agent immediately so it stops the current tool-calling loop and
-        # processes the new message.  The pending message is stored in the
-        # adapter so the base adapter picks it up once the interrupted run
-        # returns.  A brief ack tells the user what's happening (debounced
-        # to avoid spam when they fire multiple messages quickly).
+        # The user sent a message while the agent is working.
+        # Store the message so it's processed after the current run exits.
+        # In "queue" mode (default) the agent finishes its turn naturally.
+        # In "interrupt" mode the agent is aborted immediately.
 
         adapter = self.adapters.get(event.source.platform)
         if not adapter:
             return False  # let default path handle it
 
-        # Store the message so it's processed as the next turn after the
-        # interrupt causes the current run to exit.
         from gateway.platforms.base import merge_pending_message_event
         merge_pending_message_event(adapter._pending_messages, session_key, event)
 
-        # Interrupt the running agent — this aborts in-flight tool calls and
-        # causes the agent loop to exit at the next check point.
+        if self._busy_input_mode == "queue":
+            # Queue mode: let the current turn finish, then drain the pending
+            # message automatically.  No interrupt, no abort.
+            _BUSY_ACK_COOLDOWN = 30
+            now = time.time()
+            last_ack = self._busy_ack_ts.get(session_key, 0)
+            if now - last_ack >= _BUSY_ACK_COOLDOWN:
+                self._busy_ack_ts[session_key] = now
+                thread_meta = {"thread_id": event.source.thread_id} if event.source.thread_id else None
+                try:
+                    await adapter._send_with_retry(
+                        chat_id=event.source.chat_id,
+                        content="📝 Queued for the next turn.",
+                        reply_to=event.message_id,
+                        metadata=thread_meta,
+                    )
+                except Exception as e:
+                    logger.debug("Failed to send queue-ack: %s", e)
+            return True
+
+        # Interrupt mode (legacy): abort in-flight tool calls and exit the
+        # agent loop at the next checkpoint.
         running_agent = self._running_agents.get(session_key)
         if running_agent and running_agent is not _AGENT_PENDING_SENTINEL:
             try:

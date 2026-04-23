@@ -59,7 +59,7 @@ TIPS = [
     "Ctrl+C interrupts the agent. Double-press within 2 seconds to force exit.",
     "Ctrl+Z suspends Hermes to the background — run fg in your shell to resume.",
     "Tab accepts auto-suggestion ghost text or autocompletes slash commands.",
-    "Type a new message while the agent is working to interrupt and redirect it.",
+    "Type a new message while the agent is working to queue it for the next turn. Use Ctrl+C or /stop to interrupt immediately.",
     "Alt+V pastes an image from your clipboard into the conversation.",
     "Pasting 5+ lines auto-saves to a file and inserts a compact reference instead.",
 

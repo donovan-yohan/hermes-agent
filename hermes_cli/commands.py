@@ -92,7 +92,7 @@ COMMAND_REGISTRY: list[CommandDef] = [
     CommandDef("queue", "Queue a prompt for the next turn (doesn't interrupt)", "Session",
                aliases=("q",), args_hint="<prompt>"),
     CommandDef("steer", "Inject a message after the next tool call without interrupting", "Session",
-               args_hint="<prompt>"),
+               aliases=("s",), args_hint="<prompt>"),
     CommandDef("status", "Show session info", "Session"),
     CommandDef("profile", "Show active profile name and home directory", "Info"),
     CommandDef("sethome", "Set this chat as the home channel", "Session",

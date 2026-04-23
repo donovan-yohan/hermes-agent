@@ -1743,12 +1743,18 @@ class BasePlatformAdapter(ABC):
                 merge_pending_message_event(self._pending_messages, session_key, event)
                 return  # Don't interrupt now - will run after current task completes
 
-            # Default behavior for non-photo follow-ups: interrupt the running agent
-            logger.debug("[%s] New message while session %s is active — triggering interrupt", self.name, session_key)
-            self._pending_messages[session_key] = event
-            # Signal the interrupt (the processing task checks this)
-            self._active_sessions[session_key].set()
-            return  # Don't process now - will be handled after current task finishes
+            # Default behavior for non-photo follow-ups when no busy handler is
+            # registered: queue the message safely instead of interrupting.
+            # The gateway always sets a busy session handler in production; this
+            # path is a safety net for tests and custom adapters.
+            logger.warning(
+                "[%s] No busy_session_handler for active session %s — "
+                "queuing message instead of interrupting",
+                self.name,
+                session_key,
+            )
+            merge_pending_message_event(self._pending_messages, session_key, event)
+            return  # Will run after current task completes
         
         # Mark session as active BEFORE spawning background task to close
         # the race window where a second message arriving before the task

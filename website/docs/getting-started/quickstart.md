@@ -174,7 +174,7 @@ Press `Alt+Enter` or `Ctrl+J` to add a new line. Great for pasting code or writi
 
 ### Interrupt the agent
 
-If the agent is taking too long, type a new message and press Enter — it interrupts the current task and switches to your new instructions. `Ctrl+C` also works.
+If the agent is taking too long, press `Ctrl+C` to interrupt immediately. You can also type a new message while the agent is working — it will queue for the next turn.
 
 ## 6. Add the Next Layer
 
