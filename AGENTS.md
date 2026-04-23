@@ -2,6 +2,17 @@
 
 Instructions for AI coding assistants and developers working on the hermes-agent codebase.
 
+## Non-negotiable workflow rules
+
+- For substantial programming work, act as an orchestrator/supervisor and delegate implementation to Codex or Claude in `tmux`, not as a solo coder doing the whole feature directly.
+- Prefer `tmux`-driven agent sessions over fire-and-forget one-shots so the supervising agent can inspect progress, steer, and collaborate interactively.
+- Start Hermes-initiated development in isolated git worktrees so parallel agents do not collide with each other or with the developer's main checkout.
+- Do development in `~/Documents/Programs/personal/hermes-agent`, never in `~/.hermes/hermes-agent`. The `~/.hermes` install is the runtime copy and editing it directly risks bricking the local agent.
+- Branch semantics for this fork:
+  - `main` = tracking copy of upstream `NousResearch/hermes-agent` main, kept clean for upstream sync/reference
+  - `dy-main` = the user's real master/runtime branch and the branch used by the installed local Hermes
+- When discussing or choosing a base branch for new Hermes work, default to `dy-main` unless the user explicitly asks for upstream/main behavior.
+
 ## Development Environment
 
 ```bash
