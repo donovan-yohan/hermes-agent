@@ -208,9 +208,9 @@ There are two ways to enter multi-line messages:
 Pasting multi-line text is supported — use `Alt+Enter` or `Ctrl+J` to insert newlines, or simply paste content directly.
 :::
 
-## Interrupting the Agent
+## While the Agent is Working
 
-You can interrupt the agent at any point:
+You can interact with Hermes while it is busy:
 
 - **Type a new message + Enter** while the agent is working — queues for the next turn (use `/stop` or `Ctrl+C` to interrupt immediately)
 - **`Ctrl+C`** — interrupt the current operation (press twice within 2s to force exit)

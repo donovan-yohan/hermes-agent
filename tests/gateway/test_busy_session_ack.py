@@ -65,6 +65,7 @@ def _make_runner():
     runner._pending_messages = {}
     runner._busy_ack_ts = {}
     runner._draining = False
+    runner._busy_input_mode = "queue"
     runner.adapters = {}
     runner.config = MagicMock()
     runner.session_store = None
@@ -92,9 +93,10 @@ class TestBusySessionAck:
     """User sends a message while agent is running — should get acknowledgment."""
 
     @pytest.mark.asyncio
-    async def test_sends_ack_when_agent_running(self):
-        """First message during busy session should get a status ack."""
+    async def test_interrupt_mode_sends_ack_and_interrupts(self):
+        """In interrupt mode, first message during busy session should get a status ack and interrupt."""
         runner, sentinel = _make_runner()
+        runner._busy_input_mode = "interrupt"
         adapter = _make_adapter()
 
         event = _make_event(text="Are you working?")
@@ -134,9 +136,10 @@ class TestBusySessionAck:
         agent.interrupt.assert_called_once_with("Are you working?")
 
     @pytest.mark.asyncio
-    async def test_debounce_suppresses_rapid_acks(self):
-        """Second message within 30s should NOT send another ack."""
+    async def test_interrupt_mode_debounce_suppresses_rapid_acks(self):
+        """In interrupt mode, second message within 30s should NOT send another ack but still interrupt."""
         runner, sentinel = _make_runner()
+        runner._busy_input_mode = "interrupt"
         adapter = _make_adapter()
 
         event1 = _make_event(text="hello?")
@@ -209,9 +212,10 @@ class TestBusySessionAck:
         assert adapter._send_with_retry.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_includes_status_detail(self):
-        """Ack message should include iteration and tool info when available."""
+    async def test_interrupt_mode_includes_status_detail(self):
+        """In interrupt mode, ack message should include iteration and tool info when available."""
         runner, sentinel = _make_runner()
+        runner._busy_input_mode = "interrupt"
         adapter = _make_adapter()
 
         event = _make_event(text="yo")
@@ -291,3 +295,122 @@ class TestBusySessionAck:
 
         result = await runner._handle_active_session_busy_message(event, sk)
         assert result is False  # not handled, let default path try
+
+
+class TestQueueModeBusySessionAck:
+    """Queue mode (default): messages are queued, not interrupting."""
+
+    @pytest.mark.asyncio
+    async def test_queue_mode_sends_ack_and_no_interrupt(self):
+        """In queue mode, message should be queued and agent NOT interrupted."""
+        runner, sentinel = _make_runner()
+        # runner defaults to queue already
+        adapter = _make_adapter()
+
+        event = _make_event(text="Follow-up question")
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 21,
+            "max_iterations": 60,
+            "current_tool": "terminal",
+            "last_activity_ts": time.time(),
+            "last_activity_desc": "terminal",
+            "seconds_since_activity": 1.0,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time() - 600
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        # Verify ack was sent with queue wording
+        adapter._send_with_retry.assert_called_once()
+        call_kwargs = adapter._send_with_retry.call_args
+        content = call_kwargs.kwargs.get("content", "")
+        assert "Queued" in content or "queued" in content or "next turn" in content
+
+        # Verify message was queued in adapter pending
+        assert sk in adapter._pending_messages
+
+        # Verify agent was NOT interrupted
+        agent.interrupt.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_queue_mode_debounce_suppresses_rapid_acks(self):
+        """In queue mode, second message within 30s should NOT send another ack."""
+        runner, sentinel = _make_runner()
+        adapter = _make_adapter()
+
+        event1 = _make_event(text="hello?")
+        event2 = MessageEvent(
+            text="still there?",
+            message_type=MessageType.TEXT,
+            source=event1.source,
+            message_id="msg2",
+        )
+        sk = build_session_key(event1.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 5,
+            "max_iterations": 60,
+            "current_tool": None,
+            "last_activity_ts": time.time(),
+            "last_activity_desc": "api_call",
+            "seconds_since_activity": 0.5,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time() - 60
+        runner.adapters[event1.source.platform] = adapter
+
+        # First message — should get ack
+        result1 = await runner._handle_active_session_busy_message(event1, sk)
+        assert result1 is True
+        assert adapter._send_with_retry.call_count == 1
+
+        # Second message within cooldown — should be queued but no ack
+        result2 = await runner._handle_active_session_busy_message(event2, sk)
+        assert result2 is True
+        assert adapter._send_with_retry.call_count == 1  # still 1, no new ack
+
+        # Agent should NOT be interrupted in queue mode
+        agent.interrupt.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_queue_mode_ack_after_cooldown_expires(self):
+        """In queue mode, after 30s cooldown a new message should send a fresh ack."""
+        runner, sentinel = _make_runner()
+        adapter = _make_adapter()
+
+        event = _make_event(text="hello?")
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 10,
+            "max_iterations": 60,
+            "current_tool": "web_search",
+            "last_activity_ts": time.time(),
+            "last_activity_desc": "tool",
+            "seconds_since_activity": 0.5,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time() - 120
+        runner.adapters[event.source.platform] = adapter
+
+        # First ack
+        await runner._handle_active_session_busy_message(event, sk)
+        assert adapter._send_with_retry.call_count == 1
+
+        # Fake that cooldown expired
+        runner._busy_ack_ts[sk] = time.time() - 31
+
+        # Second ack should go through
+        await runner._handle_active_session_busy_message(event, sk)
+        assert adapter._send_with_retry.call_count == 2
+
+        # Agent should NOT be interrupted in queue mode
+        agent.interrupt.assert_not_called()
