@@ -100,8 +100,27 @@ class LocalClientSessionService:
             snap.update({"ok": True, "accepted": False, "busy": True, "running": True})
             return snap
 
+        message = req.message or ""
+        if isinstance(req.context, dict):
+            page_ctx = req.context.get("page_context")
+            if isinstance(page_ctx, dict):
+                parts = []
+                title = page_ctx.get("title", "")
+                url = page_ctx.get("url", "")
+                kind = page_ctx.get("content_kind", "")
+                parts.append(f"[page_context] title={title} url={url} content_kind={kind}")
+                if "selection" in page_ctx:
+                    parts.append("selection:")
+                    parts.append(str(page_ctx["selection"]))
+                if "page_text" in page_ctx:
+                    parts.append("page_text:")
+                    parts.append(str(page_ctx["page_text"]))
+                parts.append("")
+                parts.append(message)
+                message = "\n".join(parts)
+
         event = MessageEvent(
-            text=req.message,
+            text=message,
             message_type=MessageType.TEXT,
             source=source,
             internal=False,
@@ -114,7 +133,7 @@ class LocalClientSessionService:
                 bg.add(task)
                 task.add_done_callback(bg.discard)
             snap = self._snapshot(session_key, source)
-            snap.update({"ok": True, "accepted": True, "running": True})
+            snap.update({"ok": True, "accepted": True, "running": True, "busy": True})
             return snap
 
         task = asyncio.create_task(self._runner._handle_message(event))
@@ -135,6 +154,7 @@ class LocalClientSessionService:
                     "ok": True,
                     "accepted": True,
                     "running": True,
+                    "busy": True,
                     "detail": "Turn still running after sync timeout.",
                 }
             )
