@@ -816,10 +816,10 @@ display:
   interim_assistant_messages: true
 
   # What Enter does when Hermes is already busy in the CLI.
-  #   interrupt: Interrupt the current run and redirect Hermes (default)
-  #   queue:     Queue your message for the next turn
+  #   interrupt: Interrupt the current run and redirect Hermes
+  #   queue:     Queue your message for the next turn (default)
   # Ctrl+C always interrupts regardless of this setting.
-  busy_input_mode: interrupt
+  busy_input_mode: queue
 
   # Background process notifications (gateway/messaging only).
   # Controls how chatty the process watcher is when you use

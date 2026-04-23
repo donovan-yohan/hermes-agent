@@ -1802,8 +1802,8 @@ class HermesCLI:
         self.bell_on_complete = CLI_CONFIG["display"].get("bell_on_complete", False)
         # show_reasoning: display model thinking/reasoning before the response
         self.show_reasoning = CLI_CONFIG["display"].get("show_reasoning", False)
-        # busy_input_mode: "interrupt" (Enter interrupts current run) or "queue" (Enter queues for next turn)
-        _bim = CLI_CONFIG["display"].get("busy_input_mode", "interrupt")
+        # busy_input_mode: "queue" (Enter queues for next turn, default) or "interrupt" (Enter aborts current run)
+        _bim = CLI_CONFIG["display"].get("busy_input_mode", "queue")
         self.busy_input_mode = "queue" if str(_bim).strip().lower() == "queue" else "interrupt"
 
         self.verbose = verbose if verbose is not None else (self.tool_progress_mode == "verbose")
@@ -8708,8 +8708,8 @@ class HermesCLI:
 
             # Re-queue the interrupt message (and any that arrived while we were
             # processing the first) as the next prompt for process_loop.
-            # Only reached when busy_input_mode == "interrupt" (the default).
-            # In "queue" mode Enter routes directly to _pending_input so this
+            # Only reached when busy_input_mode == "interrupt" (legacy opt-in).
+            # In "queue" mode (default) Enter routes directly to _pending_input so this
             # block is never hit.
             if pending_message and hasattr(self, '_pending_input'):
                 all_parts = [pending_message]
