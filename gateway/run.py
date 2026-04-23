@@ -285,6 +285,7 @@ from gateway.session import (
     resolve_repo_context,
 )
 from gateway.delivery import DeliveryRouter
+from gateway.local_client_bridge import LocalClientBridge
 from gateway.platforms.base import (
     BasePlatformAdapter,
     MessageEvent,
@@ -813,6 +814,11 @@ class GatewayRunner:
 
         # Track background tasks to prevent garbage collection mid-execution
         self._background_tasks: set = set()
+
+        # Localhost ingress for local clients (e.g. browser sidecars). No-op
+        # unless explicitly enabled via HERMES_LOCAL_CLIENT_ENABLED or a token
+        # source (env/file). See gateway/local_client_bridge.py.
+        self._local_client_bridge = LocalClientBridge(self)
 
 
     def _warn_if_docker_media_delivery_is_risky(self) -> None:
@@ -2271,6 +2277,11 @@ class GatewayRunner:
         
         self._running = True
         self._update_runtime_status("running")
+
+        try:
+            await self._local_client_bridge.start()
+        except Exception as e:
+            logger.error("Local-client bridge failed to start: %s", e)
         
         # Emit gateway:startup hook
         hook_count = len(self.hooks.loaded_hooks)
@@ -2698,6 +2709,11 @@ class GatewayRunner:
                     logger.error("Failed to launch detached gateway restart: %s", e)
 
             self._finalize_shutdown_agents(active_agents)
+
+            try:
+                await self._local_client_bridge.stop()
+            except Exception as e:
+                logger.debug("Local-client bridge stop error: %s", e)
 
             for platform, adapter in list(self.adapters.items()):
                 try:
