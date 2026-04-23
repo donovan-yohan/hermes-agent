@@ -1,0 +1,37 @@
+gateway/local_client_bridge.py
+  cbc546b10cdac26b 1-293
+tests/gateway/test_local_client_media.py
+  cbc546b10cdac26b 1-152
+gateway/local_client_sessions.py
+  cbc546b10cdac26b 1-256
+gateway/local_client_media.py
+  cbc546b10cdac26b 1-71
+tests/gateway/test_local_client_request_model.py
+  cbc546b10cdac26b 1-99
+gateway/run.py
+  cbc546b10cdac26b 288,818-822,2280-2284,2713-2717
+tests/gateway/test_local_client_auth.py
+  cbc546b10cdac26b 1-157
+tests/gateway/test_local_client_actions.py
+  cbc546b10cdac26b 1-237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "2467a54f8cbc6cc6f264ea5d808e74473f929e1e",
+  "prompts": {
+    "cbc546b10cdac26b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f8bf4261-77a9-49cb-a548-f374911578aa",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 1282,
+      "total_deletions": 1,
+      "accepted_lines": 1281,
+      "overriden_lines": 0
+    }
+  }
+}
