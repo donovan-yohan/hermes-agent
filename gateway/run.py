@@ -1647,15 +1647,17 @@ class GatewayRunner:
 
         # Steer mode: inject the user's text into the current turn via
         # agent.steer() without interrupting and without storing the event
-        # as a pending next-turn message. Only text is delivered — photo
-        # or other non-text events degrade to queue mode so the attachment
-        # still reaches the agent on the next turn.
+        # as a pending next-turn message. Only pure text messages with no
+        # attachments are delivered — any non-TEXT event or event carrying
+        # media_urls degrades to queue mode so the full event (and any
+        # attachments) still reaches the agent on the next turn.
         running_agent = self._running_agents.get(session_key)
         can_steer = (
             self._busy_input_mode == "steer"
             and running_agent is not None
             and running_agent is not _AGENT_PENDING_SENTINEL
-            and getattr(event, "message_type", None) != MessageType.PHOTO
+            and getattr(event, "message_type", None) == MessageType.TEXT
+            and not getattr(event, "media_urls", None)
             and bool((getattr(event, "text", None) or "").strip())
             and hasattr(running_agent, "steer")
         )

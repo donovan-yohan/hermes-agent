@@ -484,6 +484,73 @@ class TestSteerModeBusySessionAck:
         assert "Queued" in content or "queued" in content
 
     @pytest.mark.asyncio
+    async def test_steer_mode_falls_back_to_queue_for_document(self):
+        """Non-text event types (DOCUMENT) must fall back so attachments are not dropped."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = MessageEvent(
+            text="see attached",
+            message_type=MessageType.DOCUMENT,
+            source=_make_event().source,
+            message_id="msg-doc",
+            media_urls=["/tmp/fake.pdf"],
+        )
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 1, "max_iterations": 60, "current_tool": None,
+            "last_activity_ts": time.time(), "last_activity_desc": "",
+            "seconds_since_activity": 0.0,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        agent.steer.assert_not_called()
+        agent.interrupt.assert_not_called()
+        assert sk in adapter._pending_messages
+        content = adapter._send_with_retry.call_args.kwargs.get("content", "")
+        assert "Queued" in content or "queued" in content
+
+    @pytest.mark.asyncio
+    async def test_steer_mode_falls_back_when_text_event_has_media_urls(self):
+        """TEXT events carrying media_urls must fall back so media is not dropped."""
+        runner, sentinel = _make_runner()
+        runner._busy_input_mode = "steer"
+        adapter = _make_adapter()
+
+        event = MessageEvent(
+            text="with image",
+            message_type=MessageType.TEXT,
+            source=_make_event().source,
+            message_id="msg-text-media",
+            media_urls=["/tmp/fake.png"],
+        )
+        sk = build_session_key(event.source)
+
+        agent = MagicMock()
+        agent.get_activity_summary.return_value = {
+            "api_call_count": 1, "max_iterations": 60, "current_tool": None,
+            "last_activity_ts": time.time(), "last_activity_desc": "",
+            "seconds_since_activity": 0.0,
+        }
+        runner._running_agents[sk] = agent
+        runner._running_agents_ts[sk] = time.time()
+        runner.adapters[event.source.platform] = adapter
+
+        result = await runner._handle_active_session_busy_message(event, sk)
+
+        assert result is True
+        agent.steer.assert_not_called()
+        assert sk in adapter._pending_messages
+
+    @pytest.mark.asyncio
     async def test_steer_mode_falls_back_to_queue_when_agent_pending(self):
         """If running_agent is the PENDING_SENTINEL we can't steer — queue instead."""
         runner, sentinel = _make_runner()
