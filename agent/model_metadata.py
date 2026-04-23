@@ -133,6 +133,8 @@ DEFAULT_CONTEXT_LENGTHS = {
     # Google
     "gemini": 1048576,
     # Gemma (open models served via AI Studio)
+    "gemma-4": 256000,  # Gemma 4 family
+    "gemma4": 256000,  # Ollama-style naming (e.g. gemma4:31b-cloud)
     "gemma-4-31b": 256000,
     "gemma-3": 131072,
     "gemma": 8192,  # fallback for older gemma models
@@ -185,6 +187,8 @@ DEFAULT_CONTEXT_LENGTHS = {
     "mimo-v2-pro": 1000000,
     "mimo-v2-omni": 256000,
     "mimo-v2-flash": 256000,
+    "mimo-v2.5-pro": 1000000,
+    "mimo-v2.5": 1000000,
     "zai-org/GLM-5": 202752,
 }
 
@@ -199,6 +203,7 @@ _CONTEXT_LENGTH_KEYS = (
     "max_seq_len",
     "n_ctx_train",
     "n_ctx",
+    "ctx_size",
 )
 
 _MAX_COMPLETION_KEYS = (
@@ -242,6 +247,7 @@ _URL_TO_PROVIDER: Dict[str, str] = {
     "chatgpt.com": "openai",
     "api.anthropic.com": "anthropic",
     "api.z.ai": "zai",
+    "open.bigmodel.cn": "zai",
     "api.moonshot.ai": "kimi-coding",
     "api.moonshot.cn": "kimi-coding-cn",
     "api.kimi.com": "kimi-coding",
