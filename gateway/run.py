@@ -343,21 +343,6 @@ def _expand_whatsapp_auth_aliases(identifier: str) -> set:
 
 logger = logging.getLogger(__name__)
 
-
-def _build_status_thread_metadata(source, progress_thread_id: str | None) -> dict | None:
-    """Build adapter metadata for status/progress/approval sends.
-
-    Most platforms only need thread routing. Discord approval prompts also need
-    the requester's user ID so the adapter can @mention the right person when a
-    dangerous command is waiting on approval.
-    """
-    metadata = {"thread_id": progress_thread_id} if progress_thread_id else {}
-    if getattr(source, "platform", None) == Platform.DISCORD and getattr(source, "user_id", None):
-        metadata["requester_user_id"] = str(source.user_id)
-        if getattr(source, "user_name", None):
-            metadata["requester_user_name"] = source.user_name
-    return metadata or None
-
 # Sentinel placed into _running_agents immediately when a session starts
 # processing, *before* any await.  Prevents a second message for the same
 # session from bypassing the "already running" guard during the async gap
@@ -676,7 +661,7 @@ class GatewayRunner:
     # Class-level defaults so partial construction in tests doesn't
     # blow up on attribute access.
     _running_agents_ts: Dict[str, float] = {}
-    _busy_input_mode: str = "queue"
+    _busy_input_mode: str = "interrupt"
     _restart_drain_timeout: float = DEFAULT_GATEWAY_RESTART_DRAIN_TIMEOUT
     _exit_code: Optional[int] = None
     _draining: bool = False
@@ -1494,7 +1479,7 @@ class GatewayRunner:
                     mode = str(cfg.get("display", {}).get("busy_input_mode", "") or "").strip().lower()
             except Exception:
                 pass
-        return "interrupt" if mode == "interrupt" else "queue"
+        return "queue" if mode == "queue" else "interrupt"
 
     @staticmethod
     def _load_restart_drain_timeout() -> float:
@@ -1627,43 +1612,23 @@ class GatewayRunner:
             )
             return True
 
-        # --- Normal busy case (agent actively running a task) ---
-        # The user sent a message while the agent is working.
-        # Store the message so it's processed after the current run exits.
-        # In "queue" mode (default) the agent finishes its turn naturally.
-        # In "interrupt" mode the agent is aborted immediately.
-
+        # Normal busy case (agent actively running a task)
         adapter = self.adapters.get(event.source.platform)
         if not adapter:
             return False  # let default path handle it
 
+        # Store the message so it's processed as the next turn after the
+        # current run finishes (or is interrupted).
         from gateway.platforms.base import merge_pending_message_event
         merge_pending_message_event(adapter._pending_messages, session_key, event)
 
-        if self._busy_input_mode == "queue":
-            # Queue mode: let the current turn finish, then drain the pending
-            # message automatically.  No interrupt, no abort.
-            _BUSY_ACK_COOLDOWN = 30
-            now = time.time()
-            last_ack = self._busy_ack_ts.get(session_key, 0)
-            if now - last_ack >= _BUSY_ACK_COOLDOWN:
-                self._busy_ack_ts[session_key] = now
-                thread_meta = {"thread_id": event.source.thread_id} if event.source.thread_id else None
-                try:
-                    await adapter._send_with_retry(
-                        chat_id=event.source.chat_id,
-                        content="📝 Queued for the next turn.",
-                        reply_to=event.message_id,
-                        metadata=thread_meta,
-                    )
-                except Exception as e:
-                    logger.debug("Failed to send queue-ack: %s", e)
-            return True
+        is_queue_mode = self._busy_input_mode == "queue"
 
-        # Interrupt mode (legacy): abort in-flight tool calls and exit the
-        # agent loop at the next checkpoint.
+        # If not in queue mode, interrupt the running agent immediately.
+        # This aborts in-flight tool calls and causes the agent loop to exit
+        # at the next check point.
         running_agent = self._running_agents.get(session_key)
-        if running_agent and running_agent is not _AGENT_PENDING_SENTINEL:
+        if not is_queue_mode and running_agent and running_agent is not _AGENT_PENDING_SENTINEL:
             try:
                 running_agent.interrupt(event.text)
             except Exception:
@@ -1675,7 +1640,7 @@ class GatewayRunner:
         now = time.time()
         last_ack = self._busy_ack_ts.get(session_key, 0)
         if now - last_ack < _BUSY_ACK_COOLDOWN:
-            return True  # interrupt sent, ack already delivered recently
+            return True  # interrupt sent (if not queue), ack already delivered recently
 
         self._busy_ack_ts[session_key] = now
 
@@ -1700,10 +1665,16 @@ class GatewayRunner:
                 pass
 
         status_detail = f" ({', '.join(status_parts)})" if status_parts else ""
-        message = (
-            f"⚡ Interrupting current task{status_detail}. "
-            f"I'll respond to your message shortly."
-        )
+        if is_queue_mode:
+            message = (
+                f"⏳ Queued for the next turn{status_detail}. "
+                f"I'll respond once the current task finishes."
+            )
+        else:
+            message = (
+                f"⚡ Interrupting current task{status_detail}. "
+                f"I'll respond to your message shortly."
+            )
 
         thread_meta = {"thread_id": event.source.thread_id} if event.source.thread_id else None
         try:
@@ -2657,6 +2628,40 @@ class GatewayRunner:
             return
 
         async def _stop_impl() -> None:
+            def _kill_tool_subprocesses(phase: str) -> None:
+                """Kill tool subprocesses + tear down terminal envs + browsers.
+
+                Called twice in the shutdown path: once eagerly after a
+                drain timeout forces agent interrupt (so we reclaim bash/
+                sleep children before systemd TimeoutStopSec escalates to
+                SIGKILL on the cgroup — #8202), and once as a final
+                catch-all at the end of _stop_impl() for the graceful
+                path or anything respawned mid-teardown.
+
+                All steps are best-effort; exceptions are swallowed so
+                one subsystem's failure doesn't block the rest.
+                """
+                try:
+                    from tools.process_registry import process_registry
+                    _killed = process_registry.kill_all()
+                    if _killed:
+                        logger.info(
+                            "Shutdown (%s): killed %d tool subprocess(es)",
+                            phase, _killed,
+                        )
+                except Exception as _e:
+                    logger.debug("process_registry.kill_all (%s) error: %s", phase, _e)
+                try:
+                    from tools.terminal_tool import cleanup_all_environments
+                    cleanup_all_environments()
+                except Exception as _e:
+                    logger.debug("cleanup_all_environments (%s) error: %s", phase, _e)
+                try:
+                    from tools.browser_tool import cleanup_all_browsers
+                    cleanup_all_browsers()
+                except Exception as _e:
+                    logger.debug("cleanup_all_browsers (%s) error: %s", phase, _e)
+
             logger.info(
                 "Stopping gateway%s...",
                 " for restart" if self._restart_requested else "",
@@ -2718,6 +2723,16 @@ class GatewayRunner:
                     self._update_runtime_status("draining")
                     await asyncio.sleep(0.1)
 
+                # Kill lingering tool subprocesses NOW, before we spend more
+                # budget on adapter disconnect / session DB close.  Under
+                # systemd (TimeoutStopSec bounded by drain_timeout+headroom),
+                # deferring this to the end of stop() risks systemd escalating
+                # to SIGKILL on the cgroup first — at which point bash/sleep
+                # children left behind by an interrupted terminal tool get
+                # killed by systemd instead of us (issue #8202).  The final
+                # catch-all cleanup below still runs for the graceful path.
+                _kill_tool_subprocesses("post-interrupt")
+
             if self._restart_requested and self._restart_detached:
                 try:
                     await self._launch_detached_restart_command()
@@ -2758,22 +2773,13 @@ class GatewayRunner:
             self._shutdown_event.set()
 
             # Global cleanup: kill any remaining tool subprocesses not tied
-            # to a specific agent (catch-all for zombie prevention).
-            try:
-                from tools.process_registry import process_registry
-                process_registry.kill_all()
-            except Exception:
-                pass
-            try:
-                from tools.terminal_tool import cleanup_all_environments
-                cleanup_all_environments()
-            except Exception:
-                pass
-            try:
-                from tools.browser_tool import cleanup_all_browsers
-                cleanup_all_browsers()
-            except Exception:
-                pass
+            # to a specific agent (catch-all for zombie prevention). On the
+            # drain-timeout path we already did this earlier after agent
+            # interrupt — this second call catches (a) the graceful path
+            # where drain succeeded without interrupt, and (b) anything
+            # that got respawned between the earlier call and adapter
+            # disconnect (defense in depth; safe to call repeatedly).
+            _kill_tool_subprocesses("final-cleanup")
 
             # Close SQLite session DBs so the WAL write lock is released.
             # Without this, --replace and similar restart flows leave the
@@ -9802,7 +9808,7 @@ class GatewayRunner:
         # Bridge sync status_callback → async adapter.send for context pressure
         _status_adapter = self.adapters.get(source.platform)
         _status_chat_id = source.chat_id
-        _status_thread_metadata = _build_status_thread_metadata(source, _progress_thread_id)
+        _status_thread_metadata = {"thread_id": _progress_thread_id} if _progress_thread_id else None
 
         def _status_callback_sync(event_type: str, message: str) -> None:
             if not _status_adapter or not _run_still_current():
@@ -10537,9 +10543,9 @@ class GatewayRunner:
         # Periodic "still working" notifications for long-running tasks.
         # Fires every N seconds so the user knows the agent hasn't died.
         # Config: agent.gateway_notify_interval in config.yaml, or
-        # HERMES_AGENT_NOTIFY_INTERVAL env var.  Default 600s (10 min).
+        # HERMES_AGENT_NOTIFY_INTERVAL env var.  Default 180s (3 min).
         # 0 = disable notifications.
-        _NOTIFY_INTERVAL_RAW = float(os.getenv("HERMES_AGENT_NOTIFY_INTERVAL", 600))
+        _NOTIFY_INTERVAL_RAW = float(os.getenv("HERMES_AGENT_NOTIFY_INTERVAL", 180))
         _NOTIFY_INTERVAL = _NOTIFY_INTERVAL_RAW if _NOTIFY_INTERVAL_RAW > 0 else None
         _notify_start = time.time()
 
@@ -11118,6 +11124,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     from gateway.status import (
         acquire_gateway_runtime_lock,
         get_running_pid,
+        get_process_start_time,
         release_gateway_runtime_lock,
         remove_pid_file,
         terminate_pid,
@@ -11125,6 +11132,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     existing_pid = get_running_pid()
     if existing_pid is not None and existing_pid != os.getpid():
         if replace:
+            existing_start_time = get_process_start_time(existing_pid)
             logger.info(
                 "Replacing existing gateway instance (PID %d) with --replace.",
                 existing_pid,
@@ -11193,7 +11201,10 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             # leaving stale lock files that block the new gateway from starting.
             try:
                 from gateway.status import release_all_scoped_locks
-                _released = release_all_scoped_locks()
+                _released = release_all_scoped_locks(
+                    owner_pid=existing_pid,
+                    owner_start_time=existing_start_time,
+                )
                 if _released:
                     logger.info("Released %d stale scoped lock(s) from old gateway.", _released)
             except Exception:
