@@ -225,14 +225,30 @@ The `display.busy_input_mode` config key controls what happens when you press En
 |------|----------|
 | `"queue"` (default) | Your message is queued and sent as the next turn after the agent finishes |
 | `"interrupt"` | Your message interrupts the current operation and is processed immediately |
+| `"steer"` | Your message is injected into the current run via `/steer`, arriving at the agent after the next tool call — no interrupt, no new turn |
 
 ```yaml
 # ~/.hermes/config.yaml
 display:
-  busy_input_mode: "interrupt"   # or "queue" (default)
+  busy_input_mode: "queue"   # or "interrupt" or "steer" (queue is the default)
 ```
 
-Queue mode is the default — it lets you prepare follow-up messages without accidentally canceling in-flight work. Set `"interrupt"` if you prefer the legacy behavior. Unknown values fall back to `"queue"`.
+`"queue"` is the default on this fork — it lets you prepare follow-up messages without accidentally canceling in-flight work. `"interrupt"` mirrors the legacy upstream behavior. `"steer"` is useful when you want to redirect the agent mid-task without interrupting — e.g. "actually, also check the tests" while it's still editing code. Unknown values fall back to `"queue"`.
+
+`"steer"` has two automatic fallbacks: if the agent hasn't started yet, or if images are attached, the message falls back to `"queue"` behavior so nothing is lost.
+
+You can also change it inside the CLI:
+
+```text
+/busy queue
+/busy steer
+/busy interrupt
+/busy status
+```
+
+:::tip First-touch hint
+The very first time you press Enter while Hermes is working, Hermes prints a one-line reminder explaining the `/busy` knob (`"(tip) Your message was queued for the next turn…"`). It only fires once per install — a flag in `config.yaml` under `onboarding.seen.busy_input_prompt` latches it. Delete that key to see the tip again.
+:::
 
 ### Suspending to Background
 

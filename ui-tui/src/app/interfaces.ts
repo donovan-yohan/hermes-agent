@@ -16,6 +16,7 @@ import type {
   Msg,
   PanelSection,
   SecretReq,
+  SectionVisibility,
   SessionInfo,
   SlashCatalog,
   SubagentProgress,
@@ -31,7 +32,7 @@ export type StatusBarMode = 'bottom' | 'off' | 'top'
 
 export interface SelectionApi {
   clearSelection: () => void
-  copySelection: () => string
+  copySelection: () => Promise<string>
 }
 
 export interface CompletionItem {
@@ -87,6 +88,8 @@ export interface UiState {
   detailsMode: DetailsMode
   info: null | SessionInfo
   inlineDiffs: boolean
+  mouseTracking: boolean
+  sections: SectionVisibility
   showCost: boolean
   showReasoning: boolean
   sid: null | string
@@ -118,7 +121,7 @@ export interface ComposerActions {
   dequeue: () => string | undefined
   enqueue: (text: string) => void
   handleTextPaste: (event: PasteEvent) => MaybePromise<ComposerPasteResult | null>
-  openEditor: () => void
+  openEditor: () => Promise<void>
   pushHistory: (text: string) => void
   replaceQueue: (index: number, text: string) => void
   setCompIdx: StateSetter<number>
