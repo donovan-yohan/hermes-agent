@@ -712,8 +712,6 @@ def setup_model_provider(config: dict, *, quick: bool = False):
     if isinstance(_m, dict):
         selected_provider = _m.get("provider")
 
-    nous_subscription_selected = selected_provider == "nous"
-
     # ── Same-provider fallback & rotation setup (full setup only) ──
     if not quick and _supports_same_provider_pool_setup(selected_provider):
         try:
@@ -2133,6 +2131,12 @@ def _setup_feishu():
     _gateway_setup_feishu()
 
 
+def _setup_yuanbao():
+    """Configure Yuanbao via gateway setup."""
+    from hermes_cli.gateway import _setup_yuanbao as _gateway_setup_yuanbao
+    _gateway_setup_yuanbao()
+
+
 def _setup_wecom():
     """Configure WeCom (Enterprise WeChat) via gateway setup."""
     from hermes_cli.gateway import _setup_wecom as _gateway_setup_wecom
@@ -2277,6 +2281,7 @@ _GATEWAY_PLATFORMS = [
     ("WhatsApp", "WHATSAPP_ENABLED", _setup_whatsapp),
     ("DingTalk", "DINGTALK_CLIENT_ID", _setup_dingtalk),
     ("Feishu / Lark", "FEISHU_APP_ID", _setup_feishu),
+    ("Yuanbao", "YUANBAO_APP_ID", _setup_yuanbao),
     ("WeCom (Enterprise WeChat)", "WECOM_BOT_ID", _setup_wecom),
     ("WeCom Callback (Self-Built App)", "WECOM_CALLBACK_CORP_ID", _setup_wecom_callback),
     ("Weixin (WeChat)", "WEIXIN_ACCOUNT_ID", _setup_weixin),
