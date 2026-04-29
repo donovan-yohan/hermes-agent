@@ -83,8 +83,10 @@ def test_load_busy_input_mode_prefers_env_then_config_then_default(tmp_path, mon
     monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
     monkeypatch.delenv("HERMES_GATEWAY_BUSY_INPUT_MODE", raising=False)
 
+    # No env, no config -> fork default is "queue"
     assert gateway_run.GatewayRunner._load_busy_input_mode() == "queue"
 
+    # Config alone is honored when env is unset.
     (tmp_path / "config.yaml").write_text(
         "display:\n  busy_input_mode: interrupt\n", encoding="utf-8"
     )
@@ -95,11 +97,12 @@ def test_load_busy_input_mode_prefers_env_then_config_then_default(tmp_path, mon
     )
     assert gateway_run.GatewayRunner._load_busy_input_mode() == "steer"
 
-    monkeypatch.setenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "queue")
-    assert gateway_run.GatewayRunner._load_busy_input_mode() == "queue"
-
+    # Env wins over config.
     monkeypatch.setenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "interrupt")
     assert gateway_run.GatewayRunner._load_busy_input_mode() == "interrupt"
+
+    monkeypatch.setenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "queue")
+    assert gateway_run.GatewayRunner._load_busy_input_mode() == "queue"
 
     monkeypatch.setenv("HERMES_GATEWAY_BUSY_INPUT_MODE", "steer")
     assert gateway_run.GatewayRunner._load_busy_input_mode() == "steer"

@@ -147,7 +147,7 @@ class TestCmdUpdateBranchFallback:
         #   3. web/       — install + "npm run build" for the web frontend
         full_flags = [
             "/usr/bin/npm",
-            "install",
+            "ci",
             "--silent",
             "--no-fund",
             "--no-audit",
@@ -156,7 +156,7 @@ class TestCmdUpdateBranchFallback:
         assert npm_calls == [
             (full_flags, PROJECT_ROOT),
             (full_flags, PROJECT_ROOT / "ui-tui"),
-            (["/usr/bin/npm", "install", "--silent"], PROJECT_ROOT / "web"),
+            (["/usr/bin/npm", "ci", "--silent"], PROJECT_ROOT / "web"),
             (["/usr/bin/npm", "run", "build"], PROJECT_ROOT / "web"),
         ]
 
