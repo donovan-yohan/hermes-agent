@@ -1,0 +1,1055 @@
+tests/run_agent/test_memory_sync_interrupted.py
+  04214930cdc34cfe 34-37,87,91
+website/docs/user-guide/skills/bundled/software-development/software-development-spike.md
+  04214930cdc34cfe 1-216
+agent/copilot_acp_client.py
+  04214930cdc34cfe 611
+skills/creative/pretext/references/patterns.md
+  04214930cdc34cfe 1-258
+plugins/memory/hindsight/__init__.py
+  04214930cdc34cfe 32,37,46,105-108,453-462,837-903,1000,1167-1169,1278,1280-1283,1288-1290,1315-1343,1345-1346,1348-1350,1425-1544,1546-1567
+tools/code_execution_tool.py
+  04214930cdc34cfe 76-93,227,230-234,248-258,274,278-281,287-290,297,513,519,521,1343-1351,1353-1356
+tui_gateway/server.py
+  04214930cdc34cfe 131-132,137,145,148,471-583,591-594,865-952,957-958,966,968-969,972-977,1105-1109,1114-1122,1124-1132,1135,1139-1209,1673-1677,1689,1745-1746,1754,1809-1823,1956-1960,1962-1963,1965-1967,1978,2118-2158,2161,2224-2228,2233,2291-2292,2294-2296,2298-2314,2316-2320,2322-2354,2746,2753-2770,2802,3406-3417,3422-3433,3450,3452-3460,3465-3467,3469,3486,3566-3567,3770-3803,3813-3821,3827-3847,4752-4753,5172-5237,5242-5244,5247-5362,5370-5373,5419
+website/docs/developer-guide/context-compression-and-caching.md
+  04214930cdc34cfe 348
+tests/gateway/test_telegram_group_gating.py
+  04214930cdc34cfe 8-15,27-30,48,65,70-82,202-261
+website/docs/user-guide/skills/bundled/productivity/productivity-maps.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/creative/creative-comfyui.md
+  04214930cdc34cfe 1-652
+agent/onboarding.py
+  04214930cdc34cfe 101-104,107-113
+tests/hermes_cli/test_profiles.py
+  04214930cdc34cfe 152-168,191-206
+agent/usage_pricing.py
+  04214930cdc34cfe 362-380,422-423
+skills/creative/pretext/templates/hello-orb-flow.html
+  04214930cdc34cfe 1-95
+tools/environments/ssh.py
+  04214930cdc34cfe 185-189
+tests/plugins/test_kanban_dashboard_plugin.py
+  04214930cdc34cfe 1-889
+tools/mcp_tool.py
+  04214930cdc34cfe 918,923,954-957
+hermes_cli/kanban.py
+  04214930cdc34cfe 1-1393
+hermes_cli/plugins_cmd.py
+  04214930cdc34cfe 21,523,633-635,662-663,766,776
+tests/gateway/test_platform_connected_checkers.py
+  04214930cdc34cfe 1-99
+tests/acp/test_mcp_e2e.py
+  04214930cdc34cfe 127,216
+tests/run_agent/test_background_review_toolset_restriction.py
+  04214930cdc34cfe 12,14,46-48,55
+website/docs/user-guide/skills/bundled/apple/apple-apple-reminders.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/gaming/gaming-pokemon-player.md
+  04214930cdc34cfe 2,4,11
+skills/creative/comfyui/tests/test_check_deps.py
+  04214930cdc34cfe 1-68
+tools/kanban_tools.py
+  04214930cdc34cfe 1-726
+plugins/kanban/dashboard/manifest.json
+  04214930cdc34cfe 1-14
+website/docs/user-guide/skills/bundled/research/research-arxiv.md
+  04214930cdc34cfe 2,4,11
+tests/plugins/test_achievements_plugin.py
+  04214930cdc34cfe 1-377
+hermes_cli/tools_config.py
+  04214930cdc34cfe 21,230-237,635-661,819-824,887-889,1011,1398,1401,1404,1409,1411,1414
+agent/skill_utils.py
+  04214930cdc34cfe 27,203-205,216-221,443
+tests/agent/test_skill_commands_reload.py
+  04214930cdc34cfe 1-160
+hermes_cli/setup.py
+  04214930cdc34cfe 15,135,143,447,486,660-755,1281,1291,1293-1294,1296,1331,1362,1382,1401,1538,1545-1577,1631-1632,1677,1705,1725,2207,2325,2330-2331,2337-2339,2342-2345,2355,2358-2370,2632,2636,2640-2648,2650-2651,3162-3163
+tests/hermes_cli/test_container_aware_cli.py
+  04214930cdc34cfe 108
+hermes_cli/doctor.py
+  04214930cdc34cfe 11,34,81-88,550,580-586,590,808,814,823,838,884-927,929,955,1034-1039,1042-1043,1053-1071
+tests/run_agent/test_background_review.py
+  04214930cdc34cfe 130-192
+tools/send_message_tool.py
+  04214930cdc34cfe 43,45-48,212-217,418-438,483-492,576-590,634-635,637-639,747,1057-1060,1066-1077,1092-1094,1096-1101,1103-1143,1145-1229
+website/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent.md
+  04214930cdc34cfe 2,4,11,135,422-478,677,698
+tests/stress/test_concurrency.py
+  04214930cdc34cfe 1-302
+website/docs/user-guide/skills/bundled/mlops/mlops-research-dspy.md
+  04214930cdc34cfe 2,4,11
+tests/tools/test_skills_tool.py
+  04214930cdc34cfe 935
+tests/gateway/test_pending_drain_no_recursion.py
+  04214930cdc34cfe 1-351
+website/docs/user-guide/features/cron.md
+  04214930cdc34cfe 94-97,369-425
+tests/agent/test_kimi_coding_anthropic_thinking.py
+  04214930cdc34cfe 97-106,118-171,173-212
+tests/hermes_cli/test_doctor.py
+  04214930cdc34cfe 164-195
+website/docs/user-guide/messaging/qqbot.md
+  04214930cdc34cfe 54,56
+tests/stress/test_benchmarks.py
+  04214930cdc34cfe 1-221
+tools/tts_tool.py
+  04214930cdc34cfe 5,12-22,45,47,59-71,113-124,136,180,210-216,226-228,241-255,285-687,776,870,881,943,1020,1115,1126,1312-1472,1566-1571,1593-1599,1604-1606,1609,1620-1628,1697-1709,1749-1759,1808-1809,1814-1816,1824,1834,1836,1838,1842,1850-1851,1956,2142,2148-2149,2165
+website/docs/user-guide/skills/bundled/creative/creative-ascii-art.md
+  04214930cdc34cfe 2,4,11
+agent/transports/anthropic.py
+  04214930cdc34cfe 61,77,90-92,107-109,113
+skills/software-development/subagent-driven-development/references/gates-taxonomy.md
+  04214930cdc34cfe 1-93
+tests/hermes_cli/test_mcp_reload_confirm_gate.py
+  04214930cdc34cfe 1-91
+plugins/kanban/dashboard/dist/index.js
+  04214930cdc34cfe 1-1601
+plugins/memory/__init__.py
+  04214930cdc34cfe 30,318
+tests/gateway/test_matrix.py
+  04214930cdc34cfe 1279-1282
+tests/hermes_cli/test_ignore_user_config_flags.py
+  04214930cdc34cfe 227-228,230-237,239,241
+hermes_cli/config.py
+  04214930cdc34cfe 76-77,353,374-377,508-509,525-534,722-734,792,822-834,967-989,1053-1060,1113-1130,1232,2137-2173,2336,2339-2356,2361-2384,3305-3388,3661,3663-3666,3671,3681,3706-3751,4014-4018,4023,4026-4033,4412-4414,4572-4576,4586-4587,4603,4605
+hermes_cli/browser_connect.py
+  04214930cdc34cfe 1-138
+tests/agent/test_curator_classification.py
+  04214930cdc34cfe 1-550
+website/docs/developer-guide/extending-the-cli.md
+  04214930cdc34cfe 144-147,150,159
+website/docs/user-guide/skills/bundled/media/media-songsee.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/software-development/software-development-plan.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/software-development/software-development-systematic-debugging.md
+  04214930cdc34cfe 2,4,11
+tests/test_minimax_oauth.py
+  04214930cdc34cfe 1-466
+nix/web.nix
+  04214930cdc34cfe 7,11-13,17
+hermes_cli/auth.py
+  04214930cdc34cfe 75-82,137,266-276,1175,4139-4456
+website/docs/developer-guide/tools-runtime.md
+  04214930cdc34cfe 216
+gateway/platforms/email.py
+  04214930cdc34cfe 34,543-648
+hermes_cli/auth_commands.py
+  04214930cdc34cfe 36,173,334-349
+gateway/run.py
+  04214930cdc34cfe 41,50,125-139,285,295-296,309-312,439,643,857-863,886,888,892,976-983,1259-1285,1623,1678,1699,1782,1803,1819,1839,1872,1938-1953,2453-2501,2503,2507,2551,2610-2620,2638,2801-2811,2824,2987-3379,3438,3763,3767,3773-3777,3788-3806,3995,3997-3999,4022-4034,4069-4070,4072-4073,4076,4080-4083,4085,4090-4123,4127-4128,4162-4167,4206-4212,4215-4217,4223,4400-4443,4457,4646-4653,4901-4903,4928-4930,5284-5293,5298,6076-6085,6087-6109,6111-6112,6142,6161-6172,6175,6310,6507,6523-6600,6734,6974,7128-7137,7145,7288-7297,7305,7343,7402,7438,7463,7578,7938,7947-7948,7952-7955,7957-7981,7984,8005,8008-8009,8011,8463,8827-8833,9122-9206,9272-9443,9617-9626,10286-10295,10523,10525-10533,10543-10548,11322-11337,11339-11341,11390,11399,11548-11561,11631-11648,11854-11858,12250-12260,12546,12594,12596,13077,13129-13143,13495
+hermes_cli/commands.py
+  04214930cdc34cfe 153-160,165-166
+agent/anthropic_adapter.py
+  04214930cdc34cfe 23,260-263,271-273,293-294,296-298,368-449,464-468,479-486,491-492,496-502,511-516,546-549,579-582,586-587,931-933,935,941,949,957,962,1190-1195,1382,1394-1399,1628-1637,1649-1654,1661,1664,1721,1747-1748,1761-1763,1783-1821,1869,1910-1913
+cli-config.yaml.example
+  04214930cdc34cfe 183-187,573,603,615
+agent/skill_commands.py
+  04214930cdc34cfe 237,287-351,396-403,443-450
+website/docs/user-guide/features/tool-gateway.md
+  04214930cdc34cfe 21
+tests/gateway/test_send_multiple_images.py
+  04214930cdc34cfe 1-463
+ui-tui/src/entry.tsx
+  04214930cdc34cfe 2-3,12,19-22,31-37,43-46,51
+website/docs/user-guide/skills/bundled/github/github-github-pr-workflow.md
+  04214930cdc34cfe 2,4,11
+ui-tui/src/__tests__/markdown.test.ts
+  04214930cdc34cfe 64-123
+website/docs/user-guide/skills/optional/research/research-parallel-cli.md
+  04214930cdc34cfe 134,147
+tests/stress/test_atypical_scenarios.py
+  04214930cdc34cfe 1-1060
+plugins/hermes-achievements/docs/achievements-performance-spec.md
+  04214930cdc34cfe 1-174
+tools/skill_usage.py
+  04214930cdc34cfe 1-506
+tools/approval.py
+  04214930cdc34cfe 20,715,785,910
+tests/openviking_plugin/test_openviking.py
+  04214930cdc34cfe 1-233
+website/docs/user-guide/features/plugins.md
+  04214930cdc34cfe 145-147
+skills/creative/comfyui/workflows/animatediff_video.json
+  04214930cdc34cfe 1-64
+pyproject.toml
+  04214930cdc34cfe 7,33-34,44,47,106
+website/docs/getting-started/updating.md
+  04214930cdc34cfe 27-53
+tests/hermes_cli/test_gateway.py
+  04214930cdc34cfe 3-4,7-8,12-53
+tests/gateway/test_agent_cache.py
+  04214930cdc34cfe 173-188,248-258
+website/docs/user-guide/skills/bundled/github/github-github-code-review.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/research/research-llm-wiki.md
+  04214930cdc34cfe 2,4,11,67,83
+tests/hermes_cli/test_setup.py
+  04214930cdc34cfe 3,33-43,177-178,180,216-217,219,497-502,504-507,509,511-512,514-525,528-573,576,578,581,589,597,599,602,604-613,615
+tests/tools/test_ssh_bulk_upload.py
+  04214930cdc34cfe 169,172-174
+agent/models_dev.py
+  04214930cdc34cfe 152
+tests/run_agent/test_run_agent.py
+  04214930cdc34cfe 865-884
+tests/tools/test_tts_dotenv_fallback.py
+  04214930cdc34cfe 1-272
+website/docs/user-guide/skills/bundled/media/media-youtube-content.md
+  04214930cdc34cfe 2,4,11,28-30
+ui-tui/src/components/branding.tsx
+  04214930cdc34cfe 2-3,10-29,92,100-109
+website/docs/user-guide/skills/bundled/research/research-blogwatcher.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/creative/creative-excalidraw.md
+  04214930cdc34cfe 2,4,11,34-36
+tests/run_agent/test_deepseek_v4_thinking_live.py
+  04214930cdc34cfe 1-245
+cron/scheduler.py
+  04214930cdc34cfe 236-255,258,261,280-281,286-294,303-304,308-309,411-415,421-427,458-466,864-870,909-913,1047-1050,1052,1067-1078,1153-1167,1227-1228
+hermes_cli/webhook.py
+  04214930cdc34cfe 22,64
+nix/lib.nix
+  04214930cdc34cfe 3-6,9-10,13,32,65-66,92,101,121,134,166,232
+tests/hermes_cli/test_setup_openclaw_migration.py
+  04214930cdc34cfe 422-427,479-481,491-493,541-542,544-553,555-562
+tests/hermes_cli/test_dashboard_lifecycle_flags.py
+  04214930cdc34cfe 1-181
+website/docs/user-guide/messaging/telegram.md
+  04214930cdc34cfe 147-162,182,189,470-540
+agent/credential_pool.py
+  04214930cdc34cfe 1302-1343
+web/src/lib/api.ts
+  04214930cdc34cfe 66-67,72-79,135-175,424-473,535-580
+tests/gateway/test_config_cwd_bridge.py
+  04214930cdc34cfe 36-40,49-52,67-68,219-268
+tests/gateway/test_telegram_documents.py
+  04214930cdc34cfe 457-536
+website/docs/user-guide/skills/bundled/productivity/productivity-airtable.md
+  04214930cdc34cfe 1-242
+website/docs/user-guide/skills/bundled/creative/creative-popular-web-designs.md
+  04214930cdc34cfe 2,4,11,35-43
+tests/tools/test_tts_command_providers.py
+  04214930cdc34cfe 1-500
+website/docs/user-guide/skills/bundled/github/github-github-auth.md
+  04214930cdc34cfe 2,4,11
+skills/creative/comfyui/scripts/ws_monitor.py
+  04214930cdc34cfe 1-267
+ui-tui/packages/hermes-ink/src/ink/colorize.test.ts
+  04214930cdc34cfe 1-60
+tests/gateway/test_run_progress_topics.py
+  04214930cdc34cfe 70-73,78-83,260-267
+skills/creative/comfyui/scripts/_common.py
+  04214930cdc34cfe 1-835
+skills/creative/comfyui/scripts/run_batch.py
+  04214930cdc34cfe 1-243
+hermes_cli/runtime_provider.py
+  04214930cdc34cfe 394-401,419,1080-1092
+tests/hermes_cli/test_claw.py
+  04214930cdc34cfe 529-533
+website/docs/user-guide/skills/bundled/creative/creative-baoyu-infographic.md
+  04214930cdc34cfe 2,4,11,142,151
+tests/gateway/test_busy_session_auth_bypass.py
+  04214930cdc34cfe 1-223
+website/docs/user-guide/features/vision.md
+  04214930cdc34cfe 192-204
+website/docs/user-guide/skills/optional/mlops/mlops-stable-diffusion.md
+  04214930cdc34cfe 121,130
+tests/tools/test_process_registry.py
+  04214930cdc34cfe 107-233
+tests/stress/test_concurrency_mixed.py
+  04214930cdc34cfe 1-350
+plugins/hermes-achievements/docs/achievements-performance-implementation-spec.md
+  04214930cdc34cfe 1-219
+tests/hermes_cli/test_config_env_expansion.py
+  04214930cdc34cfe 75-78,92
+web/src/i18n/en.ts
+  04214930cdc34cfe 77-78,177-188,227-256
+website/docs/developer-guide/gateway-internals.md
+  04214930cdc34cfe 15
+website/docs/user-guide/skills/bundled/apple/apple-findmy.md
+  04214930cdc34cfe 2,4,11
+.github/workflows/nix-lockfile-fix.yml
+  04214930cdc34cfe 31,65-66,205-206,210
+ui-tui/packages/hermes-ink/src/ink/parse-keypress.ts
+  04214930cdc34cfe 700-701,706,710,726,730,838-845
+skills/creative/comfyui/scripts/run_workflow.py
+  04214930cdc34cfe 1-796
+nix/packages.nix
+  04214930cdc34cfe 10-12
+plugins/platforms/irc/plugin.yaml
+  04214930cdc34cfe 1-13
+tests/cli/test_branch_command.py
+  04214930cdc34cfe 195-221
+tests/run_agent/test_provider_parity.py
+  04214930cdc34cfe 147-176,969-977,981,986-987
+tests/stress/test_concurrency_reclaim_race.py
+  04214930cdc34cfe 1-241
+web/src/i18n/zh.ts
+  04214930cdc34cfe 76-77,175-186,224-253
+.github/actions/nix-setup/action.yml
+  04214930cdc34cfe 2-8,14-18
+website/docs/user-guide/sessions.md
+  04214930cdc34cfe 127
+website/docs/user-guide/skills/bundled/creative/creative-ascii-video.md
+  04214930cdc34cfe 2,4,11,28-34
+hermes_cli/vercel_auth.py
+  04214930cdc34cfe 1-70
+tests/stress/test_property_fuzzing.py
+  04214930cdc34cfe 1-283
+website/docs/user-guide/messaging/signal.md
+  04214930cdc34cfe 162,170-182
+skills/creative/comfyui/workflows/flux_dev_txt2img.json
+  04214930cdc34cfe 1-78
+tests/gateway/test_weixin.py
+  04214930cdc34cfe 761-790
+tools/cronjob_tools.py
+  04214930cdc34cfe 153-173,307,388
+plugins/hermes-achievements/tests/test_achievement_engine.py
+  04214930cdc34cfe 1-156
+website/docs/user-guide/features/delegation.md
+  04214930cdc34cfe 176-201
+website/docs/user-guide/skills/bundled/github/github-codebase-inspection.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/mlops/mlops-evaluation-lm-evaluation-harness.md
+  04214930cdc34cfe 2,4,11,33-35
+agent/prompt_builder.py
+  04214930cdc34cfe 185-242
+tests/tools/test_skill_manager_tool.py
+  04214930cdc34cfe 569-827
+tests/tools/test_tts_piper.py
+  04214930cdc34cfe 1-306
+ui-tui/src/app/slash/commands/core.ts
+  04214930cdc34cfe 269-271
+tests/gateway/test_platform_reconnect.py
+  04214930cdc34cfe 17-25,75-152
+ui-tui/src/app/slash/commands/ops.ts
+  04214930cdc34cfe 5,79,81-94,96,99-129,140-141,149-150,152-153,157,160-165,174-175,178-182
+website/docs/user-guide/skills/bundled/mlops/mlops-inference-outlines.md
+  04214930cdc34cfe 2,4,11
+tests/gateway/test_api_server.py
+  04214930cdc34cfe 317,495-534,691,698-701,727-730,750,757-760,782,786-917
+tests/hermes_cli/test_update_stale_dashboard.py
+  04214930cdc34cfe 1,3-11,16,19,23-59,67-84,86,96,98,105-107,118-120,130-134,136,138,141,143-146,149-155,157-158,160,165,170-174,179-181,185-356,360-363,366-394
+tests/agent/test_curator_activity.py
+  04214930cdc34cfe 1-56
+skills/creative/comfyui/references/official-cli.md
+  04214930cdc34cfe 1-255
+tests/gateway/test_tts_media_routing.py
+  04214930cdc34cfe 1-195
+website/docs/guides/build-a-hermes-plugin.md
+  04214930cdc34cfe 245-246,249-261
+website/docs/developer-guide/architecture.md
+  04214930cdc34cfe 35-36,43,55-56,79,86,105,112,120,123-124,216,228
+plugins/memory/holographic/__init__.py
+  04214930cdc34cfe 29,106
+skills/software-development/subagent-driven-development/references/context-budget-discipline.md
+  04214930cdc34cfe 1-53
+tests/agent/test_deepseek_anthropic_thinking.py
+  04214930cdc34cfe 1-242
+website/docs/reference/environment-variables.md
+  04214930cdc34cfe 41-44,92,96,113,132,137-140,173-174,182,223-225,230,325,346,385-412,418-423,434-438,443-457,466-468
+website/docs/user-guide/docker.md
+  04214930cdc34cfe 42,211,262,264-267,315
+website/docs/user-guide/skills/bundled/creative/creative-manim-video.md
+  04214930cdc34cfe 2,4,11,29-31
+hermes_cli/_parser.py
+  04214930cdc34cfe 1-373
+agent/memory_provider.py
+  04214930cdc34cfe 28,164-200
+tests/cli/test_cprint_bg_thread.py
+  04214930cdc34cfe 1-206
+ui-tui/src/types.ts
+  04214930cdc34cfe 146,151
+website/docs/user-guide/skills/bundled/apple/apple-apple-notes.md
+  04214930cdc34cfe 2,4,11
+tests/plugins/memory/test_hindsight_provider.py
+  04214930cdc34cfe 672,713,722,733,744,765,771,783,816,837,846,853,865-1072
+hermes_cli/skills_config.py
+  04214930cdc34cfe 16,33
+tests/agent/test_memory_session_switch.py
+  04214930cdc34cfe 1-320
+hermes_cli/__init__.py
+  04214930cdc34cfe 14-15
+run_agent.py
+  04214930cdc34cfe 50-55,136,169,332-337,941,993-995,1024,1122-1128,1130,1132,1816,2020-2027,2030-2034,2036-2038,2044,2083-2084,2101-2115,2203,2884-2901,2987,3205-3206,3606-3608,3612-3614,3783,3807,3972,3987,4299,4367,4588,4639-4646,4786,4818-4820,4822,4843-4848,4976-4984,6273-6276,6278,6289,6594-6596,7255-7260,8245,8368,8527,8587-8602,8659,8661,8710-8721,8764,8770-8774,8787-8789,9070-9086,10108,10138,10847,11267-11272,11804-11833,12640-12643,13891
+tests/run_agent/test_deepseek_reasoning_content_echo.py
+  04214930cdc34cfe 26-27,38-41,45-67,141,158-159,251-414
+website/docs/user-guide/skills/bundled/creative/creative-p5js.md
+  04214930cdc34cfe 2,4,11,31-37
+website/docs/user-guide/skills/bundled/github/github-github-repo-management.md
+  04214930cdc34cfe 2,4,11
+website/docusaurus.config.ts
+  04214930cdc34cfe 43-55
+skills/creative/comfyui/scripts/health_check.py
+  04214930cdc34cfe 1-223
+tools/vision_tools.py
+  04214930cdc34cfe 41,60,62,439,487,559,561
+website/static/api/model-catalog.json
+  04214930cdc34cfe 3,168-169
+website/docs/user-guide/skills/bundled/research/research-research-paper-writing.md
+  04214930cdc34cfe 2,4,11,39,61,744,754
+tools/env_passthrough.py
+  04214930cdc34cfe 25,113
+ui-tui/src/components/markdown.tsx
+  04214930cdc34cfe 5,9-58,73-81,94-100,116-122,169-170,176,241,245-247,254-258,261,267,273,304-316,514,516-519,522-549,553,555-568,571-577,582,587,598,610
+website/docs/user-guide/skills/bundled/yuanbao/yuanbao-yuanbao.md
+  04214930cdc34cfe 1-124
+tools/environments/base.py
+  04214930cdc34cfe 338-341,349
+tests/gateway/test_irc_adapter.py
+  04214930cdc34cfe 1-502
+skills/creative/comfyui/tests/test_cloud_integration.py
+  04214930cdc34cfe 1-95
+tests/tools/test_tirith_security.py
+  04214930cdc34cfe 1000,1003-1005,1007,1009
+website/docs/user-guide/skills/bundled/creative/creative-baoyu-comic.md
+  04214930cdc34cfe 2,4,11
+skills/creative/comfyui/workflows/sdxl_txt2img.json
+  04214930cdc34cfe 1-49
+hermes_cli/relaunch.py
+  04214930cdc34cfe 1-149
+tests/gateway/test_signal.py
+  04214930cdc34cfe 2,13-22,814,817-825,827,830,839,1019-1651
+tests/hermes_cli/test_kanban_core_functionality.py
+  04214930cdc34cfe 1-2713
+website/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-codex.md
+  04214930cdc34cfe 2,4,11,35-42
+tests/cron/test_compute_next_run_last_run_at.py
+  04214930cdc34cfe 1-87
+website/docs/user-guide/skills/bundled/devops/devops-webhook-subscriptions.md
+  04214930cdc34cfe 2,4,11
+tests/test_get_tool_definitions_cache_isolation.py
+  04214930cdc34cfe 1-94
+tests/test_cli_skin_integration.py
+  04214930cdc34cfe 99,108,119,130
+acp_adapter/server.py
+  04214930cdc34cfe 16,34,50,94,104-156,410,436-507,536,553,650-654,657-661,744,747
+website/docs/developer-guide/agent-loop.md
+  04214930cdc34cfe 9,225
+website/docs/user-guide/configuring-models.md
+  04214930cdc34cfe 1-207
+website/docs/user-guide/features/tools.md
+  04214930cdc34cfe 51,67,74,121-148,155
+web/src/i18n/types.ts
+  04214930cdc34cfe 77-78,179-191,231-259
+tests/gateway/test_stream_consumer.py
+  04214930cdc34cfe 1340-1495
+gateway/platforms/api_server.py
+  04214930cdc34cfe 10,12,595-596,815-859,984-1001,1003,1005-1007,1009-1010,1012-1029,1034-1039,1047-1048,1163-1164,2374-2389,2394-2398,2510,2513-2541,2545,2575-2596,2599-2604,2634-2648,2711-2712,2755-2763,2782,2798
+gateway/config.py
+  04214930cdc34cfe 16,48-52,54-60,82-151,315-352,409,412-445,842-856,1509-1530
+agent/curator.py
+  04214930cdc34cfe 1-1315
+tests/tools/test_slash_confirm.py
+  04214930cdc34cfe 1-197
+website/docs/user-guide/cli.md
+  04214930cdc34cfe 99-100,106-109,361
+website/docs/user-guide/configuration.md
+  04214930cdc34cfe 86,90,99,110,135,149,228-270,305-321,376-389,482-492,606,620-625,634,700,707-708,765-787,813-817,945,1000-1008,1155-1156,1167,1179-1195,1198,1203-1209,1212
+skills/creative/comfyui/scripts/hardware_check.py
+  04214930cdc34cfe 1-497
+tools/process_registry.py
+  04214930cdc34cfe 803-874,883-886,977-980
+plugins/hermes-achievements/dashboard/dist/style.css
+  04214930cdc34cfe 1-120
+website/docs/user-guide/messaging/weixin.md
+  04214930cdc34cfe 15-25,100,147,151-152,157-158,163,290,306
+website/docs/user-guide/messaging/wecom-callback.md
+  04214930cdc34cfe 63,66
+ui-tui/packages/hermes-ink/src/ink/colorize.ts
+  04214930cdc34cfe 31-63,94-95,98,104,166-175,202-206
+cli.py
+  04214930cdc34cfe 83-87,500,506,513,1243-1251,1253-1309,1608-1627,1630,1640-1643,1646-1676,2050-2051,3228-3229,4243-4273,4964-4979,5032,5070-5085,5206-5221,5480,5707,6132-6175,6419-6422,6463-6467,6469,6811,6820,6827-6857,6874,6892,6906-6909,6911,6915-6920,7596-7666,7752-7823,8905-8906,9033-9039,9686-9700,10370-10372,10526-10528,11285-11287
+gateway/platforms/discord.py
+  04214930cdc34cfe 21,1346-1473,2401-2404,3059-3095,3829-3921
+skills/creative/comfyui/references/rest-api.md
+  04214930cdc34cfe 1-312
+website/docs/user-guide/tui.md
+  04214930cdc34cfe 79-80,94-96,100-143,158-161
+website/docs/user-guide/features/hooks.md
+  04214930cdc34cfe 388-389,1008-1092
+agent/model_metadata.py
+  04214930cdc34cfe 49,1250,1430
+hermes_cli/curator.py
+  04214930cdc34cfe 1-287
+tests/tools/test_code_execution.py
+  04214930cdc34cfe 117,121,125-140,245-302,846-852,855-857,859
+tests/hermes_cli/test_gateway_service.py
+  04214930cdc34cfe 17-36,258-259,286-287,1130-1133,1143-1146,1175-1178,1196-1199,1218-1219
+tests/test_tui_gateway_server.py
+  04214930cdc34cfe 62-202,1023-1052,1240-1251,1569,1580-1625,2471-2503,2538-2545,2547,2549-2551,2589-2595,2778-2926,3184-3185,3211-3234,3243-3244,3307-3309,3315-3507,3513-3515,3595-3599,3605-3607,3622-3684,3699-3703,3712-3714,3758-3760,3828-3829,3833-3837,3851-3855,3870-3874,3878-4044
+tests/hermes_cli/test_model_switch_custom_providers.py
+  04214930cdc34cfe 299-300,305,318,322-345
+tests/cli/test_cli_reload_skills.py
+  04214930cdc34cfe 1-99
+tools/environments/docker.py
+  04214930cdc34cfe 154-156,159,171-203,302,458-477,479-486
+tests/hermes_cli/test_update_autostash.py
+  04214930cdc34cfe 336-339,376
+website/docs/user-guide/features/tts.md
+  04214930cdc34cfe 17,30,46,87-95,111,124,130-225,245,252-253,274
+website/docs/user-guide/messaging/yuanbao.md
+  04214930cdc34cfe 340-341
+website/docs/developer-guide/context-engine-plugin.md
+  04214930cdc34cfe 61-62,66-69
+gateway/platforms/qqbot/adapter.py
+  04214930cdc34cfe 979-990,1047-1055
+website/docs/user-guide/skills/bundled/media/media-heartmula.md
+  04214930cdc34cfe 2,4,11,32
+website/docs/developer-guide/adding-platform-adapters.md
+  04214930cdc34cfe 10-12,23-27,31-176
+tests/tools/test_terminal_requirements.py
+  04214930cdc34cfe 4-5,13-18,21,23-24,27-30,194-314
+website/sidebars.ts
+  04214930cdc34cfe 26,48,65-66,143-144,148,153-154,266,317-319,321,323,329-335
+skills/creative/comfyui/scripts/fetch_logs.py
+  04214930cdc34cfe 1-158
+plugins/kanban/systemd/hermes-kanban-dispatcher.service
+  04214930cdc34cfe 1-32
+tests/gateway/test_session.py
+  04214930cdc34cfe 17-21,106-112
+tests/gateway/conftest.py
+  04214930cdc34cfe 15-31,34,36,39-40,221-345
+gateway/stream_consumer.py
+  04214930cdc34cfe 94,100-107,158-167,551-553,686-688,772-776,1006-1010
+tests/tools/test_accretion_caps.py
+  04214930cdc34cfe 130-134
+hermes_cli/platforms.py
+  04214930cdc34cfe 47-51,53-83
+tests/tools/test_transcription_dotenv_fallback.py
+  04214930cdc34cfe 1-230
+gateway/platforms/telegram.py
+  04214930cdc34cfe 240,247,255,289-291,1000,1417-1458,1827-1888,1954-1956,1965-1966,1975-1984,1994-2105,2272,2334,2368,2540,2755,2765,3123
+skills/creative/pretext/templates/donut-orbit.html
+  04214930cdc34cfe 1-1468
+website/docs/index.md
+  04214930cdc34cfe 32
+skills/creative/comfyui/workflows/sd15_txt2img.json
+  04214930cdc34cfe 1-49
+gateway/platforms/webhook.py
+  04214930cdc34cfe 205-220
+tests/tools/test_tts_mistral.py
+  04214930cdc34cfe 219-222
+website/docs/user-guide/messaging/discord.md
+  04214930cdc34cfe 295,485-511
+tests/test_model_tools_async_bridge.py
+  04214930cdc34cfe 202-209,217,240-243,262-337
+website/docs/user-guide/skills/bundled/software-development/software-development-test-driven-development.md
+  04214930cdc34cfe 2,4,11
+skills/creative/comfyui/references/workflow-format.md
+  04214930cdc34cfe 1-226
+plugins/hermes-achievements/dashboard/manifest.json
+  04214930cdc34cfe 1-11
+tests/cli/test_cli_init.py
+  04214930cdc34cfe 299-322,357-398
+skills/creative/comfyui/tests/test_run_workflow.py
+  04214930cdc34cfe 1-213
+tests/tools/test_browser_orphan_reaper.py
+  04214930cdc34cfe 357
+plugins/kanban/dashboard/plugin_api.py
+  04214930cdc34cfe 1-845
+tests/hermes_cli/test_kanban_db.py
+  04214930cdc34cfe 1-438
+website/docs/developer-guide/provider-runtime.md
+  04214930cdc34cfe 184
+website/docs/user-guide/skills/bundled/mlops/mlops-training-axolotl.md
+  04214930cdc34cfe 2,4,11,33-35
+website/docs/user-guide/skills/bundled/social-media/social-media-xurl.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/software-development/software-development-writing-plans.md
+  04214930cdc34cfe 2,4,11
+plugins/memory/honcho/cli.py
+  04214930cdc34cfe 15,110,143,216
+tests/cron/test_cron_workdir.py
+  04214930cdc34cfe 268,339,378-379
+website/docs/user-guide/skills/bundled/software-development/software-development-python-debugpy.md
+  04214930cdc34cfe 1-392
+skills/creative/comfyui/tests/test_extract_schema.py
+  04214930cdc34cfe 1-185
+website/docs/user-guide/skills/bundled/red-teaming/red-teaming-godmode.md
+  04214930cdc34cfe 2,4,11
+tests/gateway/_plugin_adapter_loader.py
+  04214930cdc34cfe 1-72
+tests/gateway/test_7100_transient_failure_transcript.py
+  04214930cdc34cfe 1-137
+gateway/platform_registry.py
+  04214930cdc34cfe 1-212
+website/docs/reference/toolsets-reference.md
+  04214930cdc34cfe 55,59,61-62,67,72,76,82,90-93,95,105,110-111,113
+tests/conftest.py
+  04214930cdc34cfe 23,178-179,181,191-198,341-348,403-419
+tests/tools/test_command_guards.py
+  04214930cdc34cfe 76-79
+hermes_cli/tips.py
+  04214930cdc34cfe 103-105
+tests/run_agent/test_anthropic_prompt_cache_policy.py
+  04214930cdc34cfe 92-95,98-116,121-158
+skills/creative/comfyui/scripts/auto_fix_deps.py
+  04214930cdc34cfe 1-225
+website/docs/user-guide/skills/optional/mlops/mlops-lambda-labs.md
+  04214930cdc34cfe 296,309
+website/docs/user-guide/messaging/slack.md
+  04214930cdc34cfe 350-357,368-370
+website/docs/guides/minimax-oauth.md
+  04214930cdc34cfe 1-224
+website/docs/user-guide/skills/bundled/software-development/software-development-subagent-driven-development.md
+  04214930cdc34cfe 2,4,11,361-369
+website/docs/user-guide/skills/bundled/creative/creative-creative-ideation.md
+  04214930cdc34cfe 2,4,11,32-34
+agent/redact.py
+  04214930cdc34cfe 308,313-314,322
+website/docs/user-guide/checkpoints-and-rollback.md
+  04214930cdc34cfe 19
+website/docs/user-guide/messaging/dingtalk.md
+  04214930cdc34cfe 126-132,139-152,156-157
+tests/tui_gateway/test_protocol.py
+  04214930cdc34cfe 301,641-662
+tests/cli/test_cli_terminal_response_sanitizer.py
+  04214930cdc34cfe 58-81
+website/docs/user-guide/skills/bundled/mlops/mlops-evaluation-weights-and-biases.md
+  04214930cdc34cfe 2,4,11
+tests/hermes_cli/test_runtime_provider_resolution.py
+  04214930cdc34cfe 2001,2172-2235
+gateway/platforms/mattermost.py
+  04214930cdc34cfe 22,499-591
+website/docs/user-guide/features/credential-pools.md
+  04214930cdc34cfe 43
+tests/gateway/test_api_server_runs.py
+  04214930cdc34cfe 1,5,50,121-127,155-166,194-276,364-367
+tests/hermes_cli/test_pty_bridge.py
+  04214930cdc34cfe 99-107,109
+tests/gateway/test_signal_rate_limit.py
+  04214930cdc34cfe 1-233
+tools/environments/local.py
+  04214930cdc34cfe 9,104-107,313-314,373-377,386-415,421-439,441-448,457-458
+website/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-claude-code.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/productivity/productivity-linear.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/optional/mlops/mlops-hermes-atropos-environments.md
+  04214930cdc34cfe 37,48
+cron/jobs.py
+  04214930cdc34cfe 316-319,323-330
+tests/hermes_cli/test_config.py
+  04214930cdc34cfe 322-338
+web/src/components/ui/confirm-dialog.tsx
+  04214930cdc34cfe 4
+hermes_cli/gateway.py
+  04214930cdc34cfe 282-283,286,835-850,874,876-878,884,888,892,894-896,910,924,2371-2375,2768-2808,2815,2817-2838,3364-3369,3383,3385,3388,3796-3860,3913-3918,3922,3925,3928-3939,3941-3942,4380
+plugins/platforms/teams/plugin.yaml
+  04214930cdc34cfe 1-13
+tests/agent/test_curator_reports.py
+  04214930cdc34cfe 1-272
+website/docs/user-guide/features/built-in-plugins.md
+  04214930cdc34cfe 54-70,182-261
+ui-tui/packages/hermes-ink/src/ink/parse-keypress.test.ts
+  04214930cdc34cfe 42-98
+scripts/release.py
+  04214930cdc34cfe 45,48-50,56-58,60,65-74,78-79,82,86,88-91,97,125,127,129,153,293,296,348,362,450,631-646
+tests/tools/test_file_sync_back.py
+  04214930cdc34cfe 219,240
+website/docs/user-guide/skills/bundled/creative/creative-sketch.md
+  04214930cdc34cfe 1-237
+website/docs/user-guide/skills/bundled/mlops/mlops-models-segment-anything.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/creative/creative-design-md.md
+  04214930cdc34cfe 2,4,11,23,52-54
+website/docs/user-guide/skills/bundled/github/github-github-issues.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/software-development/software-development-debugging-hermes-tui-commands.md
+  04214930cdc34cfe 1-171
+tests/agent/test_anthropic_adapter.py
+  04214930cdc34cfe 69-73,76-78,80-85,87,89-91,102,112,989-1023
+website/docs/user-guide/messaging/bluebubbles.md
+  04214930cdc34cfe 93-94
+tests/cron/test_scheduler.py
+  04214930cdc34cfe 282-319,554,561,938-1051,1144-1216
+skills/creative/comfyui/scripts/extract_schema.py
+  04214930cdc34cfe 1-315
+tests/cli/test_cli_loading_indicator.py
+  04214930cdc34cfe 52-57,59-60
+hermes_cli/plugins.py
+  04214930cdc34cfe 40,49-62,133,173,199-203,467-522,601,644-646,651,654-656,713-717
+nix/hermes-agent.nix
+  04214930cdc34cfe 22-25,30,36,52-59,61,86-124,128,139,150,154-155,167,175-180
+tests/stress/conftest.py
+  04214930cdc34cfe 1-37
+agent/credential_sources.py
+  04214930cdc34cfe 255-267,405-408
+tests/hermes_cli/test_auth_commands.py
+  04214930cdc34cfe 1449-1454,1458-1466,1473,1477-1478
+tests/tui_gateway/test_review_summary_callback.py
+  04214930cdc34cfe 1-117
+tests/acp_adapter/test_acp_images.py
+  04214930cdc34cfe 1-36
+website/docs/user-guide/skills/bundled/creative/creative-pretext.md
+  04214930cdc34cfe 1-237
+hermes_cli/banner.py
+  04214930cdc34cfe 8,126-128,130,133-134,136-138,140-143,145-151,153-155,172,174-214,217,590-606
+tests/tools/test_kanban_tools.py
+  04214930cdc34cfe 1-494
+website/docs/user-guide/security.md
+  04214930cdc34cfe 68,71-92,122,140,336,353,504-517
+skills/creative/comfyui/workflows/wan_video_t2v.json
+  04214930cdc34cfe 1-69
+website/docs/user-guide/skills/bundled/data-science/data-science-jupyter-live-kernel.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/mlops/mlops-training-unsloth.md
+  04214930cdc34cfe 2,4,11
+plugins/platforms/teams/__init__.py
+  04214930cdc34cfe 1-3
+tests/agent/transports/test_chat_completions.py
+  04214930cdc34cfe 125,131,134-135,137,143,151-166,172,179,185,188-190,193,199,206,212,215-229,239,242-244,247-286,623-656
+docker-compose.yml
+  04214930cdc34cfe 37-43
+tests/tools/test_hardline_blocklist.py
+  04214930cdc34cfe 244
+tests/agent/test_onboarding.py
+  04214930cdc34cfe 208-209,211,214-222
+tests/gateway/test_signal_format.py
+  04214930cdc34cfe 1-452
+website/docs/user-guide/skills/bundled/gaming/gaming-minecraft-modpack-server.md
+  04214930cdc34cfe 2,4,11
+tests/tools/test_init_session_cwd_respect.py
+  04214930cdc34cfe 1-148
+tests/tools/test_cronjob_tools.py
+  04214930cdc34cfe 234-290
+hermes_cli/main.py
+  04214930cdc34cfe 117-122,1103-1126,1132,1157-1159,1307,1808-1809,1930,2699-2745,5044-5050,5347-5348,5356-5362,5374-5380,5385,5387-5388,5414,5430-5432,5434-5457,5461-5535,5672,7529-7534,7733,7925-7957,7959-7977,8044,8046,8691-8697,9238-9257,9723-9724,10082-10097,10287
+tests/agent/test_auxiliary_client.py
+  04214930cdc34cfe 262,270,272,275,279-286,518,520,525,794,796,798-802,844-849,853,856-858,1377,1384,1401-1402,1408,1456,1463,1652-1754
+nix/checks.nix
+  04214930cdc34cfe 7,9,54,127-142
+hermes_cli/model_switch.py
+  04214930cdc34cfe 542,569,1023-1053,1160,1275,1355,1506-1513,1572-1579
+agent/auxiliary_client.py
+  04214930cdc34cfe 8-12,21-30,110-117,227,247-261,294-301,358-364,755-757,887,890,894,900,1096-1097,1115,1123-1124,1142,1436-1452,1468,1474,1555-1561,2082-2088,2097,2105,2148-2150,2192,2195,2239,2285-2286,2335,2498-2501,2606-2618,3100
+website/docs/reference/slash-commands.md
+  04214930cdc34cfe 35-36,38,58-60,71,81,95,148,154-157,171,174
+tests/agent/test_codex_cloudflare_headers.py
+  04214930cdc34cfe 13,210-213,229,248
+tests/tools/test_transcription_tools.py
+  04214930cdc34cfe 762-764,766
+website/docs/reference/tools-reference.md
+  04214930cdc34cfe 9,11,32-40,191-231
+website/docs/user-guide/features/fallback-providers.md
+  04214930cdc34cfe 24-32,42-45,69,77-82
+plugins/kanban/dashboard/dist/style.css
+  04214930cdc34cfe 1-752
+gateway/platforms/weixin.py
+  04214930cdc34cfe 95-106,1225-1235,1280-1281,1546,1623
+website/docs/reference/cli-commands.md
+  04214930cdc34cfe 41,50,52,62-63,70,74,76,92,119-145,215-220,340-371,534-539,709,712,715,717-725,727-735,739-761,779-782,1003,1016-1044,1047-1057
+website/docs/user-guide/skills/bundled/mlops/mlops-huggingface-hub.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/mlops/mlops-models-audiocraft.md
+  04214930cdc34cfe 2,4,11,149,169
+website/docs/user-guide/skills/bundled/productivity/productivity-ocr-and-documents.md
+  04214930cdc34cfe 2,4,11
+plugins/hermes-achievements/dashboard/plugin_api.py
+  04214930cdc34cfe 1-1053
+tests/tools/test_mcp_dynamic_discovery.py
+  04214930cdc34cfe 91-96,102,107,113
+tools/environments/file_sync.py
+  04214930cdc34cfe 32-37,252
+website/docs/user-guide/features/voice-mode.md
+  04214930cdc34cfe 108-109
+model_tools.py
+  04214930cdc34cfe 110-114,116-141,143,147-155,158-161,323-329,331,679-685,781
+tests/agent/test_copilot_acp_client.py
+  04214930cdc34cfe 83-95
+tests/hermes_cli/test_set_config_value.py
+  04214930cdc34cfe 130-136,175-259
+website/docs/user-guide/skills/bundled/creative/creative-pixel-art.md
+  04214930cdc34cfe 2,4,11
+gateway/channel_directory.py
+  04214930cdc34cfe 89-98
+skills/creative/comfyui/scripts/comfyui_setup.sh
+  04214930cdc34cfe 1-286
+tools/skill_manager_tool.py
+  04214930cdc34cfe 46,70,112-135,137-145,148-160,439-441,483-485,566-568,571,574,576,613-615,651-653,749-759,787-790
+tests/agent/test_minimax_provider.py
+  04214930cdc34cfe 311,313-319
+tests/hermes_cli/test_setup_irc.py
+  04214930cdc34cfe 1-245
+agent/error_classifier.py
+  04214930cdc34cfe 57,454-470
+plugins/hermes-achievements/dashboard/dist/index.js
+  04214930cdc34cfe 1-351
+ui-tui/src/__tests__/theme.test.ts
+  04214930cdc34cfe 19,23,25,33-36,92-97,173-174,235-266
+tests/tools/test_send_message_tool.py
+  04214930cdc34cfe 11-22,29,1637-1994
+tests/tools/test_skill_usage.py
+  04214930cdc34cfe 1-542
+tests/tools/test_mcp_structured_content.py
+  04214930cdc34cfe 38-46,55-58
+tests/agent/test_curator.py
+  04214930cdc34cfe 1-637
+website/docs/user-guide/skills/bundled/creative/creative-architecture-diagram.md
+  04214930cdc34cfe 2,4,11
+web/src/plugins/registry.ts
+  04214930cdc34cfe 22-24,29
+tests/hermes_cli/test_dashboard_browser_safe_imports.py
+  04214930cdc34cfe 1-16
+skills/creative/comfyui/tests/pytest.ini
+  04214930cdc34cfe 1-5
+website/docs/developer-guide/session-storage.md
+  04214930cdc34cfe 14-19,62,136,138,151-152,154
+website/docs/user-guide/skills/bundled/software-development/software-development-requesting-code-review.md
+  04214930cdc34cfe 2,4,11
+plugins/platforms/irc/__init__.py
+  04214930cdc34cfe 1-3
+tests/hermes_cli/test_status.py
+  04214930cdc34cfe 82-111
+skills/creative/comfyui/workflows/sdxl_img2img.json
+  04214930cdc34cfe 1-54
+website/docs/user-guide/skills/bundled/mlops/mlops-training-trl-fine-tuning.md
+  04214930cdc34cfe 2,4,11
+hermes_cli/oneshot.py
+  04214930cdc34cfe 6-7,32-123,128,139,163-168,181-187,206-207,280-285
+website/docs/user-guide/features/web-dashboard.md
+  04214930cdc34cfe 26-27
+website/docs/user-guide/skills/bundled/mlops/mlops-inference-obliteratus.md
+  04214930cdc34cfe 2,4,11,34-37,42-47
+website/docs/user-guide/skills/bundled/smart-home/smart-home-openhue.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/skills/bundled/dogfood/dogfood-dogfood.md
+  04214930cdc34cfe 2,4,11,53,59
+tests/hermes_cli/test_relaunch.py
+  04214930cdc34cfe 1-155
+tests/hermes_cli/test_api_key_providers.py
+  04214930cdc34cfe 1100-1159
+website/docs/user-guide/skills/bundled/media/media-spotify.md
+  04214930cdc34cfe 2,4,11
+ui-tui/src/theme.ts
+  04214930cdc34cfe 79-234,349-353,405,471-506,526,572
+tests/hermes_cli/test_dashboard_profiles_nav_label.py
+  04214930cdc34cfe 1-11
+website/docs/user-guide/skills/bundled/mcp/mcp-native-mcp.md
+  04214930cdc34cfe 2,4,11
+.github/workflows/nix.yml
+  04214930cdc34cfe 10,26-37,39,41,43,45,47,49-114
+tests/cli/test_cli_browser_connect.py
+  04214930cdc34cfe 4,8,31-32,37-43,60-61,66-101
+gateway/platforms/signal_rate_limit.py
+  04214930cdc34cfe 1-369
+toolsets.py
+  04214930cdc34cfe 63-67,210-227,590-610
+tools/credential_files.py
+  04214930cdc34cfe 28,142
+website/docs/developer-guide/cron-internals.md
+  04214930cdc34cfe 105,208
+website/docs/user-guide/skills/bundled/email/email-himalaya.md
+  04214930cdc34cfe 2,4,11
+tools/slash_confirm.py
+  04214930cdc34cfe 1-162
+website/docs/user-guide/skills/bundled/creative/creative-songwriting-and-ai-music.md
+  04214930cdc34cfe 2,4,11
+agent/transports/chat_completions.py
+  04214930cdc34cfe 23,27-38,78-101,340,394-406,480-483,486
+gateway/session.py
+  04214930cdc34cfe 65,286,298-309,314,339,380,446,448,456,460,476,480,484
+website/docs/user-guide/features/kanban.md
+  04214930cdc34cfe 1-510
+skills/creative/comfyui/tests/test_common.py
+  04214930cdc34cfe 1-447
+gateway/hooks.py
+  04214930cdc34cfe 24,101-108,110,117-122
+hermes_cli/mcp_config.py
+  04214930cdc34cfe 19,720
+website/docs/user-guide/skills/bundled/media/media-gif-search.md
+  04214930cdc34cfe 2,4,11,34-36
+tools/browser_camofox.py
+  04214930cdc34cfe 554
+tests/gateway/test_plugin_platform_interface.py
+  04214930cdc34cfe 1-230
+skills/creative/comfyui/scripts/check_deps.py
+  04214930cdc34cfe 1-437
+tests/tools/test_modal_sandbox_fixes.py
+  04214930cdc34cfe 10,105-123
+tests/tools/test_approval_heartbeat.py
+  04214930cdc34cfe 134,141-142,151-159,162
+website/docs/user-guide/skills/bundled/creative/creative-claude-design.md
+  04214930cdc34cfe 1-608
+website/docs/user-guide/skills/bundled/research/research-polymarket.md
+  04214930cdc34cfe 2,4,11
+plugins/platforms/teams/adapter.py
+  04214930cdc34cfe 1-685
+tests/acp/test_server.py
+  04214930cdc34cfe 14,31,229-279
+hermes_cli/profiles.py
+  04214930cdc34cfe 14,74-96,414-415,451-456,473-479
+tests/hermes_cli/test_tui_resume_flow.py
+  04214930cdc34cfe 15,39,66,84,102,108,125,130-311,331,338
+tests/gateway/test_platform_base.py
+  04214930cdc34cfe 326-374
+tests/tools/test_local_env_blocklist.py
+  04214930cdc34cfe 135-138,294-297
+tools/skills_tool.py
+  04214930cdc34cfe 80,103-106,541,1486-1510,1515,1519
+tests/gateway/test_reload_skills_command.py
+  04214930cdc34cfe 1-200
+tests/hermes_cli/test_kanban_cli.py
+  04214930cdc34cfe 1-210
+website/docs/reference/skills-catalog.md
+  04214930cdc34cfe 17-19,26-29,35-52,59,65,71,77,83-84,90-95,101,107-111,117-120,122-129,142-148,154,160-164,170,176,182-198
+tools/transcription_tools.py
+  04214930cdc34cfe 45-58,239,255,264,279,285,288,544,657,697,705
+website/docs/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-opencode.md
+  04214930cdc34cfe 2,4,11
+tests/gateway/test_unauthorized_dm_behavior.py
+  04214930cdc34cfe 19-20,183-285,305-354
+hermes_cli/kanban_db.py
+  04214930cdc34cfe 1-2765
+gateway/platforms/base.py
+  04214930cdc34cfe 26-64,1490-1524,1541-1598,1807,1947-1959,2292-2297,2309,2312-2317,2575-2584,2687-2691,2693-2695,2701-2705,2707-2731,2736,2760-2761,2766,2805-2819,2821-2824,2826,2871,2888-2922,2930-2942,2946,2953-2957,2976-2990
+website/docs/user-guide/profiles.md
+  04214930cdc34cfe 73,176
+tests/gateway/test_platform_registry.py
+  04214930cdc34cfe 1-396
+tests/gateway/test_duplicate_reply_suppression.py
+  04214930cdc34cfe 111-119
+website/docs/developer-guide/acp-internals.md
+  04214930cdc34cfe 30,173
+plugins/memory/openviking/__init__.py
+  04214930cdc34cfe 531-570,620-644,646-675,677,680-684,694,697-714
+website/docs/getting-started/nix-setup.md
+  04214930cdc34cfe 946
+website/docs/integrations/providers.md
+  04214930cdc34cfe 21,31-32,140,162-167,415-458,1242
+website/docs/user-guide/skills/optional/mlops/mlops-slime.md
+  04214930cdc34cfe 57,73
+hermes_cli/model_normalize.py
+  04214930cdc34cfe 99
+tui_gateway/entry.py
+  04214930cdc34cfe 168-176,178-180,182-190
+plugins/platforms/irc/adapter.py
+  04214930cdc34cfe 1-686
+website/docs/getting-started/quickstart.md
+  04214930cdc34cfe 73,80
+tools/browser_tool.py
+  04214930cdc34cfe 71,196,2249,2452
+skills/creative/comfyui/tests/conftest.py
+  04214930cdc34cfe 1-64
+hermes_cli/status.py
+  04214930cdc34cfe 10,21,94,99,107,118,124,143,162-167,171,176,229-242,325-326,329,331,343-360,363,369,387,404-415,451,457,471,477,489,525
+tests/tools/test_terminal_tool_requirements.py
+  04214930cdc34cfe 52-116
+website/docs/user-guide/skills/bundled/software-development/software-development-hermes-agent-skill-authoring.md
+  04214930cdc34cfe 1-182
+.env.example
+  04214930cdc34cfe 401-416
+hermes_cli/models.py
+  04214930cdc34cfe 43,292-295,796,840-842,2038-2039,2041,2046-2050,2052-2087
+tests/tools/test_docker_environment.py
+  04214930cdc34cfe 48,388-391,401-408,411-412,418-514
+hermes_cli/web_server.py
+  04214930cdc34cfe 26,36,256-261,347-351,448-461,938-1138,1443-1450,1494-1503,2347-2594,2765-2857,3490,3540-3541,3544-3545,3690-3691,3695-3706
+website/docs/user-guide/skills/bundled/creative/creative-touchdesigner-mcp.md
+  04214930cdc34cfe 224,226,359-367
+tests/tools/test_clipboard.py
+  04214930cdc34cfe 208-210,213-220,224,229,233-239,241,245,250-251,254
+website/docs/user-guide/features/curator.md
+  04214930cdc34cfe 1-195
+website/docs/integrations/index.md
+  04214930cdc34cfe 66,79
+tests/stress/_fake_worker.py
+  04214930cdc34cfe 1-50
+gateway/platforms/slack.py
+  04214930cdc34cfe 517-525,795-899,2048-2208
+ui-tui/src/app/slash/commands/session.ts
+  04214930cdc34cfe 157-172,182,352-374
+nix/overlays.nix
+  04214930cdc34cfe 8
+tests/hermes_cli/test_user_providers_model_switch.py
+  04214930cdc34cfe 456-591,751,754-841
+tests/tools/test_transcription.py
+  04214930cdc34cfe 39-40,47-48
+tools/environments/vercel_sandbox.py
+  04214930cdc34cfe 1-638
+website/docs/user-guide/skills/bundled/software-development/software-development-node-inspect-debugger.md
+  04214930cdc34cfe 1-336
+tests/tools/test_terminal_config_env_sync.py
+  04214930cdc34cfe 1-210
+plugins/hermes-achievements/docs/achievements-performance-implementation-plan.md
+  04214930cdc34cfe 1-157
+website/docs/user-guide/features/overview.md
+  04214930cdc34cfe 33-34,42
+gateway/platforms/signal.py
+  04214930cdc34cfe 24,34,42-52,67,178-181,508-512,566-568,576-578,689-690,699-703,723,729-734,736,738,743-744,752-904,916,919-920,923,926-931,941-944,1008-1179,1340-1442
+tests/cron/test_cron_inactivity_timeout.py
+  04214930cdc34cfe 172-180,184-185,194-195,199-213
+tests/hermes_cli/test_web_server.py
+  04214930cdc34cfe 32,43,58,68,374-379,594-809,2070-2081,2085,2087,2176,2178,2185-2199
+tools/terminal_tool.py
+  04214930cdc34cfe 5-8,14,17,120-181,812-815,979-981,986-987,996-997,1009,1027,1046-1047,1053,1075-1077,1110,1181-1195,1209-1212,1746,1753,1758,2084-2086,2170-2172,2180,2220-2224
+tools/file_tools.py
+  04214930cdc34cfe 383,389,393,492,495-496,499-500
+tests/gateway/test_teams.py
+  04214930cdc34cfe 1-560
+tests/tools/test_vercel_sandbox_environment.py
+  04214930cdc34cfe 1-623
+tests/agent/test_error_classifier.py
+  04214930cdc34cfe 60-62,463-495
+website/docs/user-guide/features/kanban-tutorial.md
+  04214930cdc34cfe 1-263
+website/docs/user-guide/skills/bundled/productivity/productivity-notion.md
+  04214930cdc34cfe 2,4,11
+website/docs/user-guide/messaging/teams.md
+  04214930cdc34cfe 1-211
+hermes_cli/providers.py
+  04214930cdc34cfe 114-118,588-593,608-611,623-636
+skills/creative/comfyui/workflows/upscale_4x.json
+  04214930cdc34cfe 1-27
+website/docs/user-guide/skills/bundled/productivity/productivity-powerpoint.md
+  04214930cdc34cfe 2,4,11,29-31
+website/docs/user-guide/skills/bundled/creative/creative-humanizer.md
+  04214930cdc34cfe 1-593
+website/docs/user-guide/skills/bundled/mlops/mlops-inference-vllm.md
+  04214930cdc34cfe 2,4,11,33-35
+website/docs/user-guide/skills/bundled/productivity/productivity-google-workspace.md
+  04214930cdc34cfe 2,4,11
+tests/test_model_tools.py
+  04214930cdc34cfe 196-204,218-226,228-269
+tests/tools/test_local_interrupt_cleanup.py
+  04214930cdc34cfe 19,41-92,174-177,182
+skills/creative/comfyui/workflows/sdxl_inpaint.json
+  04214930cdc34cfe 1-59
+tests/hermes_cli/test_curator_status.py
+  04214930cdc34cfe 1-169
+tests/stress/test_subprocess_e2e.py
+  04214930cdc34cfe 1-228
+agent/memory_manager.py
+  04214930cdc34cfe 405-439
+tests/gateway/test_resume_command.py
+  04214930cdc34cfe 233-259
+website/docs/user-guide/skills/bundled/productivity/productivity-nano-pdf.md
+  04214930cdc34cfe 2,4,11
+website/docs/getting-started/installation.md
+  04214930cdc34cfe 44-54
+website/docs/user-guide/features/api-server.md
+  04214930cdc34cfe 197-219,236-262,267-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "06ee1b7287ee6a1b58c182ca109534e5ed55bbeb",
+  "prompts": {
+    "04214930cdc34cfe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "060c6b73-fe2f-47f3-8727-024c910f8fa4",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 141640,
+      "total_deletions": 4532,
+      "accepted_lines": 140258,
+      "overriden_lines": 1
+    }
+  }
+}
