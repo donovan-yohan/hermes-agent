@@ -482,6 +482,30 @@ logger = logging.getLogger(__name__)
 _AGENT_PENDING_SENTINEL = object()
 
 
+def _build_status_thread_metadata(
+    source: SessionSource,
+    progress_thread_id: Optional[str],
+) -> Optional[dict]:
+    """Build metadata for gateway status/approval sends.
+
+    Discord approval prompts need the original requester id so the adapter can
+    emit an intentional user mention for dangerous-command approvals.  Keep
+    that detail out of non-Discord platforms, where user ids may not be valid
+    mention handles.
+    """
+    metadata: dict[str, str] = {}
+    if progress_thread_id:
+        metadata["thread_id"] = str(progress_thread_id)
+
+    if source.platform == Platform.DISCORD:
+        if source.user_id:
+            metadata["requester_user_id"] = str(source.user_id)
+        if source.user_name:
+            metadata["requester_user_name"] = str(source.user_name)
+
+    return metadata or None
+
+
 def _resolve_runtime_agent_kwargs() -> dict:
     """Resolve provider credentials for gateway-created AIAgent instances.
 
@@ -11706,7 +11730,7 @@ class GatewayRunner:
         # Bridge sync status_callback → async adapter.send for context pressure
         _status_adapter = self.adapters.get(source.platform)
         _status_chat_id = source.chat_id
-        _status_thread_metadata = {"thread_id": _progress_thread_id} if _progress_thread_id else None
+        _status_thread_metadata = _build_status_thread_metadata(source, _progress_thread_id)
 
         def _status_callback_sync(event_type: str, message: str) -> None:
             if not _status_adapter or not _run_still_current():

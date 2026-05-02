@@ -119,6 +119,7 @@ def _ensure_discord_mock() -> None:
             self.title = title
             self.description = description
             self.color = color
+            self.add_field = MagicMock()
     discord_mod.Embed = _FakeEmbed
 
     # ui.View / ui.Select / ui.Button: real classes (not MagicMock) so

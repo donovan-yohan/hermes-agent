@@ -303,10 +303,13 @@ async def test_send_exec_approval_mentions_requesting_user_in_thread(monkeypatch
         metadata={"thread_id": "456", "requester_user_id": "42"},
     )
 
-    assert result == SendResult(success=True, message_id="777")
+    assert result.success, result.error
+    assert result.message_id == "777"
     channel.send.assert_awaited_once()
     kwargs = channel.send.await_args.kwargs
     assert kwargs["content"] == "<@42> command approval needed"
+    assert "allowed_mentions" in kwargs
+    assert kwargs["allowed_mentions"] is not None
     assert kwargs["embed"].title == "⚠️ Command Approval Required"
     assert kwargs["embed"].add_field.call_args.kwargs == {
         "name": "Reason",
@@ -338,7 +341,8 @@ async def test_send_exec_approval_omits_mention_without_requester_metadata(monke
         metadata={"thread_id": "456"},
     )
 
-    assert result == SendResult(success=True, message_id="778")
+    assert result.success, result.error
+    assert result.message_id == "778"
     kwargs = channel.send.await_args.kwargs
     assert kwargs["content"] is None
 
@@ -369,7 +373,8 @@ async def test_send_exec_approval_omits_mention_when_ping_disabled(monkeypatch):
         metadata={"thread_id": "456", "requester_user_id": "42"},
     )
 
-    assert result == SendResult(success=True, message_id="779")
+    assert result.success, result.error
+    assert result.message_id == "779"
     kwargs = channel.send.await_args.kwargs
     assert kwargs["content"] is None
 

@@ -230,9 +230,13 @@ def resolve_repo_context(source: SessionSource, config: GatewayConfig) -> Option
         if entry_thread_id:
             if not source.thread_id or entry_thread_id != str(source.thread_id):
                 return -1
-            if entry_chat_id and entry_chat_id != str(source.chat_id):
+            if entry_chat_id:
+                if entry_chat_id == str(source.chat_id):
+                    return 300
+                if source.parent_chat_id and entry_chat_id == str(source.parent_chat_id):
+                    return 275
                 return -1
-            return 300 if entry_chat_id else 250
+            return 250
 
         if entry_chat_id == str(source.chat_id):
             return 200

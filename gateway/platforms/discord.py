@@ -3049,8 +3049,29 @@ class DiscordAdapter(BasePlatformAdapter):
             if self._discord_ping_exec_approval() and metadata and metadata.get("requester_user_id"):
                 mention_user_id = str(metadata["requester_user_id"]).strip()
             mention_text = f"<@{mention_user_id}> command approval needed" if mention_user_id else None
+            send_kwargs = {"content": mention_text, "embed": embed, "view": view}
+            if mention_user_id:
+                # Client-level allowed_mentions may disable user pings globally to
+                # keep model output safe.  This prompt is bot-generated and
+                # contains exactly one requester mention, so explicitly allow
+                # that user while still denying @everyone and roles.
+                try:
+                    allowed_user = discord.Object(id=int(mention_user_id))
+                    send_kwargs["allowed_mentions"] = discord.AllowedMentions(
+                        everyone=False,
+                        roles=False,
+                        users=[allowed_user],
+                        replied_user=False,
+                    )
+                except Exception:
+                    send_kwargs["allowed_mentions"] = discord.AllowedMentions(
+                        everyone=False,
+                        roles=False,
+                        users=True,
+                        replied_user=False,
+                    )
 
-            msg = await channel.send(content=mention_text, embed=embed, view=view)
+            msg = await channel.send(**send_kwargs)
             return SendResult(success=True, message_id=str(msg.id))
 
         except Exception as e:
