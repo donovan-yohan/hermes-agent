@@ -348,6 +348,35 @@ async def test_send_exec_approval_omits_mention_without_requester_metadata(monke
 
 
 @pytest.mark.asyncio
+async def test_send_exec_approval_omits_mention_for_invalid_requester_id(monkeypatch):
+    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="***"))
+    monkeypatch.setattr(
+        "gateway.platforms.discord.ExecApprovalView",
+        lambda *args, **kwargs: SimpleNamespace(session_key=kwargs.get("session_key")),
+    )
+
+    sent_msg = SimpleNamespace(id=780)
+    channel = SimpleNamespace(send=AsyncMock(return_value=sent_msg))
+    adapter._client = SimpleNamespace(
+        get_channel=lambda _chat_id: channel,
+        fetch_channel=AsyncMock(),
+    )
+
+    result = await adapter.send_exec_approval(
+        chat_id="123",
+        command="rm -rf /tmp/test",
+        session_key="sess-4",
+        metadata={"thread_id": "456", "requester_user_id": "42> <@999"},
+    )
+
+    assert result.success, result.error
+    assert result.message_id == "780"
+    kwargs = channel.send.await_args.kwargs
+    assert kwargs["content"] is None
+    assert "allowed_mentions" not in kwargs
+
+
+@pytest.mark.asyncio
 async def test_send_exec_approval_omits_mention_when_ping_disabled(monkeypatch):
     adapter = DiscordAdapter(
         PlatformConfig(enabled=True, token="***", extra={"mention_exec_approval": False})

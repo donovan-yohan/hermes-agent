@@ -485,7 +485,7 @@ _AGENT_PENDING_SENTINEL = object()
 def _build_status_thread_metadata(
     source: SessionSource,
     progress_thread_id: Optional[str],
-) -> Optional[dict]:
+) -> Optional[dict[str, str]]:
     """Build metadata for gateway status/approval sends.
 
     Discord approval prompts need the original requester id so the adapter can

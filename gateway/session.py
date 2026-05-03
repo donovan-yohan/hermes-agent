@@ -203,6 +203,13 @@ that requires raw IDs).  Discord is excluded because mentions use ``<@user_id>``
 and the LLM needs the real ID to tag users."""
 
 
+_REPO_CONTEXT_SCORE_THREAD_AND_CHAT_EXACT = 300
+_REPO_CONTEXT_SCORE_THREAD_AND_PARENT_CHAT = 275
+_REPO_CONTEXT_SCORE_THREAD_ONLY = 250
+_REPO_CONTEXT_SCORE_CHAT_EXACT = 200
+_REPO_CONTEXT_SCORE_PARENT_CHAT = 100
+
+
 def resolve_repo_context(source: SessionSource, config: GatewayConfig) -> Optional[Dict[str, Any]]:
     """Resolve the best repo-context binding for a message source.
 
@@ -232,16 +239,16 @@ def resolve_repo_context(source: SessionSource, config: GatewayConfig) -> Option
                 return -1
             if entry_chat_id:
                 if entry_chat_id == str(source.chat_id):
-                    return 300
+                    return _REPO_CONTEXT_SCORE_THREAD_AND_CHAT_EXACT
                 if source.parent_chat_id and entry_chat_id == str(source.parent_chat_id):
-                    return 275
+                    return _REPO_CONTEXT_SCORE_THREAD_AND_PARENT_CHAT
                 return -1
-            return 250
+            return _REPO_CONTEXT_SCORE_THREAD_ONLY
 
         if entry_chat_id == str(source.chat_id):
-            return 200
+            return _REPO_CONTEXT_SCORE_CHAT_EXACT
         if source.parent_chat_id and entry_chat_id == str(source.parent_chat_id):
-            return 100
+            return _REPO_CONTEXT_SCORE_PARENT_CHAT
         return -1
 
     best: Optional[Dict[str, Any]] = None
