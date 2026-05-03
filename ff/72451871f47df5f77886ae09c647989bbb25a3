@@ -1,0 +1,509 @@
+tests/agent/test_skill_commands.py
+  0e153eb8a734a1fd 128-179
+hermes_cli/plugins_cmd.py
+  0e153eb8a734a1fd 18,25-29,158-175,309-310,312-313,320,334-341,344-345,353,360-363,366-371,375-377,383-387,390,392,394-441,452,468,473,503-505,511-512,518,1271-1509
+hermes_cli/models.py
+  0e153eb8a734a1fd 806
+tests/gateway/test_whatsapp_connect.py
+  0e153eb8a734a1fd 288-346
+tests/gateway/test_api_server.py
+  0e153eb8a734a1fd 336-364
+web/src/plugins/slots.ts
+  0e153eb8a734a1fd 49-50,83-84
+tests/hermes_cli/test_doctor.py
+  0e153eb8a734a1fd 54-104
+agent/context_compressor.py
+  0e153eb8a734a1fd 541,995-996
+website/docs/user-guide/features/curator.md
+  0e153eb8a734a1fd 26-31,89-94,102-126,144-154
+web/src/lib/api.ts
+  0e153eb8a734a1fd 262-311,721,727-783
+tests/run_agent/test_860_dedup.py
+  0e153eb8a734a1fd 41-42
+hermes_cli/setup.py
+  0e153eb8a734a1fd 1193-1199,1653-1657,1687-1690,1701-1704,1707
+tests/gateway/test_ephemeral_reply.py
+  0e153eb8a734a1fd 1-336
+optional-skills/creative/kanban-video-orchestrator/assets/soul.md.tmpl
+  0e153eb8a734a1fd 1-38
+website/docs/user-guide/messaging/index.md
+  0e153eb8a734a1fd 235,240
+hermes_cli/runtime_provider.py
+  0e153eb8a734a1fd 361,365-374
+gateway/platforms/signal.py
+  0e153eb8a734a1fd 251-253,539-549
+website/docs/user-guide/features/tts.md
+  0e153eb8a734a1fd 72,130-141
+gateway/config.py
+  0e153eb8a734a1fd 39-58,68-76,189-191,196,199,204-206,214,340,342-343,345-346,620-630,757-761,979-984,1105,1122,1138-1146,1172,1193,1213,1245,1279,1295,1358,1386,1409,1468,1492,1530-1534,1565
+acp_adapter/tools.py
+  0e153eb8a734a1fd 31-35,59-80,115-118,120-122,127-133,135-170,172-179,183-753,915-919,961,967-969,971,977-1120,1134,1147-1156,1162
+tests/tools/test_delegate.py
+  0e153eb8a734a1fd 789-808
+tests/gateway/feishu_helpers.py
+  0e153eb8a734a1fd 1-65
+hermes_cli/config.py
+  0e153eb8a734a1fd 403-408,465,615-632,647-656,795-802,845,972-988,1042-1049,2489-2499
+tests/gateway/test_slack_mention.py
+  0e153eb8a734a1fd 218-234
+toolsets.py
+  0e153eb8a734a1fd 92-97
+agent/manual_compression_feedback.py
+  0e153eb8a734a1fd 23,27,33,40-41
+ui-tui/packages/hermes-ink/src/ink/parse-keypress.test.ts
+  0e153eb8a734a1fd 99-136
+website/docs/user-guide/messaging/teams.md
+  0e153eb8a734a1fd 16-19,40,42,47,51,54,71,98,115,118,132,185
+tests/gateway/test_goal_verdict_send.py
+  0e153eb8a734a1fd 1-217
+tests/acp/test_mcp_e2e.py
+  0e153eb8a734a1fd 181-184
+gateway/platforms/slack.py
+  0e153eb8a734a1fd 12,25,55-64,325-329,388-484,531-545,578-584,587,638-642,714-724,752-755,779-814,833-834,875,1162,1209-1211,1213,2719-2723,2726,2737-2756,2917-2925
+tests/tools/test_registry.py
+  0e153eb8a734a1fd 307
+tests/tools/test_file_tools.py
+  0e153eb8a734a1fd 107-144
+hermes_cli/web_server.py
+  0e153eb8a734a1fd 348,2885-2903,2994,3101,3133,3162,3636,3638-3641,3645,3656-3915
+tests/run_agent/test_provider_attribution_headers.py
+  0e153eb8a734a1fd 84-131
+plugins/memory/honcho/session.py
+  0e153eb8a734a1fd 163-165,168-169,181-184
+web/src/i18n/en.ts
+  0e153eb8a734a1fd 79,88,261-299
+tests/gateway/test_signal.py
+  0e153eb8a734a1fd 1652-1796
+tests/gateway/test_telegram_approval_buttons.py
+  0e153eb8a734a1fd 62-76,248-282,386-417
+website/.gitignore
+  0e153eb8a734a1fd 11-12
+tools/delegate_tool.py
+  0e153eb8a734a1fd 2312
+tests/gateway/test_feishu_bot_admission.py
+  0e153eb8a734a1fd 1-745
+tests/gateway/test_config_env_bridge_authority.py
+  0e153eb8a734a1fd 1-166
+tests/agent/test_curator_reports.py
+  0e153eb8a734a1fd 273-436
+website/docs/user-guide/skills/bundled/creative/creative-comfyui.md
+  0e153eb8a734a1fd 11,19,23,34-36,38,40,42-44,46-64,68-69,73,80-82,86,88-89,94-97,101,108,112-120,124,126,128-132,134-137,140-141,143-144,147,150,153,156-157,160,163-181,184-189,194,196-197,206-207,211,214-225,231-233,239,243,247-249,251,253,258,260-262,268-269,272-276,278-279,281-283,287-288,291,293-298,300,304-305,308-311,317,321-322,327,330-331,337-339,343,349,351,359-360,373-375,377-378,381,393,396-397,399,402-404,409,411,428,433,438-443,450,455-460,463,466-467,469-470,473-474,480,483-486,489-491,493-497,500,502-504,506,509,512-531,536,538-541,544-545,550-553,555-557,559-561,564-571,573-575,577-579,581-584,586-588,590-596,600-601,603-610
+website/docs/reference/skills-catalog.md
+  0e153eb8a734a1fd 41,65-66
+tui_gateway/server.py
+  0e153eb8a734a1fd 20,129-133,159-162,164,283,302-303,306-315,319,438-456,458-463,465-466,484-489,553-554,1075,1132,1148-1154,2322,2328-2330,2332-2336,2359-2362,2364-2370,2825,2985-3044,3114-3138,3519,4006,4220-4223,4227-4228,4319-4389,4883,4897-5017,5032-5052,5054-5097
+tests/gateway/test_approve_deny_commands.py
+  0e153eb8a734a1fd 209-225
+gateway/session.py
+  0e153eb8a734a1fd 536-544,595,644,1164-1179,1191-1193,1226
+tools/skill_manager_tool.py
+  0e153eb8a734a1fd 45,70-73,563-574,583-600,610-613,616,737,762,814-820,898-911,934-935
+website/scripts/prebuild.mjs
+  0e153eb8a734a1fd 2-9,13-15,25,37-51,54-66,69-70
+tests/agent/test_openrouter_response_cache.py
+  0e153eb8a734a1fd 1-284
+hermes_state.py
+  0e153eb8a734a1fd 517,526-527,546-549,685-693,696-719,959,979-986,1014-1087,1101-1102,1180-1221,1258-1260,1277,1360,1399-1400,1490-1491,1498,1516-1517,1885-1904
+website/docs/reference/slash-commands.md
+  0e153eb8a734a1fd 37,157
+plugins/kanban/dashboard/dist/style.css
+  0e153eb8a734a1fd 254-258,468-470,477-478
+tests/test_hermes_state.py
+  0e153eb8a734a1fd 215-290,402-422,1819-1908
+tests/gateway/test_home_target_env_var.py
+  0e153eb8a734a1fd 1-42
+tests/test_hermes_home_profile_warning.py
+  0e153eb8a734a1fd 1-116
+website/docs/user-guide/skills/bundled/devops/devops-kanban-worker.md
+  0e153eb8a734a1fd 1-152
+gateway/platforms/weixin.py
+  0e153eb8a734a1fd 2033-2035
+tests/gateway/test_discord_component_auth.py
+  0e153eb8a734a1fd 1-230
+tests/gateway/test_discord_free_response.py
+  0e153eb8a734a1fd 223-242
+tests/gateway/test_verbose_command.py
+  0e153eb8a734a1fd 89-106
+ui-tui/packages/hermes-ink/src/ink/terminal.test.ts
+  0e153eb8a734a1fd 1-15
+gateway/platforms/wecom.py
+  0e153eb8a734a1fd 209-213
+tests/gateway/test_feishu_bot_auth_bypass.py
+  0e153eb8a734a1fd 1-113
+acp_adapter/session.py
+  0e153eb8a734a1fd 29-55,64-66,124-130,135,179-183,214,257,359
+tools/approval.py
+  0e153eb8a734a1fd 22-23,97-104,108-110,415-416,490-495,817,942
+tests/gateway/test_unavailable_skill_hint.py
+  0e153eb8a734a1fd 1-185
+tests/run_agent/test_init_fallback_on_exhausted_pool.py
+  0e153eb8a734a1fd 1-69
+tests/hermes_cli/test_bedrock_model_picker.py
+  0e153eb8a734a1fd 206-229
+plugins/kanban/dashboard/dist/index.js
+  0e153eb8a734a1fd 234,602,606,622,629,636,657,663,995,999,1127,1357,1360,1441,1444,1518,1557,1569
+tests/gateway/test_discord_slash_commands.py
+  0e153eb8a734a1fd 110-113,124-127,138-140,311,340,363,387,412
+website/docs/reference/environment-variables.md
+  0e153eb8a734a1fd 17-18,305-306,413
+optional-skills/creative/kanban-video-orchestrator/references/examples.md
+  0e153eb8a734a1fd 1-227
+web/src/i18n/types.ts
+  0e153eb8a734a1fd 79,88,233-270
+tests/hermes_cli/test_commands.py
+  0e153eb8a734a1fd 16,303,306-315,333-335,346-347,423-437,825-921,999-1065,1520-1631
+plugins/platforms/teams/adapter.py
+  0e153eb8a734a1fd 41,61,213
+gateway/platforms/whatsapp.py
+  0e153eb8a734a1fd 188-194,565-579,590-593,905-908,912-913
+tests/gateway/test_update_command.py
+  0e153eb8a734a1fd 20,27,218-245,464-487
+tests/agent/test_tool_guardrails.py
+  0e153eb8a734a1fd 1-238
+tests/gateway/test_session_boundary_security_state.py
+  0e153eb8a734a1fd 13,176-207,250-276
+tests/hermes_cli/test_model_provider_persistence.py
+  0e153eb8a734a1fd 74-99
+tests/agent/test_anthropic_adapter.py
+  0e153eb8a734a1fd 1839-1890
+optional-skills/creative/kanban-video-orchestrator/references/monitoring.md
+  0e153eb8a734a1fd 1-180
+tests/gateway/test_session.py
+  0e153eb8a734a1fd 1363,1378-1390,1393,1398
+tests/gateway/test_api_server_runs.py
+  0e153eb8a734a1fd 256
+tools/vision_tools.py
+  0e153eb8a734a1fd 804-1164
+tests/tui_gateway/test_protocol.py
+  0e153eb8a734a1fd 597-614
+hermes_cli/memory_setup.py
+  0e153eb8a734a1fd 364
+tests/cron/test_rewrite_skill_refs.py
+  0e153eb8a734a1fd 1-289
+website/scripts/generate-llms-txt.py
+  0e153eb8a734a1fd 1-305
+tests/tools/test_yolo_mode.py
+  0e153eb8a734a1fd 128-154
+hermes_cli/main.py
+  0e153eb8a734a1fd 292,803-804,5437-5475,5713-5716,6756,6882-6885,7146-7149,7175-7180,7185,7196-7204,7244-7245,7349,7539-7562,7564-7565,7576-7581,7583,7592-7627,8935,8961-8970,10047-10052
+tests/gateway/test_discord_slash_auth.py
+  0e153eb8a734a1fd 1-737
+tests/gateway/test_slack.py
+  0e153eb8a734a1fd 56-58,95-134,234-282,610-631,1205-1302,1527-1536,2811-3091
+tests/hermes_cli/test_auth_nous_provider.py
+  0e153eb8a734a1fd 79-92
+tests/tools/test_browser_supervisor_healthcheck.py
+  0e153eb8a734a1fd 1-167
+gateway/platforms/feishu.py
+  0e153eb8a734a1fd 67,144,391-392,402,412-445,1418-1422,1427,1437-1446,1503-1506,1537-1538,2252-2253,2260-2263,2270,2273,2450-2451,2453-2454,2741,2767-2772,2774,2779-2780,2787,2796,2925-2929,2932,2936,3524-3529,3546-3550,3570-3577,3587-3596,3625-3653,3717,3720-3770,3789-3790,3797-3799,3807-3810,3815-3816,3968
+docker-compose.yml
+  0e153eb8a734a1fd 43
+optional-skills/creative/kanban-video-orchestrator/references/role-archetypes.md
+  0e153eb8a734a1fd 1-298
+tests/agent/test_curator_backup.py
+  0e153eb8a734a1fd 1-594
+gateway/platforms/discord.py
+  0e153eb8a734a1fd 500,617-631,1933-2151,2539-2543,2688-2689,2810-2857,2876-2881,2890-2897,2899,2911-2921,2923-2930,2933,2957-2963,2985,2987,2990,2995-3052,3111-3113,3234-3242,3420,3486,3497,3507-3508,3510,3521,3579,4135-4200,4213-4218,4222,4227-4229,4321-4327,4332,4336-4338,4416-4421,4425,4429-4431,4508,4517,4524-4526
+ui-tui/packages/hermes-ink/src/ink/parse-keypress.ts
+  0e153eb8a734a1fd 66,272-286,628-696
+agent/anthropic_adapter.py
+  0e153eb8a734a1fd 1244,1247-1259,1261
+tools/terminal_tool.py
+  0e153eb8a734a1fd 623-648,862-869
+gateway/platforms/_http_client_limits.py
+  0e153eb8a734a1fd 1-84
+tests/agent/test_curator_classification.py
+  0e153eb8a734a1fd 551-813
+website/docs/user-guide/messaging/feishu.md
+  0e153eb8a734a1fd 204,206,208-226,229,232-242,455-457,468-469,489-490,523-525
+website/docs/getting-started/updating.md
+  0e153eb8a734a1fd 31,66,116
+tests/tools/test_discord_tool.py
+  0e153eb8a734a1fd 699-730
+agent/auxiliary_client.py
+  0e153eb8a734a1fd 262-263,269-323,1207,1210,1216,1218,1223,1969,2035-2040,2111,2113,2227-2238,2348-2353,2365-2369,3295-3314
+model_tools.py
+  0e153eb8a734a1fd 359-360,365-369
+optional-skills/creative/kanban-video-orchestrator/references/kanban-setup.md
+  0e153eb8a734a1fd 1-276
+tests/gateway/test_platform_http_client_limits.py
+  0e153eb8a734a1fd 1-114
+tests/gateway/test_session_race_guard.py
+  0e153eb8a734a1fd 229-261
+hermes_cli/plugins.py
+  0e153eb8a734a1fd 36,40,44,1232-1278
+tests/tools/test_skill_manager_tool.py
+  0e153eb8a734a1fd 374-424,539-557,640-658
+tests/acp/test_session.py
+  0e153eb8a734a1fd 11,46-66,81-132
+hermes_cli/status.py
+  0e153eb8a734a1fd 128
+tests/gateway/test_restart_notification.py
+  0e153eb8a734a1fd 11-12,20-35,132-339,357,359,383,385,439-458,460-529
+hermes_cli/doctor.py
+  0e153eb8a734a1fd 266-270
+tests/gateway/test_compress_command.py
+  0e153eb8a734a1fd 67-68,73,81,87,104-105,110,121,126,150-151,163,174,209-210,226,237
+hermes_cli/goals.py
+  0e153eb8a734a1fd 1-535
+website/sidebars.ts
+  0e153eb8a734a1fd 5,68,106-107
+gateway/platforms/bluebubbles.py
+  0e153eb8a734a1fd 165-167
+tests/hermes_cli/test_runtime_provider_resolution.py
+  0e153eb8a734a1fd 900-951
+tests/run_agent/test_run_agent.py
+  0e153eb8a734a1fd 1468-1469,2184-2250,4620,4657
+tests/gateway/test_update_streaming.py
+  0e153eb8a734a1fd 325-375
+optional-skills/productivity/here-now/scripts/drive.sh
+  0e153eb8a734a1fd 1-406
+agent/skill_commands.py
+  0e153eb8a734a1fd 9,24,29-52,247-248,308-317
+website/scripts/generate-skill-docs.py
+  0e153eb8a734a1fd 624-642,650-651
+website/docs/reference/cli-commands.md
+  0e153eb8a734a1fd 721-727,734
+tests/gateway/test_telegram_network_reconnect.py
+  0e153eb8a734a1fd 135,143-151,297-475
+gateway/status.py
+  0e153eb8a734a1fd 24,38-41,213,293,305
+hermes_cli/debug.py
+  0e153eb8a734a1fd 1,6-11,16,29-38,388-403,409,416-421,481-484,490-497,500-508,591,599-601,603-608,624-632,743
+website/docs/user-stories.mdx
+  0e153eb8a734a1fd 1-10
+tests/run_agent/test_tool_executor_contextvar_propagation.py
+  0e153eb8a734a1fd 1-249
+tests/gateway/test_reload_skills_discord_resync.py
+  0e153eb8a734a1fd 1-244
+run_agent.py
+  0e153eb8a734a1fd 26,165-171,1160-1161,1261-1264,1428-1429,1477-1514,1516-1518,1572,1668-1673,1685-1692,2198-2219,3769-3771,4594-4615,5068-5069,6195,6198,6818-6820,8675-8681,8836-8843,8846-8849,8861-8864,8872,8885-8891,8893,9128,9133,9136,9194-9201,9222-9259,9303-9304,9313-9320,9472-9490,9493,9496,9505-9507,9515-9517,9525,9527-9529,9584-9591,9601,9627-9654,9656-9674,9676-9687,9696,9698,9707-9715,9721,9749,9831-9841,9859,9866,9873,9880,9887,9899,9916-9920,10104-10113,10119,10135,10238-10244,10426-10427,10471-10472,13270-13279,13323-13329,13812,13832-13833
+gateway/platforms/wecom_callback.py
+  0e153eb8a734a1fd 122-124
+nix/tui.nix
+  0e153eb8a734a1fd 7
+gateway/run.py
+  0e153eb8a734a1fd 18,33,73-112,276-295,303,420-425,430,432,434,436,438,444,446-447,450,458-475,520-521,538,731-780,786-793,809-814,826-829,1056-1061,1070-1085,1133,1996-1999,2221-2228,2357,2360,2374,2391,2403-2406,2420-2429,2432,2441-2478,2559,2627,2681-2737,2746-2757,2901,3104-3109,3111-3125,4158-4160,4362-4366,4386-4388,4565-4595,4611-4631,4925,5047-5057,5141,5377-5379,5525-5554,5582-5587,5591-5599,5603-5604,5625-5629,5768-5773,5802,5804-5807,6256,6258-6273,6850,6961-6962,7073-7079,7085-7096,7108,7210,7235,7245,7249,7275,7286-7289,7306-7309,7327,7918-8121,8153-8157,8162-8164,8167-8181,8847-8848,8865,9135,9147,9150,9168-9171,9326,9354-9363,9388-9390,9625,9628-9630,10019-10040,10402-10403,10489,10497-10498,10546,10569,10571-10575,10625,10637-10638,10658-10662,10704,10726,10741,10759,10763,10772,10781,10784-10785,10789-10801,10807,10810,10814-10868,11351,12135-12136,12225-12228,12768,13108
+tests/agent/test_skill_utils.py
+  0e153eb8a734a1fd 1-58
+hermes_cli/curator.py
+  0e153eb8a734a1fd 163-167,175,179-190,193-197,248-339,361-365,386-414
+tests/acp/test_tools.py
+  0e153eb8a734a1fd 55-60,119-137,192,197-208,217-258,283-434
+tests/gateway/test_status.py
+  0e153eb8a734a1fd 5,249-269,374-402
+tools/session_search_tool.py
+  0e153eb8a734a1fd 269-273
+tests/agent/test_context_compressor.py
+  0e153eb8a734a1fd 643-666,1146-1172
+tests/cron/test_scheduler.py
+  0e153eb8a734a1fd 49-71,144-151
+hermes_constants.py
+  0e153eb8a734a1fd 11-13,19-28,31-68
+tests/agent/test_moonshot_schema.py
+  0e153eb8a734a1fd 118,120-126,141-143,145-146,150,153,159-180,256,278-280,283-399
+tests/gateway/test_discord_connect.py
+  0e153eb8a734a1fd 176-237
+tests/hermes_cli/test_user_providers_model_switch.py
+  0e153eb8a734a1fd 842-986
+tests/agent/test_auxiliary_client.py
+  0e153eb8a734a1fd 19,1756-1895
+gateway/platforms/qqbot/adapter.py
+  0e153eb8a734a1fd 246-248,253
+scripts/profile-tui.py
+  0e153eb8a734a1fd 38-45,48-49
+tests/hermes_cli/test_update_yes_flag.py
+  0e153eb8a734a1fd 1-167
+gateway/platforms/api_server.py
+  0e153eb8a734a1fd 2354,2358,2555,2559
+optional-skills/creative/kanban-video-orchestrator/scripts/bootstrap_pipeline.py
+  0e153eb8a734a1fd 1-501
+tests/hermes_cli/test_setup_agent_settings.py
+  0e153eb8a734a1fd 7-12,16,27,35-78
+tests/gateway/test_status_command.py
+  0e153eb8a734a1fd 58-60,86-93,127-176,571-635
+tests/hermes_cli/test_discord_skill_clamp_warning.py
+  0e153eb8a734a1fd 1-246
+web/src/themes/presets.ts
+  0e153eb8a734a1fd 68,76,93,100,121,128,145,152,174,181
+tests/tui_gateway/test_goal_command.py
+  0e153eb8a734a1fd 1-196
+tests/run_agent/test_tool_call_guardrail_runtime.py
+  0e153eb8a734a1fd 1-275
+tests/gateway/test_notice_delivery.py
+  0e153eb8a734a1fd 1-67
+tests/test_tui_gateway_server.py
+  0e153eb8a734a1fd 62-83,140-143,162,1008-1022,1941-1987
+tests/gateway/test_reasoning_command.py
+  0e153eb8a734a1fd 410-450
+website/docs/reference/optional-skills-catalog.md
+  0e153eb8a734a1fd 132,134
+hermes_cli/gateway.py
+  0e153eb8a734a1fd 13,63-69,191,382-458,1658,1672-1675,1695-1697,1706-1709,2457,4468
+website/docs/user-guide/skills/bundled/devops/devops-kanban-orchestrator.md
+  0e153eb8a734a1fd 1-170
+scripts/release.py
+  0e153eb8a734a1fd 44,49-50,53,55,71,85-91,108-109,118-119,132,188,314,353,375-378,450-451,476,509-512,526,530,681-683
+tests/gateway/restart_test_helpers.py
+  0e153eb8a734a1fd 15,25,35-39,45,91-98
+website/docs/user-guide/skills/optional/productivity/productivity-here-now.md
+  0e153eb8a734a1fd 1-231
+gateway/platforms/helpers.py
+  0e153eb8a734a1fd 16-17,246
+tests/gateway/test_config.py
+  0e153eb8a734a1fd 12,153-170,216-235,420-451,498-513,563-570
+optional-skills/productivity/here-now/scripts/publish.sh
+  0e153eb8a734a1fd 1-445
+tests/acp_adapter/test_acp_commands.py
+  0e153eb8a734a1fd 1-150
+tests/hermes_cli/test_auth_commands.py
+  0e153eb8a734a1fd 8,11,594-624
+tools/browser_supervisor.py
+  0e153eb8a734a1fd 1307-1312
+gateway/platforms/homeassistant.py
+  0e153eb8a734a1fd 142
+gateway/platforms/dingtalk.py
+  0e153eb8a734a1fd 231-235
+agent/tool_guardrails.py
+  0e153eb8a734a1fd 1-455
+hermes_cli/model_switch.py
+  0e153eb8a734a1fd 894-899,902-906,1060-1098,1226-1228,1368,1457-1459,1464-1467
+tests/agent/test_auxiliary_named_custom_providers.py
+  0e153eb8a734a1fd 430-494
+gateway/platforms/base.py
+  0e153eb8a734a1fd 452,1017,1027-1065,1109-1113,1148-1151,1536-1593,1629-1648,2203-2224,2525-2552,2637-2639,2641,2645-2650,2762-2771,2860-2874,3052-3065
+website/docs/user-guide/skills/optional/productivity/productivity-shopify.md
+  0e153eb8a734a1fd 1-376
+agent/moonshot_schema.py
+  0e153eb8a734a1fd 84-86,89-110,114-133
+tests/hermes_cli/test_plugins.py
+  0e153eb8a734a1fd 24,1065-1101
+optional-skills/creative/kanban-video-orchestrator/references/tool-matrix.md
+  0e153eb8a734a1fd 1-305
+tools/discord_tool.py
+  0e153eb8a734a1fd 135,151-152,175,182
+hermes_cli/tools_config.py
+  0e153eb8a734a1fd 59,82,1826,1852-1871
+optional-skills/migration/openclaw-migration/scripts/openclaw_to_hermes.py
+  0e153eb8a734a1fd 2963
+cli.py
+  0e153eb8a734a1fd 88,602,937-950,958,2135-2136,2931-2938,3594,3642-3643,3645-3650,3653,4981,4991,6570-6571,6617-6620,6625-6627,7052-7211,7338,7535,7538-7548,7580-7584,11554-11564,11598
+tests/tools/test_session_search.py
+  0e153eb8a734a1fd 245-259
+ui-tui/packages/hermes-ink/src/ink/ink.tsx
+  0e153eb8a734a1fd 77-82,91-92,131-135,878,881-885,888
+ui-tui/packages/hermes-ink/src/ink/terminal.ts
+  0e153eb8a734a1fd 171-174
+gateway/platforms/yuanbao.py
+  0e153eb8a734a1fd 1899-1904
+agent/curator.py
+  0e153eb8a734a1fd 58,187-196,210-224,285-311,390-394,645-698,704,708-714,735-736,744-773,909-916,922,927-959,975,985,1008-1018,1149-1181,1232,1245-1250,1253-1281,1293-1296,1298-1302,1318,1328-1335,1338,1342
+tests/agent/test_credential_pool.py
+  0e153eb8a734a1fd 351-408
+tests/hermes_cli/test_update_gateway_restart.py
+  0e153eb8a734a1fd 397-469
+scripts/whatsapp-bridge/package.json
+  0e153eb8a734a1fd 15-17
+.github/workflows/deploy-site.yml
+  0e153eb8a734a1fd 79-88
+hermes_cli/commands.py
+  0e153eb8a734a1fd 13,23-26,101-102,383,507,509,517-520,523-525,541,624,626-636,641-643,661-663,667-669,745,747,750-770,777-778,792-797,802,804,807-818,827-828,831-842,849,852-882,884,890-892,902,915-921,948-951,969
+tests/gateway/test_fresh_reset_skill_injection.py
+  0e153eb8a734a1fd 1-201
+tools/file_tools.py
+  0e153eb8a734a1fd 1100-1118
+optional-skills/creative/kanban-video-orchestrator/assets/brief.md.tmpl
+  0e153eb8a734a1fd 1-79
+agent/curator_backup.py
+  0e153eb8a734a1fd 1-693
+tests/hermes_cli/test_debug.py
+  0e153eb8a734a1fd 277-370,654-769
+tests/gateway/test_restart_resume_pending.py
+  0e153eb8a734a1fd 35-36,380-381,390,393-394,935-1012,1083-1144
+tests/run_agent/test_deepseek_reasoning_content_echo.py
+  0e153eb8a734a1fd 13,16,21-27,114-115,124,132,146-181,200,212,225,237,250,282,347,369,390,395,400,405
+tests/hermes_cli/test_tools_config.py
+  0e153eb8a734a1fd 11,124-133,472-496
+optional-skills/creative/kanban-video-orchestrator/references/intake.md
+  0e153eb8a734a1fd 1-166
+optional-skills/creative/kanban-video-orchestrator/scripts/monitor.py
+  0e153eb8a734a1fd 1-195
+tests/acp/test_server.py
+  0e153eb8a734a1fd 30-31,33,206-207,216-255,286-304,309-310,325-339,352-353,363-383,628-632,676,678-709,847-883,906,923,963-968
+tests/cli/test_manual_compress.py
+  0e153eb8a734a1fd 24,28,32,38,53,57,64,69,94,103,124,129
+tests/gateway/test_clean_shutdown_marker.py
+  0e153eb8a734a1fd 52,54-55,70,75,79,81,83,85,185,188-189
+tests/hermes_cli/test_goals.py
+  0e153eb8a734a1fd 1-358
+plugins/hermes-achievements/dashboard/plugin_api.py
+  0e153eb8a734a1fd 16-22,146,150,154
+.dockerignore
+  0e153eb8a734a1fd 12-17
+tests/tools/test_terminal_tool.py
+  0e153eb8a734a1fd 107-157
+agent/credential_pool.py
+  0e153eb8a734a1fd 6,17,1384-1393,1405-1406,1432,1443-1444
+gateway/platforms/telegram.py
+  0e153eb8a734a1fd 293-301,303-334,339,515-525,537-580,819-832,1432,1450-1451,1457,1875-1880,1902-1908,1958-1965,2024-2030
+hermes_cli/auth.py
+  0e153eb8a734a1fd 46,2483-2484,3656,3715
+plugins/memory/honcho/client.py
+  0e153eb8a734a1fd 113-123,477-480,501-504,506-509
+web/src/i18n/zh.ts
+  0e153eb8a734a1fd 78,87,258-295
+website/docs/user-guide/features/goals.md
+  0e153eb8a734a1fd 1-165
+tests/gateway/test_feishu.py
+  0e153eb8a734a1fd 11,561-570,703-763,772,775,789-790,818,825,854,861,890,897,926,933,962,969,999,1023,1048-1053,1078-1083,1100-1110,1454,1566-1567,1573,1774-1836,1869,1876,1914,2777,2779-2782,3215,3227,3230,3235,3339-3467
+acp_adapter/server.py
+  0e153eb8a734a1fd 7,51,70,170-171,201-210,321-380,551-576,582-584,589-591,594,601-643,655,661-672,686,688,704,706,712-714,812-844,855,858-875,888-889,892,895-901,905,907,912-916,918,1000-1002,1024,1028-1049,1060-1061,1129-1130,1194,1196-1197,1202-1226,1228-1230,1236-1271,1289,1292-1298,1318-1324,1332-1358
+ui-tui/src/lib/rpc.ts
+  0e153eb8a734a1fd 30-34
+tests/agent/test_curator.py
+  0e153eb8a734a1fd 89-94,96-104,281-351,414-417,424-439,470-480
+tests/tools/test_video_analyze.py
+  0e153eb8a734a1fd 1-337
+website/docs/index.md
+  0e153eb8a734a1fd 58-66
+cron/jobs.py
+  0e153eb8a734a1fd 885-1002
+tests/gateway/test_native_image_buffer_isolation.py
+  0e153eb8a734a1fd 1-79
+cli-config.yaml.example
+  0e153eb8a734a1fd 125-135,304-321
+cron/scheduler.py
+  0e153eb8a734a1fd 126-136,138,160-172,201,255
+optional-skills/creative/kanban-video-orchestrator/assets/setup.sh.tmpl
+  0e153eb8a734a1fd 1-185
+web/src/lib/resolve-page-title.ts
+  0e153eb8a734a1fd 10
+tests/gateway/test_delivery.py
+  0e153eb8a734a1fd 68-125
+hermes_cli/slack_cli.py
+  0e153eb8a734a1fd 21,132
+tests/gateway/test_stale_code_self_check.py
+  0e153eb8a734a1fd 1-223
+gateway/delivery.py
+  0e153eb8a734a1fd 56-57,59,71,75-78,90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "ff72451871f47df5f77886ae09c647989bbb25a3",
+  "prompts": {
+    "0e153eb8a734a1fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4256ad90-cfb3-48d0-8a62-53b8d9b23a65",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan",
+      "messages": [],
+      "total_additions": 36300,
+      "total_deletions": 2797,
+      "accepted_lines": 35618,
+      "overriden_lines": 0
+    }
+  }
+}
