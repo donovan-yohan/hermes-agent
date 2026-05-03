@@ -347,7 +347,8 @@ class TestBuildSessionContextPrompt:
         )
         source = SessionSource(
             platform=Platform.DISCORD,
-            chat_id="1493815549464018974",
+            chat_id="1494215934519283732",
+            parent_chat_id="1493815549464018974",
             chat_name="relay-ide dev",
             chat_type="thread",
             thread_id="1494215934519283732",
@@ -390,6 +391,45 @@ class TestBuildSessionContextPrompt:
 
         assert ctx.repo_context is not None
         assert ctx.repo_context["repo"] == "donovan-yohan/relay-ide"
+
+    def test_repo_context_parent_thread_binding_beats_thread_only(self):
+        config = GatewayConfig(
+            platforms={
+                Platform.DISCORD: PlatformConfig(enabled=True, token="fake-discord-token"),
+            },
+            repo_context_bindings=[
+                {
+                    "platform": "discord",
+                    "thread_id": "thread-99",
+                    "repo": "donovan-yohan/thread-only",
+                },
+                {
+                    "platform": "discord",
+                    "chat_id": "parent-channel-1",
+                    "thread_id": "thread-99",
+                    "repo": "donovan-yohan/parent-thread",
+                },
+                {
+                    "platform": "discord",
+                    "chat_id": "parent-channel-1",
+                    "repo": "donovan-yohan/parent-only",
+                },
+            ],
+        )
+        source = SessionSource(
+            platform=Platform.DISCORD,
+            chat_id="thread-99",
+            chat_name="hermes-agent / bug triage",
+            chat_type="thread",
+            thread_id="thread-99",
+            parent_chat_id="parent-channel-1",
+            user_name="alice",
+        )
+
+        ctx = build_session_context(source, config)
+
+        assert ctx.repo_context is not None
+        assert ctx.repo_context["repo"] == "donovan-yohan/parent-thread"
 
     def test_local_delivery_path_uses_display_hermes_home(self):
         config = GatewayConfig()

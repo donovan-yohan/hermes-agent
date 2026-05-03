@@ -60,16 +60,20 @@ jobs:
           compare_url="https://github.com/${REPO}/compare/dy-main...${REPO}:main"
           latest_main_commit=$(git log --format='%h %s' -1 origin/main)
 
+          cat > /tmp/sync-pr-body.md <<PR_BODY
+          ## Summary
+          Automated sync PR because \`main\` is ahead of \`dy-main\`.
+
+          - commits ahead: ${commits_ahead}
+          - latest main commit: ${latest_main_commit}
+          - compare: ${compare_url}
+
+          This PR was opened automatically by \`.github/workflows/auto-pr-main-to-dy-main.yml\`.
+          PR_BODY
+
           gh pr create \
             --repo "$REPO" \
             --base dy-main \
             --head main \
             --title "sync: merge main into dy-main" \
-            --body "## Summary
-Automated sync PR because \\`main\\` is ahead of \\`dy-main\\`.
-
-- commits ahead: ${commits_ahead}
-- latest main commit: ${latest_main_commit}
-- compare: ${compare_url}
-
-This PR was opened automatically by \\`.github/workflows/auto-pr-main-to-dy-main.yml\\`."
+            --body-file /tmp/sync-pr-body.md

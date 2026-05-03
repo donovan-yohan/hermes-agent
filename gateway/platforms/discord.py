@@ -3047,10 +3047,32 @@ class DiscordAdapter(BasePlatformAdapter):
 
             mention_user_id = None
             if self._discord_ping_exec_approval() and metadata and metadata.get("requester_user_id"):
-                mention_user_id = str(metadata["requester_user_id"]).strip()
-            mention_text = f"<@{mention_user_id}> command approval needed" if mention_user_id else None
+                candidate_user_id = str(metadata["requester_user_id"]).strip()
+                if candidate_user_id.isdigit():
+                    mention_user_id = candidate_user_id
+                else:
+                    logger.warning(
+                        "[%s] Skipping Discord exec approval mention for invalid requester_user_id=%r",
+                        self.name,
+                        candidate_user_id,
+                    )
 
-            msg = await channel.send(content=mention_text, embed=embed, view=view)
+            mention_text = f"<@{mention_user_id}> command approval needed" if mention_user_id else None
+            send_kwargs = {"content": mention_text, "embed": embed, "view": view}
+            if mention_user_id:
+                # Client-level allowed_mentions may disable user pings globally to
+                # keep model output safe.  This prompt is bot-generated and
+                # contains exactly one validated requester mention, so explicitly
+                # allow that user while still denying @everyone and roles.
+                allowed_user = discord.Object(id=int(mention_user_id))
+                send_kwargs["allowed_mentions"] = discord.AllowedMentions(
+                    everyone=False,
+                    roles=False,
+                    users=[allowed_user],
+                    replied_user=False,
+                )
+
+            msg = await channel.send(**send_kwargs)
             return SendResult(success=True, message_id=str(msg.id))
 
         except Exception as e:
