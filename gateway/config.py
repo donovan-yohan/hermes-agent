@@ -36,11 +36,40 @@ def _coerce_bool(value: Any, default: bool = True) -> bool:
     return is_truthy_value(value, default=default)
 
 
+def _coerce_float(value: Any, default: float) -> float:
+    """Coerce numeric config values, falling back on malformed input."""
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _coerce_int(value: Any, default: int) -> int:
+    """Coerce integer config values, falling back on malformed input."""
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _normalize_unauthorized_dm_behavior(value: Any, default: str = "pair") -> str:
     """Normalize unauthorized DM behavior to a supported value."""
     if isinstance(value, str):
         normalized = value.strip().lower()
         if normalized in {"pair", "ignore"}:
+            return normalized
+    return default
+
+
+def _normalize_notice_delivery(value: Any, default: str = "public") -> str:
+    """Normalize notice delivery mode to a supported value."""
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"public", "private"}:
             return normalized
     return default
 
@@ -157,18 +186,24 @@ class HomeChannel:
     Default destination for a platform.
     
     When a cron job specifies deliver="telegram" without a specific chat ID,
-    messages are sent to this home channel.
+    messages are sent to this home channel. Thread-aware platforms may also
+    store a thread/topic ID so the bare platform target routes to the exact
+    conversation where /sethome was run.
     """
     platform: Platform
     chat_id: str
     name: str  # Human-readable name for display
+    thread_id: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             "platform": self.platform.value,
             "chat_id": self.chat_id,
             "name": self.name,
         }
+        if self.thread_id:
+            result["thread_id"] = self.thread_id
+        return result
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "HomeChannel":
@@ -176,6 +211,7 @@ class HomeChannel:
             platform=Platform(data["platform"]),
             chat_id=str(data["chat_id"]),
             name=data.get("name", "Home"),
+            thread_id=str(data["thread_id"]) if data.get("thread_id") else None,
         )
 
 
@@ -301,13 +337,13 @@ class StreamingConfig:
         if not data:
             return cls()
         return cls(
-            enabled=data.get("enabled", False),
+            enabled=_coerce_bool(data.get("enabled"), False),
             transport=data.get("transport", "edit"),
-            edit_interval=float(data.get("edit_interval", 1.0)),
-            buffer_threshold=int(data.get("buffer_threshold", 40)),
+            edit_interval=_coerce_float(data.get("edit_interval"), 1.0),
+            buffer_threshold=_coerce_int(data.get("buffer_threshold"), 40),
             cursor=data.get("cursor", " ▉"),
-            fresh_final_after_seconds=float(
-                data.get("fresh_final_after_seconds", 60.0)
+            fresh_final_after_seconds=_coerce_float(
+                data.get("fresh_final_after_seconds"), 60.0
             ),
         )
 
@@ -581,6 +617,17 @@ class GatewayConfig:
                 )
         return self.unauthorized_dm_behavior
 
+    def get_notice_delivery(self, platform: Optional[Platform] = None) -> str:
+        """Return the effective notice-delivery mode for a platform."""
+        if platform:
+            platform_cfg = self.platforms.get(platform)
+            if platform_cfg and "notice_delivery" in platform_cfg.extra:
+                return _normalize_notice_delivery(
+                    platform_cfg.extra.get("notice_delivery"),
+                    "public",
+                )
+        return "public"
+
 
 def load_gateway_config() -> GatewayConfig:
     """
@@ -706,6 +753,11 @@ def load_gateway_config() -> GatewayConfig:
                     bridged["unauthorized_dm_behavior"] = _normalize_unauthorized_dm_behavior(
                         platform_cfg.get("unauthorized_dm_behavior"),
                         gw_data.get("unauthorized_dm_behavior", "pair"),
+                    )
+                if "notice_delivery" in platform_cfg:
+                    bridged["notice_delivery"] = _normalize_notice_delivery(
+                        platform_cfg.get("notice_delivery"),
+                        "public",
                     )
                 if "reply_prefix" in platform_cfg:
                     bridged["reply_prefix"] = platform_cfg["reply_prefix"]
@@ -924,6 +976,12 @@ def load_gateway_config() -> GatewayConfig:
                 if "dm_mention_threads" in matrix_cfg and not os.getenv("MATRIX_DM_MENTION_THREADS"):
                     os.environ["MATRIX_DM_MENTION_THREADS"] = str(matrix_cfg["dm_mention_threads"]).lower()
 
+            # Feishu settings → env vars (env vars take precedence)
+            feishu_cfg = yaml_cfg.get("feishu", {})
+            if isinstance(feishu_cfg, dict):
+                if "allow_bots" in feishu_cfg and not os.getenv("FEISHU_ALLOW_BOTS"):
+                    os.environ["FEISHU_ALLOW_BOTS"] = str(feishu_cfg["allow_bots"]).lower()
+
     except Exception as e:
         logger.warning(
             "Failed to process config.yaml — falling back to .env / gateway.json values. "
@@ -1044,6 +1102,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.TELEGRAM,
             chat_id=telegram_home,
             name=os.getenv("TELEGRAM_HOME_CHANNEL_NAME", "Home"),
+            thread_id=os.getenv("TELEGRAM_HOME_CHANNEL_THREAD_ID") or None,
         )
     
     # Discord
@@ -1060,6 +1119,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.DISCORD,
             chat_id=discord_home,
             name=os.getenv("DISCORD_HOME_CHANNEL_NAME", "Home"),
+            thread_id=os.getenv("DISCORD_HOME_CHANNEL_THREAD_ID") or None,
         )
     
     # Reply threading mode for Discord (off/first/all)
@@ -1075,7 +1135,15 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
         if Platform.WHATSAPP not in config.platforms:
             config.platforms[Platform.WHATSAPP] = PlatformConfig()
         config.platforms[Platform.WHATSAPP].enabled = True
-    
+    whatsapp_home = os.getenv("WHATSAPP_HOME_CHANNEL")
+    if whatsapp_home and Platform.WHATSAPP in config.platforms:
+        config.platforms[Platform.WHATSAPP].home_channel = HomeChannel(
+            platform=Platform.WHATSAPP,
+            chat_id=whatsapp_home,
+            name=os.getenv("WHATSAPP_HOME_CHANNEL_NAME", "Home"),
+            thread_id=os.getenv("WHATSAPP_HOME_CHANNEL_THREAD_ID") or None,
+        )
+
     # Slack
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     if slack_token:
@@ -1101,6 +1169,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.SLACK,
             chat_id=slack_home,
             name=os.getenv("SLACK_HOME_CHANNEL_NAME", ""),
+            thread_id=os.getenv("SLACK_HOME_CHANNEL_THREAD_ID") or None,
         )
     
     # Signal
@@ -1121,6 +1190,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.SIGNAL,
             chat_id=signal_home,
             name=os.getenv("SIGNAL_HOME_CHANNEL_NAME", "Home"),
+            thread_id=os.getenv("SIGNAL_HOME_CHANNEL_THREAD_ID") or None,
         )
 
     # Mattermost
@@ -1140,6 +1210,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.MATTERMOST,
             chat_id=mattermost_home,
             name=os.getenv("MATTERMOST_HOME_CHANNEL_NAME", "Home"),
+            thread_id=os.getenv("MATTERMOST_HOME_CHANNEL_THREAD_ID") or None,
         )
 
     # Matrix
@@ -1171,6 +1242,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.MATRIX,
             chat_id=matrix_home,
             name=os.getenv("MATRIX_HOME_ROOM_NAME", "Home"),
+            thread_id=os.getenv("MATRIX_HOME_ROOM_THREAD_ID") or None,
         )
 
     # Home Assistant
@@ -1204,6 +1276,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.EMAIL,
             chat_id=email_home,
             name=os.getenv("EMAIL_HOME_ADDRESS_NAME", "Home"),
+            thread_id=os.getenv("EMAIL_HOME_ADDRESS_THREAD_ID") or None,
         )
 
     # SMS (Twilio)
@@ -1219,6 +1292,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.SMS,
             chat_id=sms_home,
             name=os.getenv("SMS_HOME_CHANNEL_NAME", "Home"),
+            thread_id=os.getenv("SMS_HOME_CHANNEL_THREAD_ID") or None,
         )
 
     # API Server
@@ -1281,6 +1355,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 platform=Platform.DINGTALK,
                 chat_id=dingtalk_home,
                 name=os.getenv("DINGTALK_HOME_CHANNEL_NAME", "Home"),
+                thread_id=os.getenv("DINGTALK_HOME_CHANNEL_THREAD_ID") or None,
             )
 
     # Feishu / Lark
@@ -1308,6 +1383,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 platform=Platform.FEISHU,
                 chat_id=feishu_home,
                 name=os.getenv("FEISHU_HOME_CHANNEL_NAME", "Home"),
+                thread_id=os.getenv("FEISHU_HOME_CHANNEL_THREAD_ID") or None,
             )
 
     # WeCom (Enterprise WeChat)
@@ -1330,6 +1406,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 platform=Platform.WECOM,
                 chat_id=wecom_home,
                 name=os.getenv("WECOM_HOME_CHANNEL_NAME", "Home"),
+                thread_id=os.getenv("WECOM_HOME_CHANNEL_THREAD_ID") or None,
             )
 
     # WeCom callback mode (self-built apps)
@@ -1388,6 +1465,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 platform=Platform.WEIXIN,
                 chat_id=weixin_home,
                 name=os.getenv("WEIXIN_HOME_CHANNEL_NAME", "Home"),
+                thread_id=os.getenv("WEIXIN_HOME_CHANNEL_THREAD_ID") or None,
             )
 
     # BlueBubbles (iMessage)
@@ -1411,6 +1489,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform=Platform.BLUEBUBBLES,
             chat_id=bluebubbles_home,
             name=os.getenv("BLUEBUBBLES_HOME_CHANNEL_NAME", "Home"),
+            thread_id=os.getenv("BLUEBUBBLES_HOME_CHANNEL_THREAD_ID") or None,
         )
 
     # QQ (Official Bot API v2)
@@ -1448,6 +1527,11 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 platform=Platform.QQBOT,
                 chat_id=qq_home,
                 name=os.getenv("QQBOT_HOME_CHANNEL_NAME") or os.getenv(qq_home_name_env, "Home"),
+                thread_id=(
+                    os.getenv("QQBOT_HOME_CHANNEL_THREAD_ID")
+                    or os.getenv("QQ_HOME_CHANNEL_THREAD_ID")
+                    or None
+                ),
             )
 
     # Yuanbao — YUANBAO_APP_ID preferred
@@ -1478,6 +1562,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 platform=Platform.YUANBAO,
                 chat_id=yuanbao_home,
                 name=os.getenv("YUANBAO_HOME_CHANNEL_NAME", "Home"),
+                thread_id=os.getenv("YUANBAO_HOME_CHANNEL_THREAD_ID") or None,
             )
         yuanbao_dm_policy = os.getenv("YUANBAO_DM_POLICY")
         if yuanbao_dm_policy:
