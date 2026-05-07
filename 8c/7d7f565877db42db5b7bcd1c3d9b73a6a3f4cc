@@ -1,0 +1,28 @@
+website/docs/user-guide/messaging/discord.md
+  s_ffe5b39ca1fbc2::t_0d861e0de92672 335
+gateway/platforms/discord.py
+  s_ffe5b39ca1fbc2::t_89ecb985284f57 3767-3768
+  s_ffe5b39ca1fbc2::t_0279857503a97f 3536-3539
+gateway/run.py
+  s_ffe5b39ca1fbc2::t_3b49cbd666bd7b 611-613
+  s_ffe5b39ca1fbc2::t_d64f6fa36d6171 610
+tests/gateway/test_status_thread_metadata.py
+  s_ffe5b39ca1fbc2::t_695e8ecb31d8d8 61-68
+  s_ffe5b39ca1fbc2::t_5fbc3ce8a5fef1 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "8c7d7f565877db42db5b7bcd1c3d9b73a6a3f4cc",
+  "prompts": {},
+  "sessions": {
+    "s_ffe5b39ca1fbc2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4622647c-f17e-42d6-bb4d-e2309ac7e037",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan <donovanyohan@gmail.com>"
+    }
+  }
+}
