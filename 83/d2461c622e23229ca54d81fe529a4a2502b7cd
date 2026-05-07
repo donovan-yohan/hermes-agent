@@ -1,0 +1,629 @@
+plugins/platforms/irc/plugin.yaml
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 2,11-12,14-54
+run_agent.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1904-1905,1907-1932,2892-2901,3078-3081,3101,3846,3852-4004,11293-11307,12146-12153,12172-12179,13945,13954,14057,14060-14065,14138-14141,14145-14149,14240-14244,14291-14310
+tests/tools/test_skill_usage.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 4,11-18,151-172
+tools/send_message_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 245-250,286,447,524,678,761
+hermes_cli/curator.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 15,61-62,166-167,178,195,198-207,455-466,486-490,517-518
+ui-tui/src/gatewayTypes.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 298
+gateway/platforms/qqbot/adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 44,122-137,227-242,794-795,869-1068,1137-1143,1202-1208,1276-1282,1347-1353,1374-1480,2364-2368,2370-2373,2378-2379,2386-2390,2392-2395,2400-2401,2421-2570,2700-2710,2715-2720,2723-2746,2749-2751,2754-2755,2784-2811,2816-2862
+tools/skill_manager_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 286,291-292
+tests/agent/test_bedrock_adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 997
+tools/environments/base.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 492-511
+tests/plugins/test_kanban_dashboard_plugin.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 130-166,593-653,1585-1685
+cli.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1411-1417,1783-1796,2580-2588,2872-2874,2885,2887-2888,2922,2928-2932,2936,2946,2956-2960,2963,7994,8026-8027,10252-10269,10567-10568,11173,11919,12206-12208,12210-12211,12546-12557
+gateway/platforms/api_server.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 920-929,1329-1330,1901-1906,2205-2210,2212-2220,2512-2563,2565,2567,2574-2575
+website/docs/user-guide/features/kanban-tutorial.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 25
+gateway/platforms/mattermost.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 709-712,714-732
+scripts/whatsapp-bridge/allowlist.test.mjs
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 60-80
+hermes_cli/copilot_auth.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 215,217
+tests/hermes_cli/test_voice_wrapper.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 312,347,350,353-360,381-382,396-397,400-402,408-409,455-651
+tests/cron/test_scheduler_mcp_init.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-140
+tools/credential_files.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 377-404
+tests/gateway/test_feishu.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1966-2003
+gateway/platforms/feishu.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 4092-4094,4096,4103,4594,4599
+tools/delegate_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 465-495,941-945,2516,2556,2558-2560,2568
+tools/discord_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 421-426,485,512,533,770-771
+cli-config.yaml.example
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 604,635,648,880-894
+tests/hermes_cli/test_debug.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 294-298,329-331,336-338,342-345,348
+tools/url_safety.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 150-245
+CONTRIBUTING.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 109-113,294-297,299-302,304-305,605
+hermes_cli/tools_config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 302-327,689-713
+tests/test_termux_all_extra_compat.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-23
+web/src/pages/DocsPage.tsx
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 53-61
+web/src/themes/presets.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 186-206,209
+website/docs/user-guide/features/hooks.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 390,1097-1136
+hermes_cli/mcp_config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 224-227
+gateway/platforms/discord.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 13-14,29-32,54,480-507,732-742,873-1033,1049-1088,1250-1258,1263,1275-1276,1280,1284,2104-2107,2109-2113,2156-2163,2168-2181,2192,2195-2239,2336-2345
+scripts/whatsapp-bridge/allowlist.js
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 67-70,72
+tools/environments/local.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 6,407-412,423
+hermes_cli/model_switch.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 802-807,815,823,836,1640-1641,1679-1690
+hermes_state.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 615-619
+gateway/platforms/qqbot/__init__.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 37-57,76-90
+tests/run_agent/test_empty_response_recovery_persistence.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-98
+gateway/platforms/slack.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1890-1895,2933-2947
+tests/tools/test_dockerfile_pid1_reaping.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 109-114,116-117,132-142
+Dockerfile
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 69-73,75-76
+optional-skills/finance/3-statement-model/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-432
+hermes_cli/gateway.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 508,542-576,588-589,591,602-603,607-618,624-627,638-677,833-872,1100-1120,1536-1539,2086-2126,2268-2269,2272-2295,2297-2300,2307-2313,2326-2333,2405-2408,2773-2808,2819,4370-4372,4382-4387,4437-4439,4452-4454,4458-4460,4470-4472,4546-4553,4878-4879
+tests/hermes_cli/test_kanban_core_functionality.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 93-96,99,101-102,106,171-322,872-913,2843-3039,3478,3481,3484,3489,3491-3499,3518,3539-3541,3770-3859
+tests/tools/test_web_providers_ddgs.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-246
+tests/agent/test_anthropic_adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 17,70-72,101,111,114-131,1006-1007,1020
+tools/kanban_tools.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 318-326,339-346
+gateway/platforms/qqbot/chunked_upload.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-603
+skills/productivity/linear/scripts/linear_api.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-445
+tests/gateway/test_webhook_adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 355,761-837
+tests/gateway/test_config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 60-72
+agent/models_dev.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 384-386,389,391-395
+tools/web_providers/__init__.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-6
+hermes_cli/skin_engine.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 45
+optional-skills/finance/merger-model/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-143
+plugins/kanban/dashboard/plugin_api.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 33,1015-1069,1580-1585
+tests/gateway/test_agent_cache.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 130-144,213-219,222
+hermes_cli/pairing.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 76-93
+mcp_serve.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 118-136,487,575,688-689,715-721,725,805
+tests/agent/test_display.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 11-12,19-25,114-150
+tests/hermes_cli/test_gateway.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 56-92
+website/docs/user-guide/messaging/open-webui.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 21-27,214-215,220-222
+gateway/pairing.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 198-201,207-213
+tests/hermes_cli/test_gateway_service.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 5,94-100,111,113,115-116,623,629,636-637,640-642,647-648,653-657,661,663-664,666-757,802-806,2273-2440
+tools/skill_usage.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 31,40-50,66-98,253-265,389-396,466-470
+website/docs/user-guide/features/plugins.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 111,231,235
+agent/credential_pool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 71-72,74,195-196,312,315-318,324-334
+gateway/platforms/whatsapp.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 24,58-62,65-86,91-128,220,256-274,510,542,693-698,803
+optional-skills/research/searxng-search/scripts/searxng.sh
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-22
+tools/mcp_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 5-7,32-36,51,199-204,315-326,429-486,904,953,984-989,1235,1301-1345,1381,1404,1481-1492,1845-1850,2054-2055,2066-2071,2214-2224,2227,2229-2232,2294,2352,2412,2475,2546,2816-2832,2840-2849,2860-2886,3099-3111,3196
+hermes_cli/auth.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 783-849,856,858-874,878,884,888,892,897,907-908,911,915,926-944,988-993,999-1008,1082-1096,1101-1107,1109-1119,1121-1125,1184-1194,1196-1202,1572-1598,2015,2017,2780,2783,2841,2881-2943,2976-3003,3060-3064,3066-3082,3084-3091,3293-3302,3304-3308,3310-3315,3317-3328,3330-3351,3619-3623,3625-3665,3698-3738,4234-4241,5327,5330-5332,5334,5336,5338-5339
+tests/tools/test_delegate_composite_toolsets.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-46
+tests/gateway/test_discord_connect.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 2,74-82,549-723
+web/src/main.tsx
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 9,16
+scripts/install.sh
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 618-652,680,983-995,1000,1092,1615
+tests/hermes_cli/test_curator_run.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-87
+tests/agent/test_skill_commands.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 180-310
+hermes_cli/main.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 233,6484-6522,6539-6541,6544,6554,6563,7412-7414,7485-7486,7497,7499-7505,7507,7512,7816-7832,7852-7855,7859-7864,7879,7882-7885,8236,8247,8272-8274,8277-8282,8800-8802,10120-10128,10655-10658
+tests/tools/test_mcp_cancelled_error_propagation.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-92
+tests/tools/test_web_providers_brave_free.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-275
+model_tools.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 733-734,785-786,810-811
+tests/tools/test_mcp_oauth_metadata.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-213
+gateway/platform_registry.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 113-127
+agent/anthropic_adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 234-235,237-238,240-243,245-247,256-257,476-483,493-501,503-505,508,510-511,648
+website/docs/user-guide/skills/bundled/productivity/productivity-linear.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 36,54-71,281-342
+hermes_cli/voice.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 284-285,375-376,380-389,394,401-404,406,410-411,444-445,447,450-453,455,465-469,473-474,477-556,702-727,730-734
+tests/gateway/test_discord_roles_dm_scope.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-355
+website/docs/user-guide/features/fallback-providers.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 195,388
+ui-tui/src/__tests__/scroll.test.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 6-7,9,11,40-78
+tests/run_agent/test_run_agent.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 727-776,3719-3729,3731-3733,3772-3789
+website/docs/user-guide/messaging/index.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 20,50,79,389,413
+website/docs/user-guide/features/skills.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 467-579
+hermes_cli/kanban_db.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 598-605,639-642,648,667-669,790-796,978-994,996-999,1002,1007,1010,1028-1035,1191,1305-1307,1324,1411,1420-1430,1900-1904,1911-1921,1924-1926,1928-1929,1934,1936-1937,1940,1952,1965-1977,1979,1982-1984,1986-1987,1995,1997-2002,2005,2506-2590,2695-2699,2734-2804,2870-2922,3111-3117,3122-3126,3140-3172,3183-3184,3187-3188,3193-3194,3200-3208,3210,3212,3217-3223,3265-3270,3277-3278,3285-3297,3325-3330,3334-3335,3503-3528,3532-3539
+tests/hermes_cli/test_update_yes_flag.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 116-127,166-175
+tests/agent/test_image_routing.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 112-126,145-149,159,161-163,169-170,173-203,213-217,220,222,228,230,235-246
+tests/tools/test_discord_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 178-183,416,419,434-443,605
+agent/image_routing.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 147-191,225,237,241-249,256,259-260,271,275,277,279-294
+gateway/platforms/wecom.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 40,1566,1570
+plugins/kanban/dashboard/dist/style.css
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 12-38,41-61,405-424,733-735,745,748-753
+optional-skills/finance/dcf-model/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-1269
+tests/agent/test_credential_pool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 253-288,963-997
+tests/hermes_cli/test_kanban_cli.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 289-343
+tests/hermes_cli/test_kanban_specify_db.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-184
+tests/hermes_cli/test_mcp_config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 46,236,294,316,393
+tests/plugins/memory/test_openviking_provider.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 2,5-7,66-381
+tests/test_tui_gateway_server.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 207,236-309,529-546,3624-3715
+ui-tui/src/__tests__/precisionWheel.test.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-44
+gateway/platforms/matrix.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 20-21,347-369,387-392,880-887,1596-1607,1978-2006,2035-2039,2118-2119
+gateway/run.py
+  ai_agent 261,263-272,307-336,506-507,513-514,520-521,593,601-605,617-623,690-694,703,1121-1140,1222-1228,1772-1779,2607-2609,2637-2644,2670-2675,2680-2687,2923-2999,3024-3046,3416-3421,3940-3957,3986-3991,6083,6104-6108,6113,6118,6183-6217,6232,6869,8450-8470,8490,8590,9227-9232,9245-9247,9252-9254,9261-9262,11880-11887,11939-11946,12217-12220,12464,13322-13339,13462-13463,13470-13474,13588-13599,13604-13609,13612-13617,13620-13621,13719-13721,13727,13735-13744,13778-13780,13871,14348-14352,14468-14472,14611,14616-14621,15095-15137
+ui-tui/src/__tests__/useInputHandlers.test.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-37
+tests/hermes_cli/test_profiles.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 36-38,249-356
+agent/usage_pricing.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 3,86-200,210-211,222-223,303,313-314,325-326,337-338,349-350,545-561,563-575
+tests/tools/test_url_safety.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 8,411-476
+ui-tui/src/lib/precisionWheel.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-48
+tests/gateway/test_platform_base.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 332-362
+README.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 158-159,164
+tests/hermes_cli/test_cmd_update.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 163-164,169-174,185-187,189-190
+plugins/platforms/teams/plugin.yaml
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 2,11-12,14-48
+optional-skills/finance/comps-analysis/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-661
+tools/image_generation_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1023-1037,1074-1076,1112-1115
+agent/display.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 855-856,862-863
+skills/productivity/linear/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 21,39-56,266-327
+ui-tui/src/__tests__/theme.test.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 212-239
+optional-skills/finance/3-statement-model/references/formulas.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-292
+ui-tui/src/components/appChrome.tsx
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 3,16,328-335,388-389,417-418,423,427-430
+gateway/platforms/base.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1340,1346,1353-1363,1366-1385,1925,1929-1940,1943,1949,1953-1956,2162-2168,2172-2207,2887-2893,2896,2901,3003-3007,3013-3015,3021-3022
+website/docs/user-guide/features/web-search.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-340
+tests/gateway/test_webhook_deliver_only.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 36
+tests/gateway/test_discord_slash_auth.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 161-165
+tests/test_transform_llm_output_hook.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-159
+tools/schema_sanitizer.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 87-127
+ui-tui/packages/hermes-ink/src/ink/log-update.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 229-235,339-342,344-347
+optional-skills/research/searxng-search/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-211
+tests/gateway/test_restart_drain.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 267-299
+tests/cron/test_cron_prompt_injection_skill.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-217
+agent/copilot_acp_client.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 480-481
+tests/gateway/test_run_progress_topics.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 306-349
+cron/scheduler.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 44-56,168-212,215,228,239-256,274,330,884,927-952,1107-1131,1326-1345
+tests/hermes_cli/test_model_switch_custom_providers.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 509-569
+tests/hermes_cli/test_redact_config_bridge.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 75-76,78-81,112
+.github/workflows/docker-publish.yml
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 19-22,25,33-34,40-44,68-69,76-82,85-87,91,100-105,113-115,119-123,135-250
+tests/hermes_cli/test_update_gateway_restart.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 418-424,462-466,885-891,893,896-898,903,1359-1587
+agent/redact.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 59-67
+tests/gateway/test_pairing.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 241-276
+tests/test_hermes_constants.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 10-15,25,120-173
+tests/gateway/test_background_process_notifications.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 307-340
+tests/tools/test_browser_ssrf_local.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 109-164,295-319
+scripts/release.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 44-45,51-52,54,56-62,68-70,75,87-91,109-110,113,143-144,278,428,463,468-472,635,807,879-903
+tests/tools/test_web_providers.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-194
+website/docs/reference/environment-variables.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 123,270-280,470
+tests/hermes_cli/test_auth_toctou_file_modes.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-198
+tools/web_tools.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 122,129,135-136,142-144,153-190,201-206,209-223,1196-1197,1216-1245,1383,1396-1403,1779-1787,2083,2085-2088,2123-2128
+agent/bedrock_adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 634,640-645,662,743,789-792,831
+agent/auxiliary_client.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 458-463,605-612,670-700,709-713,716,728,788-789,792-794,888-895,2902-2928,2956-2957,2960,3488-3497,3728-3736,3741,3744,4044-4052,4057,4060
+gateway/platforms/weixin.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 26,36-37,554-565,567-568,577-583,737-776,1090,1094,1269-1274,1882-1889,2068
+web/src/plugins/usePlugins.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 11,46,58,71-80
+tests/cli/test_cli_init.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 6,165-191
+tests/gateway/test_telegram_thread_fallback.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 162-163,165-172,185
+tests/tools/test_schema_sanitizer.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 305-362
+tools/web_providers/ARCHITECTURE.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-73
+tui_gateway/server.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1283,1992-2021,2032,2043,2054,2056,3172-3183,5666-5672,5711,5719,5721-5722,5726-5728,5731
+ui-tui/packages/hermes-ink/src/ink/log-update.test.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 33,36,115-155
+hermes_cli/runtime_provider.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 322,325,525,644-645,648
+docker-compose.yml
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 17-19,47-55
+ui-tui/src/lib/viewportStore.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 14-19,29-34,67-86,107-118
+website/docs/reference/cli-commands.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 381,806-807
+tests/tools/test_memory_tool_schema.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-49
+tests/gateway/test_session_model_override_routing.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 166-220
+tests/tools/test_kanban_tools.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 217-271
+optional-skills/finance/excel-author/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-243
+website/docs/user-guide/messaging/google_chat.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-370
+ui-tui/src/hooks/useVirtualHistory.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 54,56,133-135,288-289,440,481,507-511
+tests/hermes_cli/test_kanban_specify.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-337
+tests/tools/test_mcp_tool_session_expired.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 56-66
+scripts/whatsapp-bridge/bridge.js
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 58-63,73-104,270-297,481-488,492-496,515-530,624,696-697,699-701
+tests/conftest.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 486-489,495,497,499-505
+hermes_cli/profiles.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 74-89,446,464-468,475-479,557-569,578-582,584-590
+scripts/contributor_audit.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 43
+tests/tools/test_mcp_sse_transport.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-209
+tests/gateway/test_goal_max_turns_config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-62
+tests/cli/test_cli_status_bar.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 210-321
+gateway/platforms/telegram.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 89-104,372-379,2778-2791,2940,2947-2949,2958-2965,3287-3290,3292-3339
+optional-skills/finance/dcf-model/scripts/validate_dcf.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-292
+agent/context_compressor.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 9,757-758,761-764,778,815,852
+hermes_cli/model_normalize.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 396-410
+tests/gateway/test_display_config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 336-396
+tests/gateway/test_feishu_onboard.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 130,152,178,199,215,226-243
+tools/browser_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 79-82,85,844-847,2092-2103,2166-2180
+optional-skills/finance/lbo-model/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-290
+tests/gateway/test_telegram_documents.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 261-296
+tests/tools/test_mcp_oauth.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 5-6,55-84
+plugins/platforms/teams/adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 155-190,410-413,415-428,741-748
+tools/web_providers/brave_free.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-130
+tests/gateway/test_whatsapp_formatting.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 148-162,198-214
+hermes_cli/nous_subscription.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 258-261,287,331-338,342,428-429
+tests/hermes_cli/test_tencent_tokenhub_provider.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 195,202-207,429,454
+ui-tui/src/types.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 163,167,171
+website/docs/user-guide/features/curator.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 87-88
+plugins/platforms/google_chat/adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-3085
+tests/run_agent/test_message_sequence_repair.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-201
+website/docs/developer-guide/image-gen-provider-plugin.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-288
+website/docs/user-guide/messaging/webhooks.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 398-399
+gateway/platforms/ADDING_A_PLATFORM.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 7-11,17-32,34
+tests/tools/test_mcp_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 550-586
+tests/acp_adapter/test_acp_images.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-2,4-11,39-80,88-159
+tests/gateway/test_api_server.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 590-593,1367-1506,1774-1837
+scripts/lint_diff.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-207
+tests/agent/test_auxiliary_client.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 6,8,29,63-74,1900-1976
+plugins/platforms/google_chat/oauth.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-638
+tests/gateway/test_google_chat.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-2582
+tools/mcp_oauth_manager.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 151-171,253-258,266-286,322-324
+ui-tui/src/app/scroll.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 16-32,41
+tests/tools/test_send_message_tool.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 143,182,488
+hermes_cli/__init__.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 17-18
+website/docs/user-guide/configuration.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 787,884-895,1441,1445-1449,1455,1460-1462,1464
+website/static/api/model-catalog.json
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 72-74
+gateway/platforms/webhook.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 62-84,152-162
+ui-tui/src/components/appOverlays.tsx
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 185,194-202
+website/docs/guides/build-a-hermes-plugin.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 22,28,750-756,764-768,777,781-788,877-878,946,954-956
+hermes_cli/kanban_specify.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-265
+gateway/config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 274-281,284,290,299,305,312-314,834-839,926-931,1015-1020,1027-1043,1054-1059,1220-1230,1691-1694,1710-1735
+RELEASE_v0.13.0.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-641
+plugins/platforms/google_chat/plugin.yaml
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-39
+website/docs/user-guide/docker.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 274-277
+tests/agent/transports/test_bedrock_transport.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 145-162
+web/src/pages/ChatPage.tsx
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 36,115,151-183,289-291,395-428,555,601,603-609,611-614,620-621,660,855,857
+web/src/plugins/types.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 25-30
+tests/gateway/test_slack_mention.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 58,66-67,254-259,562-689
+tests/gateway/test_weixin.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 10-11,57-78,306-334,517-519
+website/sidebars.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 80,215
+.env.example
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 426-446
+tests/gateway/test_wecom.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 7,125-164
+tests/test_install_sh_termux_network_prereqs.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-22
+hermes_cli/kanban.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 73,288-296,456-457,573-608,723,1032-1039,1056,1184-1200,1733,2020-2091
+optional-skills/finance/3-statement-model/references/formatting.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-118
+ui-tui/src/__tests__/viewportStore.test.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 3,54-83
+tests/hermes_cli/test_auth_nous_provider.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1182-1265
+tests/test_process_loop_event_loop_warning.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-131
+ui-tui/src/theme.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 9-10,269-272,319-320,526,533-539,548-550,567
+plugins/platforms/google_chat/__init__.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-3
+tests/hermes_cli/test_curator_status.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 178-202
+tests/hermes_cli/test_update_autostash.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 326,328,330,332,334,347-350,374,387-402
+tests/agent/test_context_compressor.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 194-217
+gateway/platforms/dingtalk.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 368-381,460,465-468,472-474
+website/docs/user-guide/features/extending-the-dashboard.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 268
+acp_adapter/server.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 6,13,15,24,53,91-356,418-431,1091,1110,1135
+plugins/platforms/irc/adapter.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 656-706,719-726
+tests/hermes_cli/test_auth_profile_fallback.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-360
+hermes_cli/doctor.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 94-102,1096-1100,1242-1251
+plugins/memory/openviking/__init__.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 30,32,34-36,38-39,48,103-107,112-115,118,124-157,162,169-185,190,297-299,305,310-329,336-380,877-895,897-922
+hermes_cli/models.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 49,420-427
+tools/mcp_oauth.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 40,42,64,166-174,176-184,186-195,197-200,216,228-230,308-329,334
+gateway/platforms/qqbot/keyboards.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-473
+tests/hermes_cli/test_kanban_db.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 171-174,177-187,193-194,197
+website/docs/user-guide/features/kanban.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 338-341,344-350,415-423,426,445,457,490,583-584,602-603,657
+.github/workflows/lint.yml
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-151
+website/docs/user-guide/features/web-dashboard.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 337
+website/docs/reference/optional-skills-catalog.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 146
+plugins/kanban/dashboard/dist/index.js
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 115-126,132-138,463-467,514,527,1760,1764,1771-1772,1908-1930,2020,2089-2093,2526-2527,2535-2595
+optional-skills/finance/pptx-author/SKILL.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-172
+tests/agent/test_models_dev.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 226-232,253,267-272
+tools/web_providers/searxng.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-131
+tests/tools/test_mcp_utility_capability_gating.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-175
+tests/hermes_cli/test_doctor.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 381-385,660-711
+ui-tui/src/__tests__/virtualHistoryOffsetCache.test.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-155
+tests/hermes_cli/test_opencode_go_flat_namespace.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-159
+tests/hermes_cli/test_spotify_auth.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 91-135
+optional-skills/finance/dcf-model/requirements.txt
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-7
+hermes_cli/plugins.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 83-86
+optional-skills/finance/excel-author/scripts/recalc.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-88
+tests/tools/test_mcp_empty_error_message.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-89
+tests/gateway/test_matrix.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1741,1756,1758-1763,1770,1785,1787-1792,1836-1861
+gateway/display_config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 38-43,197
+web/src/lib/api.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-18,27,70-73,398-405
+hermes_cli/setup.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 397,2465-2467,2485-2487,2497-2503,2507-2509,2519-2521,2549-2551
+tools/web_providers/base.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-89
+optional-skills/finance/dcf-model/TROUBLESHOOTING.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-40
+tests/hermes_cli/test_plugins.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 333
+tests/gateway/test_run_cleanup_progress.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-367
+website/docs/user-guide/features/skins.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 70,143
+ui-tui/src/app/useInputHandlers.ts
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 14,25-44,60,180,183-185,206-213,215-216,315-317,323,325-329,332
+pyproject.toml
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 7,71,80-100,181,184-185
+tools/web_providers/ddgs.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-98
+optional-skills/finance/3-statement-model/references/sec-filings.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-125
+tests/tools/test_mcp_image_content.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-138
+web/src/components/ChatSidebar.tsx
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 306,358,363
+hermes_cli/commands.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 162,164
+tests/tools/test_dockerfile_node_modules_perms.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-39
+tests/gateway/test_restart_resume_pending.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 36,42,56-72,931-1134
+hermes_cli/_parser.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 73-75
+tests/gateway/test_runtime_env_reload_config_authority.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-53
+tests/gateway/restart_test_helpers.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 2,78-79,121-125
+website/docs/developer-guide/adding-platform-adapters.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 43-44,47-48,51,53-61,105-116,127-134,184-186,200-292
+tests/gateway/test_post_delivery_callback_chaining.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-113
+tests/tools/test_web_providers_searxng.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-337
+website/docs/user-guide/features/tool-gateway.md
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 3,10,12,14-16,18,20-25,27-36,38,40,43,46,48,50-52,54,57-63,65,67,69,71,73,75-77,79,82,85-87,89,91-113,132,134,138,141,143,145,148-151,154,158,160,162,164,166,168,170,172,174,176
+tests/gateway/test_qqbot.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 629-1809
+tests/gateway/test_allowed_channels_widening.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-364
+tests/test_mcp_serve.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 12,211-258,281-289,750-792,831-836,839-848,850-869
+tests/gateway/test_restart_notification.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 500-574,606-625
+hermes_cli/web_server.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 55,1880-1881,2015,2018,2176-2252,2267-2279,2459,2565,2570-2571,3042-3048,3051-3053,3311-3333,3340-3346,3359-3364,3369-3370,3372-3380,3387-3409,3413-3414,3424,3434-3436
+hermes_cli/config.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 547-553,783-795,1116-1123,1132-1137,1160,1165-1167,1171-1177,1227,1266-1269,1872-1887,2006,4022-4025,4065-4066,4985-5081
+tests/hermes_cli/test_mcp_add_command_dest.py
+  s_ffe5b39ca1fbc2::t_7255efc1987dff 1-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "83d2461c622e23229ca54d81fe529a4a2502b7cd",
+  "prompts": {},
+  "sessions": {
+    "s_ffe5b39ca1fbc2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4622647c-f17e-42d6-bb4d-e2309ac7e037",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan <donovanyohan@gmail.com>"
+    }
+  }
+}
