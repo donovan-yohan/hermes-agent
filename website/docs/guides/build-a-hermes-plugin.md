@@ -19,13 +19,13 @@ Hermes has several distinct pluggable interfaces — some use Python `register_*
 | A **gateway channel** (Discord/Telegram/IRC/Teams/etc.) | [Adding Platform Adapters](/docs/developer-guide/adding-platform-adapters) |
 | A **memory backend** (Honcho/Mem0/Supermemory/etc.) | [Memory Provider Plugins](/docs/developer-guide/memory-provider-plugin) |
 | A **context-compression engine** | [Context Engine Plugins](/docs/developer-guide/context-engine-plugin) |
-| An **image-generation backend** | See bundled examples in `plugins/image_gen/openai/` and `plugins/image_gen/xai/` |
+| An **image-generation backend** | [Image Generation Provider Plugins](/docs/developer-guide/image-gen-provider-plugin) |
 | A **TTS backend** (any CLI — Piper, VoxCPM, Kokoro, voice cloning, …) | [TTS custom command providers](/docs/user-guide/features/tts#custom-command-providers) — config-driven, no Python needed |
 | An **STT backend** (custom whisper / ASR CLI) | [Voice Message Transcription](/docs/user-guide/features/tts#voice-message-transcription-stt) — set `HERMES_LOCAL_STT_COMMAND` to a shell template |
 | **External tools via MCP** (filesystem, GitHub, Linear, any MCP server) | [MCP](/docs/user-guide/features/mcp) — declare `mcp_servers.<name>` in `config.yaml` |
 | **Gateway event hooks** (fire on startup, session events, commands) | [Event Hooks](/docs/user-guide/features/hooks#gateway-event-hooks) — drop `HOOK.yaml` + `handler.py` into `~/.hermes/hooks/<name>/` |
 | **Shell hooks** (run a shell command on events) | [Shell Hooks](/docs/user-guide/features/hooks#shell-hooks) — declare under `hooks:` in `config.yaml` |
-| **Additional skill sources** (custom GitHub repos, private skill indexes) | [Skills](/docs/user-guide/features/skills) — `hermes skills tap add <repo>` |
+| **Additional skill sources** (custom GitHub repos, private skill indexes) | [Skills](/docs/user-guide/features/skills) — `hermes skills tap add <repo>` · [Publishing a tap](/docs/user-guide/features/skills#publishing-a-custom-skill-tap) |
 | A first-class **core** inference provider (not a plugin) | [Adding Providers](/docs/developer-guide/adding-providers) |
 
 See the full [Pluggable interfaces table](/docs/user-guide/features/plugins#pluggable-interfaces--where-to-go-for-each) for a consolidated view of every extension surface including config-driven (TTS, STT, MCP, shell hooks) and drop-in directory (gateway hooks) styles.
@@ -747,6 +747,13 @@ def check_requirements():
     import os
     return bool(os.environ.get("MYPLATFORM_TOKEN"))
 
+def _env_enablement():
+    import os
+    tok = os.getenv("MYPLATFORM_TOKEN", "").strip()
+    if not tok:
+        return None
+    return {"token": tok}
+
 def register(ctx):
     ctx.register_platform(
         name="myplatform",
@@ -754,6 +761,11 @@ def register(ctx):
         adapter_factory=lambda cfg: MyPlatformAdapter(cfg),
         check_fn=check_requirements,
         required_env=["MYPLATFORM_TOKEN"],
+        # Auto-populate PlatformConfig.extra from env so env-only setups
+        # show up in `hermes gateway status` without SDK instantiation.
+        env_enablement_fn=_env_enablement,
+        # Opt in to cron delivery: `deliver=myplatform` routes to this var.
+        cron_deliver_env_var="MYPLATFORM_HOME_CHANNEL",
         emoji="💬",
         platform_hint="You are chatting via MyPlatform. Keep responses concise.",
     )
@@ -762,10 +774,18 @@ def register(ctx):
 ```yaml
 # plugins/platforms/myplatform/plugin.yaml
 name: myplatform-platform
+label: MyPlatform
 kind: platform
 version: 1.0.0
 description: MyPlatform gateway adapter
-requires_env: [MYPLATFORM_TOKEN]
+requires_env:
+  - name: MYPLATFORM_TOKEN
+    description: "Bot token from the MyPlatform console"
+    password: true
+optional_env:
+  - name: MYPLATFORM_HOME_CHANNEL
+    description: "Default channel for cron delivery"
+    password: false
 ```
 
 **Full guide:** [Adding Platform Adapters](/docs/developer-guide/adding-platform-adapters) — complete `BasePlatformAdapter` contract, message routing, auth gating, setup wizard integration. Look at `plugins/platforms/irc/` for a stdlib-only working example.
@@ -854,6 +874,8 @@ version: 1.0.0
 description: Custom image generation backend
 ```
 
+**Full guide:** [Image Generation Provider Plugins](/docs/developer-guide/image-gen-provider-plugin) — full `ImageGenProvider` ABC, `list_models()` / `get_setup_schema()` metadata, `success_response()`/`error_response()` helpers, base64 vs URL output, user overrides, pip distribution.
+
 **Reference examples:** `plugins/image_gen/openai/` (DALL-E / GPT-Image via OpenAI SDK), `plugins/image_gen/openai-codex/`, `plugins/image_gen/xai/` (Grok image gen).
 
 ## Non-Python extension surfaces
@@ -921,7 +943,7 @@ Supports all the same events as Python plugin hooks (`pre_tool_call`, `post_tool
 
 ### Skill sources — add a custom skill registry
 
-If you maintain a private GitHub repo of skills (or want to pull from a community index beyond the built-in sources), add it as a **tap**:
+If you maintain a GitHub repo of skills (or want to pull from a community index beyond the built-in sources), add it as a **tap**:
 
 ```bash
 hermes skills tap add myorg/skills-repo
@@ -929,7 +951,9 @@ hermes skills search my-workflow --source myorg/skills-repo
 hermes skills install myorg/skills-repo/my-workflow
 ```
 
-**Full guide:** [Skills Hub](/docs/user-guide/features/skills#skills-hub).
+Publishing your own tap is just a GitHub repo with `skills/<skill-name>/SKILL.md` directories — no server or registry signup needed.
+
+**Full guides:** [Skills Hub](/docs/user-guide/features/skills#skills-hub) · [Publishing a custom tap](/docs/user-guide/features/skills#publishing-a-custom-skill-tap) (repo layout, minimal example, non-default paths, trust levels).
 
 ### TTS / STT via command templates
 
