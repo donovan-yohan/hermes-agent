@@ -1,0 +1,37 @@
+gateway/run.py
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 588-625,13552-13554
+tests/gateway/test_status_thread_metadata.py
+  s_ffe5b39ca1fbc2::t_d903308104d528 1-69
+website/docs/user-guide/messaging/discord.md
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 282,306,329-337
+  s_ffe5b39ca1fbc2::t_81ab86a7565fdf 338
+gateway/config.py
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 759-760,826-827
+tests/gateway/test_config.py
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 375-409
+tests/gateway/conftest.py
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 122-126,129-132
+gateway/platforms/discord.py
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 3531-3548,3750-3776,3778
+  s_ffe5b39ca1fbc2::t_4fd72452fab8b5 3777
+website/docs/reference/environment-variables.md
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 255
+tests/gateway/test_discord_send.py
+  s_ffe5b39ca1fbc2::t_179a25a08d4a0e 26-27,391-519
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.1",
+  "base_commit_sha": "d301b065f85c6ad73e2ec8f62a9ce186f8118586",
+  "prompts": {},
+  "sessions": {
+    "s_ffe5b39ca1fbc2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4622647c-f17e-42d6-bb4d-e2309ac7e037",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "Donovan Yohan <donovanyohan@gmail.com>"
+    }
+  }
+}
