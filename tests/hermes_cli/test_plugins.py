@@ -129,6 +129,40 @@ class TestPluginDiscovery:
 
         assert "proj_plugin" not in mgr._plugins
 
+    def test_custom_plugins_discovered_and_opt_in(self, tmp_path, monkeypatch):
+        """Repo custom-plugins are visible and standalone plugins remain opt-in."""
+        hermes_home = tmp_path / "hermes_test"
+        hermes_home.mkdir(exist_ok=True)
+        (hermes_home / "config.yaml").write_text(
+            yaml.safe_dump({"plugins": {"enabled": []}})
+        )
+        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+
+        mgr = PluginManager()
+        mgr.discover_and_load()
+
+        listing = {p["key"]: p for p in mgr.list_plugins()}
+        assert "remote-hosts" in listing
+        assert listing["remote-hosts"]["source"] == "custom"
+        assert listing["remote-hosts"]["enabled"] is False
+
+        (hermes_home / "config.yaml").write_text(
+            yaml.safe_dump({"plugins": {"enabled": ["remote-hosts"]}})
+        )
+        mgr = PluginManager()
+        mgr.discover_and_load()
+        listing = {p["key"]: p for p in mgr.list_plugins()}
+        assert listing["remote-hosts"]["source"] == "custom"
+        assert listing["remote-hosts"]["enabled"] is True
+
+        from tools.registry import registry
+        assert set(registry.get_tool_names_for_toolset("remote-hosts")) >= {
+            "remote_hosts_list",
+            "remote_terminal",
+            "remote_read_file",
+            "remote_write_file",
+        }
+
     def test_discover_is_idempotent(self, tmp_path, monkeypatch):
         """Calling discover_and_load() twice does not duplicate plugins."""
         plugins_dir = tmp_path / "hermes_test" / "plugins"
@@ -139,12 +173,7 @@ class TestPluginDiscovery:
         mgr.discover_and_load()
         mgr.discover_and_load()  # second call should no-op
 
-        # Filter out bundled plugins — they're always discovered.
-        non_bundled = {
-            n: p for n, p in mgr._plugins.items()
-            if p.manifest.source != "bundled"
-        }
-        assert len(non_bundled) == 1
+        assert list(mgr._plugins).count("once_plugin") == 1
 
     def test_discover_skips_dir_without_manifest(self, tmp_path, monkeypatch):
         """Directories without plugin.yaml are silently skipped."""
@@ -155,12 +184,7 @@ class TestPluginDiscovery:
         mgr = PluginManager()
         mgr.discover_and_load()
 
-        # Filter out bundled plugins — they're always discovered.
-        non_bundled = {
-            n: p for n, p in mgr._plugins.items()
-            if p.manifest.source != "bundled"
-        }
-        assert len(non_bundled) == 0
+        assert "no_manifest" not in mgr._plugins
 
     def test_entry_points_scanned(self, tmp_path, monkeypatch):
         """Entry-point based plugins are discovered (mocked)."""

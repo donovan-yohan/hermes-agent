@@ -2,19 +2,21 @@
 Hermes Plugin System
 ====================
 
-Discovers, loads, and manages plugins from four sources:
+Discovers, loads, and manages plugins from five sources:
 
 1. **Bundled plugins** – ``<repo>/plugins/<name>/`` (shipped with hermes-agent;
    ``memory/`` and ``context_engine/`` subdirs are excluded — they have their
    own discovery paths)
-2. **User plugins**   – ``~/.hermes/plugins/<name>/``
-3. **Project plugins** – ``./.hermes/plugins/<name>/`` (opt-in via
+2. **Custom plugins** – ``<repo>/custom-plugins/<name>/`` (fork-local shipped
+   plugins; standalone plugins remain opt-in via ``plugins.enabled``)
+3. **User plugins**   – ``~/.hermes/plugins/<name>/``
+4. **Project plugins** – ``./.hermes/plugins/<name>/`` (opt-in via
    ``HERMES_ENABLE_PROJECT_PLUGINS``)
-4. **Pip plugins**     – packages that expose the ``hermes_agent.plugins``
+5. **Pip plugins**     – packages that expose the ``hermes_agent.plugins``
    entry-point group.
 
-Later sources override earlier ones on name collision, so a user or project
-plugin with the same name as a bundled plugin replaces it.
+Later sources override earlier ones on name collision, so a custom, user, or
+project plugin with the same name as a bundled plugin replaces it.
 
 Each directory plugin must contain a ``plugin.yaml`` manifest **and** an
 ``__init__.py`` with a ``register(ctx)`` function.
@@ -63,6 +65,11 @@ def get_bundled_plugins_dir() -> Path:
     if env_override:
         return Path(env_override)
     return Path(__file__).resolve().parent.parent / "plugins"
+
+
+def get_custom_plugins_dir() -> Path:
+    """Locate the fork-local ``custom-plugins/`` directory."""
+    return Path(__file__).resolve().parent.parent / "custom-plugins"
 
 try:
     import yaml
@@ -191,7 +198,7 @@ class PluginManifest:
     requires_env: List[Union[str, Dict[str, Any]]] = field(default_factory=list)
     provides_tools: List[str] = field(default_factory=list)
     provides_hooks: List[str] = field(default_factory=list)
-    source: str = ""        # "user", "project", or "entrypoint"
+    source: str = ""        # "bundled", "custom", "user", "project", or "entrypoint"
     path: Optional[str] = None
     # Plugin kind — see plugins.py module docstring for semantics.
     # ``standalone`` (default): hooks/tools of its own; opt-in via
@@ -664,16 +671,20 @@ class PluginManager:
             self._scan_directory(repo_plugins / "platforms", source="bundled")
         )
 
-        # 2. User plugins (~/.hermes/plugins/)
+        # 2. Custom fork-local plugins (<repo>/custom-plugins/<name>/)
+        custom_plugins = get_custom_plugins_dir()
+        manifests.extend(self._scan_directory(custom_plugins, source="custom"))
+
+        # 3. User plugins (~/.hermes/plugins/)
         user_dir = get_hermes_home() / "plugins"
         manifests.extend(self._scan_directory(user_dir, source="user"))
 
-        # 3. Project plugins (./.hermes/plugins/)
+        # 4. Project plugins (./.hermes/plugins/)
         if _env_enabled("HERMES_ENABLE_PROJECT_PLUGINS"):
             project_dir = Path.cwd() / ".hermes" / "plugins"
             manifests.extend(self._scan_directory(project_dir, source="project"))
 
-        # 4. Pip / entry-point plugins
+        # 5. Pip / entry-point plugins
         manifests.extend(self._scan_entry_points())
 
         # Load each manifest (skip user-disabled plugins).
@@ -979,7 +990,7 @@ class PluginManager:
         loaded = LoadedPlugin(manifest=manifest)
 
         try:
-            if manifest.source in ("user", "project", "bundled"):
+            if manifest.source in ("user", "project", "bundled", "custom"):
                 module = self._load_directory_module(manifest)
             else:
                 module = self._load_entrypoint_module(manifest)

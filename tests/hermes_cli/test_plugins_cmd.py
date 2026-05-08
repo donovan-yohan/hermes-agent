@@ -13,6 +13,8 @@ import yaml
 
 from hermes_cli.plugins_cmd import (
     _copy_example_files,
+    _discover_all_plugins,
+    _plugin_exists,
     _read_manifest,
     _repo_name_from_url,
     _resolve_git_url,
@@ -154,6 +156,20 @@ class TestReadManifest:
         (tmp_path / "plugin.yaml").write_text("")
         result = _read_manifest(tmp_path)
         assert result == {}
+
+
+class TestCustomPluginDiscovery:
+    """CLI plugin listing/enabling sees fork-local custom plugins."""
+
+    def test_discover_all_plugins_includes_remote_hosts_custom_source(self):
+        entries = {
+            name: source
+            for name, _version, _description, source, _path in _discover_all_plugins()
+        }
+        assert entries["remote-hosts"] == "custom"
+
+    def test_plugin_exists_accepts_custom_remote_hosts(self):
+        assert _plugin_exists("remote-hosts") is True
 
 
 # ── cmd_install tests ─────────────────────────────────────────────────────────

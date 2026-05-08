@@ -642,7 +642,7 @@ def cmd_disable(name: str) -> None:
 
 
 def _plugin_exists(name: str) -> bool:
-    """Return True if a plugin with *name* is installed (user) or bundled."""
+    """Return True if a plugin with *name* is installed, bundled, or custom."""
     # Installed: directory name or manifest name match in user plugins dir
     user_dir = _plugins_dir()
     if user_dir.is_dir():
@@ -654,26 +654,33 @@ def _plugin_exists(name: str) -> bool:
             manifest = _read_manifest(child)
             if manifest.get("name") == name:
                 return True
-    # Bundled: <repo>/plugins/<name>/ (or HERMES_BUNDLED_PLUGINS on Nix).
-    from hermes_cli.plugins import get_bundled_plugins_dir
-    repo_plugins = get_bundled_plugins_dir()
-    if repo_plugins.is_dir():
-        candidate = repo_plugins / name
+    # Bundled/custom repo-local plugins.
+    from hermes_cli.plugins import get_bundled_plugins_dir, get_custom_plugins_dir
+    for base in (get_bundled_plugins_dir(), get_custom_plugins_dir()):
+        if not base.is_dir():
+            continue
+        candidate = base / name
         if candidate.is_dir() and (
             (candidate / "plugin.yaml").exists()
             or (candidate / "plugin.yml").exists()
         ):
             return True
+        for child in base.iterdir():
+            if not child.is_dir():
+                continue
+            manifest = _read_manifest(child)
+            if manifest.get("name") == name:
+                return True
     return False
 
 
 def _discover_all_plugins() -> list:
     """Return a list of (name, version, description, source, dir_path) for
-    every plugin the loader can see — user + bundled + project.
+    every plugin the loader can see — bundled + custom + user.
 
     Matches the ordering/dedup of ``PluginManager.discover_and_load``:
-    bundled first, then user, then project; user overrides bundled on
-    name collision.
+    bundled first, then custom, then user; later sources override earlier
+    sources on name collision.
     """
     try:
         import yaml
@@ -682,16 +689,21 @@ def _discover_all_plugins() -> list:
 
     seen: dict = {}  # name -> (name, version, description, source, path)
 
-    # Bundled (<repo>/plugins/<name>/), excluding memory/ and context_engine/
-    from hermes_cli.plugins import get_bundled_plugins_dir
+    # Bundled/custom/user plugins. This lightweight scanner handles the flat
+    # plugin layout used by the CLI list/enable commands.
+    from hermes_cli.plugins import get_bundled_plugins_dir, get_custom_plugins_dir
     repo_plugins = get_bundled_plugins_dir()
-    for base, source in ((repo_plugins, "bundled"), (_plugins_dir(), "user")):
+    for base, source in (
+        (repo_plugins, "bundled"),
+        (get_custom_plugins_dir(), "custom"),
+        (_plugins_dir(), "user"),
+    ):
         if not base.is_dir():
             continue
         for d in sorted(base.iterdir()):
             if not d.is_dir():
                 continue
-            if source == "bundled" and d.name in ("memory", "context_engine"):
+            if source == "bundled" and d.name in ("memory", "context_engine", "platforms", "model-providers"):
                 continue
             manifest_file = d / "plugin.yaml"
             if not manifest_file.exists():
@@ -710,7 +722,7 @@ def _discover_all_plugins() -> list:
                     description = manifest.get("description", "")
                 except Exception:
                     pass
-            # User plugins override bundled on name collision.
+            # Later sources override earlier sources on name collision.
             if name in seen and source == "bundled":
                 continue
             src_label = source

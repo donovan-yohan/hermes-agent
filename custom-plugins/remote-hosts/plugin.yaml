@@ -1,0 +1,9 @@
+name: remote-hosts
+version: "0.1.0"
+description: Explicit SSH tools for configured remote host aliases.
+kind: standalone
+provides_tools:
+  - remote_hosts_list
+  - remote_terminal
+  - remote_read_file
+  - remote_write_file
