@@ -160,21 +160,26 @@ def test_lifecycle_payloads_are_sanitized_and_bounded(kanban_home, captured_even
         tid = kb.create_task(conn, title="redaction", body=big_body, assignee="worker")
         kb.add_comment(conn, tid, "human", big_comment)
         assert kb.block_task(conn, tid, reason="waiting on reviewer " + "r" * 1000)
-        assert kb.complete_task(conn, tid, summary="summary " + "s" * 1000, result=big_result, metadata=metadata)
+        assert kb.complete_task(conn, tid, summary="summary-secret " + "s" * 1000, result=big_result, metadata=metadata)
 
     serialized = "\n".join(json.dumps(event, sort_keys=True) for event in captured_events)
     assert "body-secret" not in serialized
     assert "comment-secret" not in serialized
     assert "result-secret" not in serialized
     assert "metadata-secret" not in serialized
+    assert "summary-secret" not in serialized
     assert "token" in serialized  # metadata keys are useful; values are not.
     for event in captured_events:
         assert len(json.dumps(event)) < 4096
 
     blocked = next(e for e in captured_events if e["event_type"] == "kanban.task_blocked")
     assert blocked["payload"]["reason_len"] > len("waiting on reviewer")
-    assert len(blocked["payload"]["reason_preview"]) <= 300
+    assert blocked["payload"]["reason_present"] is True
+    assert "reason_preview" not in blocked["payload"]
     completed = next(e for e in captured_events if e["event_type"] == "kanban.task_completed")
+    assert completed["payload"]["summary_len"] > len("summary")
+    assert completed["payload"]["summary_present"] is True
+    assert "summary_preview" not in completed["payload"]
     assert completed["payload"]["result_len"] == len(big_result)
     assert completed["payload"]["metadata_keys"] == ["count", "token"]
 

@@ -1815,13 +1815,15 @@ def _sanitize_kanban_event_payload(kind: str, payload: Optional[dict]) -> dict[s
             sanitized["claimer"] = _preview_text(value, limit=120)
         elif key == "reason":
             sanitized["reason_len"] = len(str(value or ""))
-            sanitized["reason_preview"] = _preview_text(value)
+            sanitized["reason_present"] = value is not None
         elif key == "summary":
-            sanitized["summary_preview"] = _preview_text(value)
+            sanitized["summary_len"] = len(str(value or ""))
+            sanitized["summary_present"] = value is not None
         elif key == "result":
             sanitized["result_len"] = len(str(value or ""))
         elif key == "error":
-            sanitized["error_preview"] = _preview_text(value)
+            sanitized["error_len"] = len(str(value or ""))
+            sanitized["error_present"] = value is not None
         elif key == "metadata" and isinstance(value, dict):
             sanitized["metadata_keys"] = sorted(str(k) for k in value.keys())[:50]
         elif key in sensitive_or_large:
