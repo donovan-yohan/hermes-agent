@@ -132,22 +132,22 @@ def test_append_event_requires_write_txn_for_after_commit_guarantee(kanban_home,
         assert len(captured_events) == hook_count
 
 
-def test_bounded_jsonish_does_not_process_items_beyond_cap():
+def test_bounded_lifecycle_value_does_not_process_items_beyond_cap():
     class ExplodingRepr:
         def __str__(self):
             raise AssertionError("item past the cap should not be stringified")
 
     big: dict[str, object] = {f"k{i}": i for i in range(20)}
     big["k20"] = ExplodingRepr()
-    bounded = kb._bounded_jsonish(big)
+    bounded = kb._bounded_lifecycle_value(big)
     assert len(bounded) == 20
     assert list(bounded) == [f"k{i}" for i in range(20)]
 
     values = list(range(20)) + [ExplodingRepr()]
-    assert kb._bounded_jsonish(values) == list(range(20))
+    assert kb._bounded_lifecycle_value(values) == list(range(20))
 
     large_set = set(range(1000))
-    assert len(kb._bounded_jsonish(large_set)) == 20
+    assert len(kb._bounded_lifecycle_value(large_set)) == 20
 
 
 def test_lifecycle_payloads_are_sanitized_and_bounded(kanban_home, captured_events):

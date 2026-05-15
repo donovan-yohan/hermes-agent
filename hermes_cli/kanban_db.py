@@ -1746,21 +1746,27 @@ def list_events(conn: sqlite3.Connection, task_id: str) -> list[Event]:
 def _preview_text(value: Any, *, limit: int = _KANBAN_EVENT_PREVIEW_CHARS) -> str:
     text = "" if value is None else str(value)
     text = text.strip().replace("\r", " ").replace("\n", " ")
+    try:
+        from agent.redact import redact_sensitive_text
+
+        text = redact_sensitive_text(text)
+    except Exception:
+        pass
     return text[:limit]
 
 
-def _bounded_jsonish(value: Any) -> Any:
-    """Return a small JSON-ish value for lifecycle hook payloads."""
+def _bounded_lifecycle_value(value: Any) -> Any:
+    """Return a bounded JSON-compatible value for allowlisted lifecycle fields."""
     if value is None or isinstance(value, (bool, int, float)):
         return value
     if isinstance(value, str):
         return _preview_text(value)
     if isinstance(value, (list, tuple)):
-        return [_bounded_jsonish(v) for v in value[:20]]
+        return [_bounded_lifecycle_value(v) for v in value[:20]]
     if isinstance(value, set):
-        return [_bounded_jsonish(v) for v in itertools.islice(value, 20)]
+        return [_bounded_lifecycle_value(v) for v in itertools.islice(value, 20)]
     if isinstance(value, dict):
-        return {str(k): _bounded_jsonish(v) for k, v in itertools.islice(value.items(), 20)}
+        return {str(k): _bounded_lifecycle_value(v) for k, v in itertools.islice(value.items(), 20)}
     return _preview_text(value)
 
 
@@ -1831,7 +1837,7 @@ def _sanitize_kanban_event_payload(kind: str, payload: Optional[dict]) -> dict[s
         elif key in sensitive_or_large:
             sanitized[f"{key}_present"] = value is not None
         elif key in passthrough:
-            sanitized[key] = _bounded_jsonish(value)
+            sanitized[key] = _bounded_lifecycle_value(value)
         else:
             # Fail closed for future payload keys: don't leak arbitrary text or
             # object reprs just because a new producer forgot to classify the
