@@ -72,6 +72,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import logging
 import os
 import re
 import secrets
@@ -86,6 +87,9 @@ from typing import Any, Iterable, Optional
 from toolsets import get_toolset_names
 
 
+logger = logging.getLogger(__name__)
+
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -94,6 +98,31 @@ VALID_STATUSES = {"triage", "todo", "ready", "running", "blocked", "done", "arch
 VALID_WORKSPACE_KINDS = {"scratch", "worktree", "dir"}
 KNOWN_TOOLSET_NAMES = frozenset(name.casefold() for name in get_toolset_names())
 _IS_WINDOWS = sys.platform == "win32"
+
+_KANBAN_LIFECYCLE_HOOK = "on_kanban_event"
+_KANBAN_EVENT_SCHEMA_VERSION = 1
+_KANBAN_EVENT_PREVIEW_CHARS = 300
+_KANBAN_TXN_PENDING_EVENTS: dict[int, list[dict[str, Any]]] = {}
+_KANBAN_EVENT_TYPES = {
+    "created": "kanban.task_created",
+    "assigned": "kanban.task_assigned",
+    "linked": "kanban.dependency_linked",
+    "unlinked": "kanban.dependency_unlinked",
+    "commented": "kanban.comment_added",
+    "promoted": "kanban.task_promoted",
+    "claimed": "kanban.task_claimed",
+    "spawned": "kanban.worker_spawned",
+    "completed": "kanban.task_completed",
+    "blocked": "kanban.task_blocked",
+    "unblocked": "kanban.task_unblocked",
+    "archived": "kanban.task_archived",
+    "reclaimed": "kanban.run_reclaimed",
+    "timed_out": "kanban.run_failed",
+    "crashed": "kanban.run_failed",
+    "spawn_failed": "kanban.run_failed",
+    "gave_up": "kanban.run_failed",
+    "protocol_violation": "kanban.run_failed",
+}
 
 # A running task's claim is valid for 15 minutes; after that the next
 # dispatcher tick reclaims it.  Workers that outlive this window should call
@@ -1178,14 +1207,31 @@ def write_txn(conn: sqlite3.Connection):
     task + recording an event, etc.).  A claim CAS inside this context is
     atomic -- at most one concurrent writer can succeed.
     """
-    conn.execute("BEGIN IMMEDIATE")
+    pending_events: list[dict[str, Any]] = []
+    conn_key = id(conn)
+    previous_pending = _KANBAN_TXN_PENDING_EVENTS.get(conn_key)
+    _KANBAN_TXN_PENDING_EVENTS[conn_key] = pending_events
+
+    committed = False
     try:
-        yield conn
-    except Exception:
-        conn.execute("ROLLBACK")
-        raise
-    else:
-        conn.execute("COMMIT")
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            yield conn
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+        else:
+            conn.execute("COMMIT")
+            committed = True
+    finally:
+        if previous_pending is not None:
+            _KANBAN_TXN_PENDING_EVENTS[conn_key] = previous_pending
+        else:
+            _KANBAN_TXN_PENDING_EVENTS.pop(conn_key, None)
+
+    if committed:
+        for event in pending_events:
+            _emit_kanban_event(event)
 
 
 # ---------------------------------------------------------------------------
@@ -1503,7 +1549,12 @@ def assign_task(conn: sqlite3.Connection, task_id: str, profile: Optional[str]) 
             )
         else:
             conn.execute("UPDATE tasks SET assignee = ? WHERE id = ?", (profile, task_id))
-        _append_event(conn, task_id, "assigned", {"assignee": profile})
+        _append_event(
+            conn,
+            task_id,
+            "assigned",
+            {"previous_assignee": row["assignee"], "assignee": profile},
+        )
         return True
 
 
@@ -1638,8 +1689,14 @@ def add_comment(
             "VALUES (?, ?, ?, ?)",
             (task_id, author.strip(), body.strip(), now),
         )
-        _append_event(conn, task_id, "commented", {"author": author, "len": len(body)})
-        return int(cur.lastrowid or 0)
+        comment_id = int(cur.lastrowid or 0)
+        _append_event(
+            conn,
+            task_id,
+            "commented",
+            {"comment_id": comment_id, "author": author, "len": len(body)},
+        )
+        return comment_id
 
 
 def list_comments(conn: sqlite3.Connection, task_id: str) -> list[Comment]:
@@ -1683,6 +1740,181 @@ def list_events(conn: sqlite3.Connection, task_id: str) -> list[Event]:
     return out
 
 
+def _preview_text(value: Any, *, limit: int = _KANBAN_EVENT_PREVIEW_CHARS) -> str:
+    text = "" if value is None else str(value)
+    text = text.strip().replace("\r", " ").replace("\n", " ")
+    return text[:limit]
+
+
+def _bounded_jsonish(value: Any) -> Any:
+    """Return a small JSON-ish value for lifecycle hook payloads."""
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    if isinstance(value, str):
+        return _preview_text(value)
+    if isinstance(value, (list, tuple, set)):
+        return [_bounded_jsonish(v) for v in list(value)[:20]]
+    if isinstance(value, dict):
+        return {str(k): _bounded_jsonish(v) for k, v in list(value.items())[:20]}
+    return _preview_text(value)
+
+
+def _sanitize_kanban_event_payload(kind: str, payload: Optional[dict]) -> dict[str, Any]:
+    raw = dict(payload or {})
+    sanitized: dict[str, Any] = {}
+    sensitive_or_large = {
+        "body",
+        "command",
+        "env",
+        "logs",
+        "metadata",
+        "pid",
+        "reason",
+        "result",
+        "summary",
+        "workspace_path",
+    }
+    passthrough = {
+        "assignee",
+        "status",
+        "previous_assignee",
+        "parent",
+        "child",
+        "parents",
+        "tenant",
+        "skills",
+        "run_id",
+        "expires",
+        "verified_cards",
+        "phantom_cards",
+        "phantom_refs",
+        "result_len",
+        "len",
+        "comment_id",
+        "author",
+        "failure_count",
+        "failure_limit",
+        "auto_blocked",
+        "retryable",
+        "elapsed_seconds",
+        "limit_seconds",
+        "sigkill",
+        "exit_kind",
+        "exit_code",
+    }
+
+    for key, value in raw.items():
+        if key == "pid":
+            sanitized["pid_present"] = value is not None
+        elif key == "lock":
+            sanitized["claimer"] = _preview_text(value, limit=120)
+        elif key == "reason":
+            sanitized["reason_len"] = len(str(value or ""))
+            sanitized["reason_preview"] = _preview_text(value)
+        elif key == "summary":
+            sanitized["summary_preview"] = _preview_text(value)
+        elif key == "result":
+            sanitized["result_len"] = len(str(value or ""))
+        elif key == "error":
+            sanitized["error_preview"] = _preview_text(value)
+        elif key == "metadata" and isinstance(value, dict):
+            sanitized["metadata_keys"] = sorted(str(k) for k in value.keys())[:50]
+        elif key in sensitive_or_large:
+            sanitized[f"{key}_present"] = value is not None
+        elif key in passthrough:
+            sanitized[key] = _bounded_jsonish(value)
+        else:
+            sanitized[key] = _bounded_jsonish(value)
+
+    if kind in {"timed_out", "crashed", "spawn_failed", "gave_up", "protocol_violation"}:
+        sanitized.setdefault("outcome", kind)
+    if kind == "commented" and "len" in sanitized:
+        sanitized["body_len"] = sanitized.pop("len")
+    if kind in {"linked", "unlinked"}:
+        sanitized.setdefault("parent_id", sanitized.pop("parent", None))
+        sanitized.setdefault("child_id", sanitized.pop("child", None))
+    return sanitized
+
+
+def _build_kanban_lifecycle_event(
+    conn: sqlite3.Connection,
+    *,
+    event_id: int,
+    task_id: str,
+    kind: str,
+    payload: Optional[dict],
+    run_id: Optional[int],
+    created_at: int,
+) -> Optional[dict[str, Any]]:
+    event_type = _KANBAN_EVENT_TYPES.get(kind)
+    if event_type is None:
+        return None
+
+    task = conn.execute(
+        "SELECT id, title, assignee, status, tenant, created_by, "
+        "priority, workspace_kind FROM tasks WHERE id = ?",
+        (task_id,),
+    ).fetchone()
+    title_preview = _preview_text(task["title"] if task else "")
+    assignee = task["assignee"] if task else None
+    status = task["status"] if task else None
+    tenant = task["tenant"] if task else None
+
+    relationships: list[dict[str, Any]] = []
+    if assignee:
+        relationships.append(
+            {
+                "subject_type": "profile",
+                "subject_id": assignee,
+                "relation": kind,
+                "object_type": "task",
+                "object_id": task_id,
+            }
+        )
+
+    sanitized_payload = _sanitize_kanban_event_payload(kind, payload)
+    if task:
+        sanitized_payload.setdefault("title_preview", title_preview)
+        sanitized_payload.setdefault("workspace_kind", task["workspace_kind"])
+        sanitized_payload.setdefault("priority", task["priority"])
+
+    return {
+        "schema_version": _KANBAN_EVENT_SCHEMA_VERSION,
+        "event_id": event_id,
+        "event_type": event_type,
+        "emitted_at": created_at,
+        "board": get_current_board(),
+        "tenant": tenant,
+        "task_id": task_id,
+        "run_id": run_id,
+        "source": "kanban_db",
+        "actor": None,
+        "origin_plugin": None,
+        "correlation_id": None,
+        "status_before": None,
+        "status_after": status,
+        "assignee_before": sanitized_payload.get("previous_assignee"),
+        "assignee_after": assignee,
+        "relationships": relationships,
+        "payload": sanitized_payload,
+    }
+
+
+def _emit_kanban_event(event: dict[str, Any]) -> None:
+    try:
+        from hermes_cli.plugins import invoke_hook
+
+        invoke_hook(_KANBAN_LIFECYCLE_HOOK, event=event)
+    except Exception as exc:
+        logger.warning(
+            "Kanban lifecycle hook delivery failed for %s event_id=%s task_id=%s: %s",
+            event.get("event_type"),
+            event.get("event_id"),
+            event.get("task_id"),
+            exc,
+        )
+
+
 def _append_event(
     conn: sqlite3.Connection,
     task_id: str,
@@ -1690,8 +1922,12 @@ def _append_event(
     payload: Optional[dict] = None,
     *,
     run_id: Optional[int] = None,
-) -> None:
-    """Record an event row.  Called from within an already-open txn.
+) -> int:
+    """Record an event row and queue a sanitized lifecycle hook event.
+
+    Called from within an already-open txn. Hook delivery is deferred until
+    :func:`write_txn` commits, so observers see committed state and hook
+    failures cannot roll back the Kanban mutation.
 
     ``run_id`` is optional: pass the current run id so UIs can group
     events by attempt. For events that aren't scoped to a single run
@@ -1700,11 +1936,28 @@ def _append_event(
     """
     now = int(time.time())
     pl = json.dumps(payload, ensure_ascii=False) if payload else None
-    conn.execute(
+    cur = conn.execute(
         "INSERT INTO task_events (task_id, run_id, kind, payload, created_at) "
         "VALUES (?, ?, ?, ?, ?)",
         (task_id, run_id, kind, pl, now),
     )
+    event_id = int(cur.lastrowid or 0)
+    event = _build_kanban_lifecycle_event(
+        conn,
+        event_id=event_id,
+        task_id=task_id,
+        kind=kind,
+        payload=payload,
+        run_id=run_id,
+        created_at=now,
+    )
+    if event is not None:
+        pending = _KANBAN_TXN_PENDING_EVENTS.get(id(conn))
+        if pending is not None:
+            pending.append(event)
+        else:
+            _emit_kanban_event(event)
+    return event_id
 
 
 def _end_run(
@@ -2476,6 +2729,9 @@ def complete_task(
         completed_payload: dict = {
             "result_len": len(result) if result else 0,
             "summary": ev_summary or None,
+            "metadata_keys": sorted(str(k) for k in metadata.keys())[:50]
+            if isinstance(metadata, dict)
+            else [],
         }
         if verified_cards:
             completed_payload["verified_cards"] = verified_cards

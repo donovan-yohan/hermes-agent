@@ -143,6 +143,10 @@ VALID_HOOKS: Set[str] = {
     "on_session_finalize",
     "on_session_reset",
     "subagent_stop",
+    # Kanban lifecycle observer hook. Fired after committed Kanban DB
+    # mutations with a bounded/sanitized event dict. Observer only:
+    # return values are ignored and callbacks cannot veto lifecycle writes.
+    "on_kanban_event",
     # Gateway pre-dispatch hook. Fired once per incoming MessageEvent
     # after the internal-event guard but BEFORE auth/pairing and agent
     # dispatch. Plugins may return a dict to influence flow:
