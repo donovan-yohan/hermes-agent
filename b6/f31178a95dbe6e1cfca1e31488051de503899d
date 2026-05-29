@@ -1,0 +1,21 @@
+tests/hermes_cli/test_container_boot.py
+  s_1bfddab06eeaf5::t_f2780836f84c38 519-568
+hermes_cli/container_boot.py
+  s_1bfddab06eeaf5::t_b720fdcead6408 180-182,215-216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b6f31178a95dbe6e1cfca1e31488051de503899d",
+  "prompts": {},
+  "sessions": {
+    "s_1bfddab06eeaf5": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e7584-f6b4-7dc2-a9ef-b3a1e0753ce4",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Donovan Yohan <34756395+donovan-yohan@users.noreply.github.com>"
+    }
+  }
+}
