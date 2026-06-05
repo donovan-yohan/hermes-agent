@@ -478,6 +478,120 @@ def test_stale_claim_with_live_pid_extends_instead_of_reclaiming(
         assert "reclaimed" not in kinds
 
 
+def test_stale_claim_with_live_pid_and_no_heartbeat_uses_run_start_baseline(
+    kanban_home, monkeypatch,
+):
+    """A live worker that never heartbeats should not be extended forever."""
+    import json
+    import signal
+    import hermes_cli.kanban_db as _kb
+
+    with kb.connect() as conn:
+        t = kb.create_task(conn, title="silent worker", assignee="a")
+        host = _kb._claimer_id().split(":", 1)[0]
+        kb.claim_task(conn, t, claimer=f"{host}:worker")
+        kb._set_worker_pid(conn, t, 12345)
+
+        old_started = int(time.time()) - (
+            _kb.DEFAULT_CLAIM_HEARTBEAT_MAX_STALE_SECONDS + 60
+        )
+        stale_task_heartbeat = old_started - 30
+        with kb.write_txn(conn):
+            conn.execute(
+                "UPDATE tasks SET claim_expires = ?, started_at = ?, "
+                "last_heartbeat_at = ? WHERE id = ?",
+                (int(time.time()) - 60, old_started, stale_task_heartbeat, t),
+            )
+            conn.execute(
+                "UPDATE task_runs SET claim_expires = ?, started_at = ?, "
+                "last_heartbeat_at = NULL "
+                "WHERE id = (SELECT current_run_id FROM tasks WHERE id = ?)",
+                (int(time.time()) - 60, old_started, t),
+            )
+
+        alive = {"value": True}
+        monkeypatch.setattr(_kb, "_pid_alive", lambda _pid: alive["value"])
+        killed: list[int] = []
+
+        def _signal(_pid, sig):
+            killed.append(sig)
+            alive["value"] = False
+
+        reclaimed = kb.release_stale_claims(conn, signal_fn=_signal)
+        assert reclaimed == 1
+        assert killed == [signal.SIGTERM]
+        task = kb.get_task(conn, t)
+        assert task is not None
+        assert task.status == "ready"
+
+        row = conn.execute(
+            "SELECT payload FROM task_events "
+            "WHERE task_id = ? AND kind = 'reclaimed'",
+            (t,),
+        ).fetchone()
+        assert row is not None
+        payload = json.loads(row["payload"])
+        assert payload["last_heartbeat_at"] is None
+        assert payload["heartbeat_baseline_at"] == old_started
+        assert payload["heartbeat_stale"] is True
+
+
+def test_stale_claim_ignores_previous_run_task_heartbeat_for_active_run(
+    kanban_home, monkeypatch,
+):
+    """Task-level heartbeat from a prior attempt must not poison a fresh run."""
+    import json
+    import hermes_cli.kanban_db as _kb
+
+    with kb.connect() as conn:
+        t = kb.create_task(conn, title="retry silent worker", assignee="a")
+        host = _kb._claimer_id().split(":", 1)[0]
+        old_heartbeat = int(time.time()) - (
+            _kb.DEFAULT_CLAIM_HEARTBEAT_MAX_STALE_SECONDS + 60
+        )
+        with kb.write_txn(conn):
+            conn.execute(
+                "UPDATE tasks SET started_at = ?, last_heartbeat_at = ? WHERE id = ?",
+                (old_heartbeat, old_heartbeat, t),
+            )
+
+        kb.claim_task(conn, t, claimer=f"{host}:worker")
+        kb._set_worker_pid(conn, t, 12345)
+        old_expires = int(time.time()) - 60
+        with kb.write_txn(conn):
+            conn.execute(
+                "UPDATE tasks SET claim_expires = ? WHERE id = ?",
+                (old_expires, t),
+            )
+            conn.execute(
+                "UPDATE task_runs SET claim_expires = ? "
+                "WHERE id = (SELECT current_run_id FROM tasks WHERE id = ?)",
+                (old_expires, t),
+            )
+
+        monkeypatch.setattr(_kb, "_pid_alive", lambda _pid: True)
+        killed: list[int] = []
+        reclaimed = kb.release_stale_claims(
+            conn, signal_fn=lambda _pid, sig: killed.append(sig),
+        )
+        assert reclaimed == 0
+        assert killed == []
+        task = kb.get_task(conn, t)
+        assert task is not None
+        assert task.status == "running"
+        assert task.claim_expires is not None
+        assert task.claim_expires > old_expires
+
+        row = conn.execute(
+            "SELECT payload FROM task_events "
+            "WHERE task_id = ? AND kind = 'claim_extended'",
+            (t,),
+        ).fetchone()
+        assert row is not None
+        payload = json.loads(row["payload"])
+        assert payload["last_heartbeat_at"] is None
+
+
 def test_stale_claim_with_live_pid_uses_env_ttl_override(
     kanban_home, monkeypatch,
 ):
@@ -525,6 +639,11 @@ def test_stale_claim_reclaim_event_records_diagnostic_payload(
         conn.execute(
             "UPDATE tasks SET claim_expires = ?, last_heartbeat_at = ? "
             "WHERE id = ?",
+            (old_expires, hb_at, t),
+        )
+        conn.execute(
+            "UPDATE task_runs SET claim_expires = ?, last_heartbeat_at = ? "
+            "WHERE id = (SELECT current_run_id FROM tasks WHERE id = ?)",
             (old_expires, hb_at, t),
         )
 
