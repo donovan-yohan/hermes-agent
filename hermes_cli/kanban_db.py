@@ -3223,23 +3223,39 @@ def release_stale_claims(
     reclaimed = 0
     host_prefix = f"{_claimer_id().split(':', 1)[0]}:"
     stale = conn.execute(
-        "SELECT id, claim_lock, worker_pid, claim_expires, last_heartbeat_at "
-        "FROM tasks "
-        "WHERE status = 'running' AND claim_expires IS NOT NULL "
-        "  AND claim_expires < ?",
+        "SELECT t.id, t.claim_lock, t.worker_pid, t.claim_expires, "
+        "       t.last_heartbeat_at AS task_last_heartbeat_at, "
+        "       r.id AS active_run_id, "
+        "       r.last_heartbeat_at AS run_last_heartbeat_at, "
+        "       COALESCE(r.started_at, t.started_at) AS active_started_at "
+        "FROM tasks t "
+        "LEFT JOIN task_runs r ON r.id = t.current_run_id "
+        "WHERE t.status = 'running' AND t.claim_expires IS NOT NULL "
+        "  AND t.claim_expires < ?",
         (now,),
     ).fetchall()
     for row in stale:
         lock = row["claim_lock"] or ""
         host_local = lock.startswith(host_prefix)
-        hb = row["last_heartbeat_at"]
-        # Heartbeat staleness backstop: if we have a heartbeat at all
-        # and it's older than the max-stale threshold, the worker is
-        # not making observable progress.  Reclaim instead of extending,
-        # even if the PID is still alive (it's likely in a logic loop).
+        active_run_id = row["active_run_id"]
+        task_hb = row["task_last_heartbeat_at"]
+        run_hb = row["run_last_heartbeat_at"]
+        # Heartbeat staleness backstop: when the active run has an explicit
+        # heartbeat, use it. Otherwise use the active run's start time as the
+        # baseline so live-but-silent workers cannot be extended forever just
+        # because they never emitted a heartbeat event. On legacy rows without
+        # a current task_runs entry, fall back to the task-level heartbeat/start
+        # fields so old boards keep the previous behavior.
+        current_hb = run_hb if active_run_id is not None else task_hb
+        heartbeat_baseline = (
+            current_hb
+            if current_hb is not None
+            else row["active_started_at"]
+        )
         heartbeat_stale = (
-            hb is not None
-            and (now - int(hb)) > DEFAULT_CLAIM_HEARTBEAT_MAX_STALE_SECONDS
+            heartbeat_baseline is not None
+            and (now - int(heartbeat_baseline))
+            > DEFAULT_CLAIM_HEARTBEAT_MAX_STALE_SECONDS
         )
         if (
             host_local
@@ -3274,8 +3290,8 @@ def release_stale_claims(
                         "claim_expires_was": int(row["claim_expires"]),
                         "claim_expires_now": new_expires,
                         "last_heartbeat_at": (
-                            int(row["last_heartbeat_at"])
-                            if row["last_heartbeat_at"] is not None
+                            int(current_hb)
+                            if current_hb is not None
                             else None
                         ),
                     },
@@ -3310,8 +3326,12 @@ def release_stale_claims(
                 ),
                 "claim_expires": int(row["claim_expires"]),
                 "last_heartbeat_at": (
-                    int(row["last_heartbeat_at"])
-                    if row["last_heartbeat_at"] is not None else None
+                    int(current_hb)
+                    if current_hb is not None else None
+                ),
+                "heartbeat_baseline_at": (
+                    int(heartbeat_baseline)
+                    if heartbeat_baseline is not None else None
                 ),
                 "now": now,
                 "host_local": host_local,
