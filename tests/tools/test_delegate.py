@@ -16,6 +16,8 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
+import tools.delegate_tool as delegate_mod
+
 from tools.delegate_tool import (
     DELEGATE_BLOCKED_TOOLS,
     DELEGATE_TASK_SCHEMA,
@@ -69,6 +71,8 @@ class TestDelegateRequirements(unittest.TestCase):
         self.assertIn("tasks", props)
         self.assertIn("context", props)
         self.assertIn("toolsets", props)
+        self.assertIn("profile", props)
+        self.assertIn("profile", props["tasks"]["items"]["properties"])
         # max_iterations is intentionally NOT exposed to the model — it's
         # config-authoritative via delegation.max_iterations so users get
         # predictable budgets.
@@ -157,6 +161,22 @@ class TestStripBlockedTools(unittest.TestCase):
         self.assertEqual(result, [])
 
 
+class TestProfileDelegateToolsets(unittest.TestCase):
+    def test_profile_delegate_toolsets_arg_joins_requested_toolsets(self):
+        self.assertEqual(
+            delegate_mod._profile_delegate_toolsets_arg(["terminal", "file"]),
+            "terminal,file",
+        )
+
+    def test_profile_delegate_toolsets_arg_omits_empty_values(self):
+        self.assertIsNone(delegate_mod._profile_delegate_toolsets_arg(None))
+        self.assertIsNone(delegate_mod._profile_delegate_toolsets_arg([]))
+        self.assertEqual(
+            delegate_mod._profile_delegate_toolsets_arg(["terminal", "", " file "]),
+            "terminal,file",
+        )
+
+
 class TestDelegateTask(unittest.TestCase):
     def test_no_parent_agent(self):
         result = json.loads(delegate_task(goal="test"))
@@ -215,6 +235,280 @@ class TestDelegateTask(unittest.TestCase):
         self.assertEqual(result["results"][0]["summary"], "Result A")
         self.assertEqual(result["results"][1]["summary"], "Result B")
         self.assertIn("total_duration_seconds", result)
+
+    @patch("tools.delegate_tool._resolve_profile_delegate_env")
+    @patch("tools.delegate_tool._resolve_profile_delegate_argv")
+    @patch("tools.delegate_tool.subprocess.Popen")
+    def test_profile_task_mode_spawns_profile_subprocess(self, mock_popen, mock_argv, mock_profile_env):
+        captured = {}
+        mock_profile_env.return_value = ("qa", "/tmp/hermes/profiles/qa")
+        mock_argv.return_value = ["hermes"]
+
+        class FakeProc:
+            pid = 1234
+            returncode = 0
+
+            def communicate(self, timeout=None):
+                captured["timeout"] = timeout
+                return "profile result\n", ""
+
+            def poll(self):
+                return self.returncode
+
+        def fake_popen(cmd, **kwargs):
+            captured["cmd"] = list(cmd)
+            captured["env"] = dict(kwargs["env"])
+            captured["stdin"] = kwargs["stdin"]
+            return FakeProc()
+
+        mock_popen.side_effect = fake_popen
+        parent = _make_mock_parent()
+        result = json.loads(
+            delegate_task(
+                goal="Review this diff",
+                context="base=main",
+                toolsets=["terminal", "file"],
+                profile="QA",
+                parent_agent=parent,
+            )
+        )
+
+        self.assertEqual(result["results"][0]["status"], "completed")
+        self.assertEqual(result["results"][0]["summary"], "profile result")
+        self.assertEqual(result["results"][0]["profile"], "qa")
+        self.assertEqual(captured["env"]["HERMES_HOME"], "/tmp/hermes/profiles/qa")
+        self.assertEqual(captured["env"]["HERMES_PROFILE"], "qa")
+        self.assertEqual(captured["cmd"][:4], ["hermes", "-p", "qa", "--accept-hooks"])
+        self.assertIn("-t", captured["cmd"])
+        self.assertEqual(
+            captured["cmd"][captured["cmd"].index("-t") + 1],
+            "terminal,file",
+        )
+        self.assertLess(captured["cmd"].index("-t"), captured["cmd"].index("-z"))
+        self.assertIn("-z", captured["cmd"])
+        prompt = captured["cmd"][captured["cmd"].index("-z") + 1]
+        self.assertIn("Review this diff", prompt)
+        self.assertIn("base=main", prompt)
+        mock_profile_env.assert_called_with("QA")
+
+    @patch("tools.delegate_tool._resolve_profile_delegate_env")
+    @patch("tools.delegate_tool._resolve_profile_delegate_argv")
+    @patch("tools.delegate_tool.subprocess.Popen")
+    def test_profile_task_mode_reports_subprocess_failure(self, mock_popen, mock_argv, mock_profile_env):
+        mock_profile_env.return_value = ("qa", "/tmp/hermes/profiles/qa")
+        mock_argv.return_value = ["hermes"]
+
+        class FakeProc:
+            pid = 1234
+            returncode = 7
+
+            def communicate(self, timeout=None):
+                return "partial", "boom"
+
+            def poll(self):
+                return self.returncode
+
+        mock_popen.return_value = FakeProc()
+        parent = _make_mock_parent()
+        result = json.loads(delegate_task(goal="Do it", profile="qa", parent_agent=parent))
+
+        entry = result["results"][0]
+        self.assertEqual(entry["status"], "error")
+        self.assertEqual(entry["summary"], "partial")
+        self.assertEqual(entry["error"], "boom")
+        self.assertEqual(entry["exit_code"], 7)
+
+    @patch("tools.delegate_tool._resolve_profile_delegate_env")
+    @patch("tools.async_delegation.dispatch_async_delegation")
+    @patch("tools.delegate_tool._run_profile_delegate")
+    def test_profile_background_dispatches_without_building_child_agent(
+        self, mock_run_profile, mock_dispatch, mock_profile_env
+    ):
+        mock_profile_env.return_value = ("qa", "/tmp/hermes/profiles/qa")
+        mock_run_profile.return_value = {"task_index": 0, "status": "completed", "summary": "ok"}
+        mock_dispatch.return_value = {"status": "dispatched", "delegation_id": "deleg_123"}
+        parent = _make_mock_parent()
+        result = json.loads(
+            delegate_task(
+                goal="Review later",
+                toolsets=["terminal", "file"],
+                profile="qa",
+                background=True,
+                parent_agent=parent,
+            )
+        )
+
+        self.assertEqual(result["status"], "dispatched")
+        self.assertEqual(result["delegation_id"], "deleg_123")
+        self.assertEqual(result["profile"], "qa")
+        kwargs = mock_dispatch.call_args.kwargs
+        self.assertEqual(kwargs["model"], "profile:qa")
+        self.assertTrue(callable(kwargs["runner"]))
+        self.assertTrue(callable(kwargs["interrupt_fn"]))
+
+        runner_result = kwargs["runner"]()
+        self.assertEqual(runner_result["status"], "completed")
+        mock_profile_env.assert_called_once_with("qa")
+        mock_run_profile.assert_called_once()
+        self.assertEqual(
+            mock_run_profile.call_args.kwargs["resolved_profile"],
+            ("qa", "/tmp/hermes/profiles/qa"),
+        )
+        self.assertEqual(
+            mock_run_profile.call_args.kwargs["toolsets"],
+            ["terminal", "file"],
+        )
+
+    @patch("tools.delegate_tool._resolve_profile_delegate_env")
+    @patch("tools.delegate_tool._run_profile_delegate")
+    def test_profile_background_registered_handler_returns_before_runner_finishes(
+        self, mock_run_profile, mock_profile_env
+    ):
+        from tools import async_delegation
+
+        async_delegation._reset_for_tests()
+        mock_profile_env.return_value = ("qa", "/tmp/hermes/profiles/qa")
+        runner_started = threading.Event()
+        release_runner = threading.Event()
+
+        def slow_profile_runner(**kwargs):
+            runner_started.set()
+            release_runner.wait(timeout=5)
+            return {"task_index": 0, "status": "completed", "summary": "ok"}
+
+        mock_run_profile.side_effect = slow_profile_runner
+        parent = _make_mock_parent()
+        entry = delegate_mod.registry.get_entry("delegate_task")
+        assert entry is not None
+
+        try:
+            start = time.monotonic()
+            raw = entry.handler(
+                {
+                    "goal": "Review later",
+                    "toolsets": ["terminal", "file"],
+                    "profile": "qa",
+                    "background": True,
+                },
+                parent_agent=parent,
+            )
+            elapsed = time.monotonic() - start
+            result = json.loads(raw)
+
+            self.assertEqual(result["status"], "dispatched")
+            self.assertIn("delegation_id", result)
+            self.assertEqual(result["profile"], "qa")
+            self.assertLess(elapsed, 0.5)
+            self.assertTrue(runner_started.wait(timeout=1))
+            self.assertEqual(async_delegation.active_count(), 1)
+        finally:
+            release_runner.set()
+            time.sleep(0.05)
+            async_delegation._reset_for_tests()
+
+    def test_profile_batch_rejects_mixed_profile_and_in_process_tasks(self):
+        parent = _make_mock_parent()
+        result = json.loads(
+            delegate_task(
+                tasks=[{"goal": "QA", "profile": "qa"}, {"goal": "Plain"}],
+                parent_agent=parent,
+            )
+        )
+
+        self.assertIn("error", result)
+        self.assertIn("cannot mix profile and in-process tasks", result["error"])
+
+    def test_profile_background_rejects_batch(self):
+        parent = _make_mock_parent()
+        result = json.loads(
+            delegate_task(
+                tasks=[{"goal": "A", "profile": "qa"}, {"goal": "B", "profile": "qa"}],
+                background=True,
+                parent_agent=parent,
+            )
+        )
+
+        self.assertIn("error", result)
+        self.assertIn("background=true", result["error"])
+        self.assertIn("single-task", result["error"])
+
+    @patch("tools.delegate_tool._resolve_profile_delegate_env")
+    @patch("tools.delegate_tool._resolve_profile_delegate_argv")
+    @patch("tools.delegate_tool._terminate_profile_delegate_process")
+    @patch("tools.delegate_tool.subprocess.Popen")
+    def test_profile_delegate_terminates_subprocess_on_base_exception(
+        self, mock_popen, mock_terminate, mock_argv, mock_profile_env
+    ):
+        mock_profile_env.return_value = ("qa", "/tmp/hermes/profiles/qa")
+        mock_argv.return_value = ["hermes"]
+        proc_holder = {}
+
+        class FakeProc:
+            pid = 1234
+            returncode = None
+
+            def communicate(self, timeout=None):
+                raise KeyboardInterrupt()
+
+            def poll(self):
+                return None
+
+        fake_proc = FakeProc()
+        mock_popen.return_value = fake_proc
+
+        with self.assertRaises(KeyboardInterrupt):
+            delegate_mod._run_profile_delegate(
+                task_index=0,
+                goal="Review",
+                context=None,
+                toolsets=None,
+                profile="qa",
+                timeout_seconds=60,
+                proc_holder=proc_holder,
+            )
+
+        mock_terminate.assert_called_once_with(fake_proc)
+        self.assertEqual(proc_holder, {})
+
+    @patch("tools.delegate_tool._terminate_profile_delegate_process")
+    @patch("tools.delegate_tool.as_completed", side_effect=KeyboardInterrupt)
+    def test_profile_batch_terminates_in_flight_subprocesses_on_interrupt(
+        self, mock_as_completed, mock_terminate
+    ):
+        fake_procs = [MagicMock(name="proc0"), MagicMock(name="proc1")]
+
+        class FakeExecutor:
+            def __init__(self, *args, **kwargs):
+                self.submits = []
+                self.shutdown_calls = []
+
+            def submit(self, fn, **kwargs):
+                idx = kwargs["task_index"]
+                kwargs["proc_holder"]["proc"] = fake_procs[idx]
+                self.submits.append((fn, kwargs))
+                return MagicMock(name=f"future{idx}")
+
+            def shutdown(self, **kwargs):
+                self.shutdown_calls.append(kwargs)
+
+        fake_executor = FakeExecutor()
+        tasks = [{"goal": "A", "profile": "qa"}, {"goal": "B", "profile": "qa"}]
+
+        with patch("tools.delegate_tool.ThreadPoolExecutor", return_value=fake_executor):
+            with self.assertRaises(KeyboardInterrupt):
+                delegate_mod._run_profile_delegates(
+                    task_list=tasks,
+                    top_profile=None,
+                    top_toolsets=None,
+                    max_children=2,
+                    timeout_seconds=60,
+                )
+
+        self.assertEqual([call.args[0] for call in mock_terminate.call_args_list], fake_procs)
+        self.assertEqual(
+            fake_executor.shutdown_calls,
+            [{"wait": False, "cancel_futures": True}],
+        )
 
     @patch("tools.delegate_tool._run_single_child")
     def test_batch_mode_accepts_json_string_tasks(self, mock_run):
@@ -499,7 +793,7 @@ class TestToolNamePreservation(unittest.TestCase):
         with patch("run_agent.AIAgent") as MockAgent:
             mock_child = MagicMock()
 
-            def capture_and_return(user_message, task_id=None):
+            def capture_and_return(user_message, task_id=None, stream_callback=None):
                 captured["saved"] = list(mock_child._delegate_saved_tool_names)
                 return {"final_response": "ok", "completed": True, "api_calls": 1}
 
@@ -2616,7 +2910,7 @@ class TestOrchestratorEndToEnd(unittest.TestCase):
                 m.thinking_callback = None
                 orch_mock["agent"] = m
 
-                def _orchestrator_run(user_message=None, task_id=None):
+                def _orchestrator_run(user_message=None, task_id=None, stream_callback=None):
                     # Re-entrant: orchestrator spawns two leaves
                     delegate_task(
                         tasks=[{"goal": "leaf-A"}, {"goal": "leaf-B"}],
