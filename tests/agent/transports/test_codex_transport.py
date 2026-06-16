@@ -168,6 +168,47 @@ class TestCodexBuildKwargs:
 
         assert "extra_headers" not in kw
 
+    def test_codex_backend_gpt55_sets_extended_prompt_cache_retention(self, transport):
+        messages = [{"role": "user", "content": "Hi"}]
+
+        kw = transport.build_kwargs(
+            model="gpt-5.5",
+            messages=messages,
+            tools=[],
+            session_id="conv-codex-1",
+            is_codex_backend=True,
+        )
+
+        assert kw["prompt_cache_key"] == "conv-codex-1"
+        assert kw["prompt_cache_retention"] == "24h"
+
+    def test_codex_backend_gpt55_preserves_prompt_cache_retention_override(self, transport):
+        messages = [{"role": "user", "content": "Hi"}]
+
+        kw = transport.build_kwargs(
+            model="openai/gpt-5.5-codex",
+            messages=messages,
+            tools=[],
+            session_id="conv-codex-1",
+            is_codex_backend=True,
+            request_overrides={"prompt_cache_retention": "1h"},
+        )
+
+        assert kw["prompt_cache_retention"] == "1h"
+
+    def test_codex_backend_gpt54_does_not_set_extended_prompt_cache_retention(self, transport):
+        messages = [{"role": "user", "content": "Hi"}]
+
+        kw = transport.build_kwargs(
+            model="gpt-5.4",
+            messages=messages,
+            tools=[],
+            session_id="conv-codex-1",
+            is_codex_backend=True,
+        )
+
+        assert "prompt_cache_retention" not in kw
+
     def test_codex_backend_strips_caller_extra_headers(self, transport):
         messages = [{"role": "user", "content": "Hi"}]
 

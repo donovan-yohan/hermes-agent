@@ -11,6 +11,20 @@ from agent.transports.base import ProviderTransport
 from agent.transports.types import NormalizedResponse, ToolCall
 
 
+def _model_needs_explicit_extended_prompt_cache(model: str) -> bool:
+    """Return true for Responses models where explicit 24h cache retention helps.
+
+    OpenAI's GPT-5.5 family only supports extended prompt-cache retention
+    (`"24h"`).  The public docs say that is the default, but the
+    chatgpt.com Codex backend has shown intermittent tiny/zero cache hits on
+    very large stable-prefix agent sessions unless cache routing is made as
+    explicit as possible.  Keep the default narrow to GPT-5.5 so older Codex
+    models that still support in-memory retention are not behaviorally changed.
+    """
+    name = str(model or "").split("/")[-1].lower()
+    return name == "gpt-5.5" or name.startswith("gpt-5.5-")
+
+
 class ResponsesApiTransport(ProviderTransport):
     """Transport for api_mode='codex_responses'.
 
@@ -222,6 +236,12 @@ class ResponsesApiTransport(ProviderTransport):
             # ``extra_headers`` with HTTP 400. Correlation/cache routing for
             # this backend must not be sent through the Responses payload.
             kwargs.pop("extra_headers", None)
+            if _model_needs_explicit_extended_prompt_cache(model):
+                # GPT-5.5 requires extended prompt caching.  Set this
+                # explicitly on the Codex backend so long agent sessions do
+                # not rely on backend defaults during cache-routing changes.
+                # request_overrides still wins for controlled experiments.
+                kwargs.setdefault("prompt_cache_retention", "24h")
 
         max_tokens = params.get("max_tokens")
         if max_tokens is not None and not is_codex_backend:

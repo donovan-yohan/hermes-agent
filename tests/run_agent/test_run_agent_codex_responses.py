@@ -1262,6 +1262,18 @@ def test_preflight_codex_api_kwargs_allows_service_tier(monkeypatch):
     assert result["service_tier"] == "priority"
 
 
+def test_preflight_codex_api_kwargs_allows_prompt_cache_retention(monkeypatch):
+    agent = _build_agent(monkeypatch)
+    kwargs = _codex_request_kwargs()
+    kwargs["prompt_cache_key"] = "session-123"
+    kwargs["prompt_cache_retention"] = "24h"
+
+    from agent.codex_responses_adapter import _preflight_codex_api_kwargs
+    result = _preflight_codex_api_kwargs(kwargs)
+    assert result["prompt_cache_key"] == "session-123"
+    assert result["prompt_cache_retention"] == "24h"
+
+
 def test_preflight_codex_api_kwargs_preserves_positive_timeout(monkeypatch):
     """Positive numeric timeouts survive preflight so the SDK honors them."""
     agent = _build_agent(monkeypatch)
