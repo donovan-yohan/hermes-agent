@@ -2093,6 +2093,16 @@ def _profile_delegate_timeout_seconds(cfg: dict) -> int:
         return _PROFILE_DELEGATE_TIMEOUT_SECONDS
 
 
+def _profile_delegate_toolsets_arg(toolsets: Optional[List[str]]) -> Optional[str]:
+    """Return a comma-separated ``--toolsets`` value for profile delegates."""
+    if not toolsets:
+        return None
+    cleaned = [str(toolset).strip() for toolset in toolsets if str(toolset).strip()]
+    if not cleaned:
+        return None
+    return ",".join(cleaned)
+
+
 def _terminate_profile_delegate_process(proc: subprocess.Popen) -> None:
     if proc.poll() is not None:
         return
@@ -2122,6 +2132,7 @@ def _run_profile_delegate(
     task_index: int,
     goal: str,
     context: Optional[str],
+    toolsets: Optional[List[str]],
     profile: str,
     timeout_seconds: int,
     proc_holder: Optional[Dict[str, subprocess.Popen]] = None,
@@ -2158,9 +2169,11 @@ def _run_profile_delegate(
         "-p",
         canon,
         "--accept-hooks",
-        "-z",
-        _profile_delegate_prompt(goal, context),
     ]
+    toolsets_arg = _profile_delegate_toolsets_arg(toolsets)
+    if toolsets_arg:
+        cmd.extend(["-t", toolsets_arg])
+    cmd.extend(["-z", _profile_delegate_prompt(goal, context)])
 
     proc: Optional[subprocess.Popen] = None
     try:
@@ -2239,6 +2252,7 @@ def _run_profile_delegates(
     *,
     task_list: List[Dict[str, Any]],
     top_profile: Optional[str],
+    top_toolsets: Optional[List[str]],
     max_children: int,
     timeout_seconds: int,
 ) -> List[Dict[str, Any]]:
@@ -2259,6 +2273,7 @@ def _run_profile_delegates(
                 task_index=i,
                 goal=task["goal"],
                 context=task.get("context"),
+                toolsets=task.get("toolsets") or top_toolsets,
                 profile=profile,
                 timeout_seconds=timeout_seconds,
             )
@@ -2274,6 +2289,7 @@ def _run_profile_delegates(
                 task_index=i,
                 goal=task["goal"],
                 context=task.get("context"),
+                toolsets=task.get("toolsets") or top_toolsets,
                 profile=profile,
                 timeout_seconds=timeout_seconds,
                 proc_holder=proc_holders[i],
@@ -2482,6 +2498,7 @@ def delegate_task(
                     task_index=0,
                     goal=task["goal"],
                     context=task.get("context"),
+                    toolsets=task.get("toolsets") or toolsets,
                     profile=canon_profile,
                     timeout_seconds=timeout_seconds,
                     proc_holder=proc_holder,
@@ -2525,6 +2542,7 @@ def delegate_task(
             profile_results = _run_profile_delegates(
                 task_list=task_list,
                 top_profile=profile,
+                top_toolsets=toolsets,
                 max_children=max_children,
                 timeout_seconds=timeout_seconds,
             )
