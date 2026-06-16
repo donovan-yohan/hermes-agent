@@ -26,9 +26,12 @@ Use `profile` when the delegated work should run as a real Hermes profile with i
 delegate_task(
     goal="Review this PR as the QA profile",
     context="Base branch: main. Focus on regressions and missing tests.",
-    profile="qa"
+    profile="qa",
+    toolsets=["terminal", "file"],
 )
 ```
+
+When `toolsets` is provided with `profile`, Hermes passes it through to the profile subprocess as `--toolsets` / `-t`. The target profile still supplies its identity, config, credentials, memory, and other profile-local settings, but the delegated run only exposes the requested tools for that task. Omitting `toolsets` preserves the profile's normal default tool configuration.
 
 Profile-backed delegation is intentionally lighter than Kanban: the result returns to the current `delegate_task` call (or re-enters the chat when `background=True`) and no durable task-board state is created. Use Kanban when the work needs durable assignment, retries, dependencies, or human-visible task state.
 

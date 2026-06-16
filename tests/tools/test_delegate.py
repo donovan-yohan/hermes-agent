@@ -161,6 +161,22 @@ class TestStripBlockedTools(unittest.TestCase):
         self.assertEqual(result, [])
 
 
+class TestProfileDelegateToolsets(unittest.TestCase):
+    def test_profile_delegate_toolsets_arg_joins_requested_toolsets(self):
+        self.assertEqual(
+            delegate_mod._profile_delegate_toolsets_arg(["terminal", "file"]),
+            "terminal,file",
+        )
+
+    def test_profile_delegate_toolsets_arg_omits_empty_values(self):
+        self.assertIsNone(delegate_mod._profile_delegate_toolsets_arg(None))
+        self.assertIsNone(delegate_mod._profile_delegate_toolsets_arg([]))
+        self.assertEqual(
+            delegate_mod._profile_delegate_toolsets_arg(["terminal", "", " file "]),
+            "terminal,file",
+        )
+
+
 class TestDelegateTask(unittest.TestCase):
     def test_no_parent_agent(self):
         result = json.loads(delegate_task(goal="test"))
@@ -251,6 +267,7 @@ class TestDelegateTask(unittest.TestCase):
             delegate_task(
                 goal="Review this diff",
                 context="base=main",
+                toolsets=["terminal", "file"],
                 profile="QA",
                 parent_agent=parent,
             )
@@ -262,6 +279,12 @@ class TestDelegateTask(unittest.TestCase):
         self.assertEqual(captured["env"]["HERMES_HOME"], "/tmp/hermes/profiles/qa")
         self.assertEqual(captured["env"]["HERMES_PROFILE"], "qa")
         self.assertEqual(captured["cmd"][:4], ["hermes", "-p", "qa", "--accept-hooks"])
+        self.assertIn("-t", captured["cmd"])
+        self.assertEqual(
+            captured["cmd"][captured["cmd"].index("-t") + 1],
+            "terminal,file",
+        )
+        self.assertLess(captured["cmd"].index("-t"), captured["cmd"].index("-z"))
         self.assertIn("-z", captured["cmd"])
         prompt = captured["cmd"][captured["cmd"].index("-z") + 1]
         self.assertIn("Review this diff", prompt)
@@ -306,7 +329,13 @@ class TestDelegateTask(unittest.TestCase):
         mock_dispatch.return_value = {"status": "dispatched", "delegation_id": "deleg_123"}
         parent = _make_mock_parent()
         result = json.loads(
-            delegate_task(goal="Review later", profile="qa", background=True, parent_agent=parent)
+            delegate_task(
+                goal="Review later",
+                toolsets=["terminal", "file"],
+                profile="qa",
+                background=True,
+                parent_agent=parent,
+            )
         )
 
         self.assertEqual(result["status"], "dispatched")
@@ -324,6 +353,10 @@ class TestDelegateTask(unittest.TestCase):
         self.assertEqual(
             mock_run_profile.call_args.kwargs["resolved_profile"],
             ("qa", "/tmp/hermes/profiles/qa"),
+        )
+        self.assertEqual(
+            mock_run_profile.call_args.kwargs["toolsets"],
+            ["terminal", "file"],
         )
 
     def test_profile_batch_rejects_mixed_profile_and_in_process_tasks(self):
@@ -381,6 +414,7 @@ class TestDelegateTask(unittest.TestCase):
                 task_index=0,
                 goal="Review",
                 context=None,
+                toolsets=None,
                 profile="qa",
                 timeout_seconds=60,
                 proc_holder=proc_holder,
@@ -418,6 +452,7 @@ class TestDelegateTask(unittest.TestCase):
                 delegate_mod._run_profile_delegates(
                     task_list=tasks,
                     top_profile=None,
+                    top_toolsets=None,
                     max_children=2,
                     timeout_seconds=60,
                 )
