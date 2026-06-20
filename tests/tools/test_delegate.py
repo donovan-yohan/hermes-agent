@@ -418,7 +418,9 @@ class TestDelegateTask(unittest.TestCase):
         self.assertIn("error", result)
         self.assertIn("cannot mix profile and in-process tasks", result["error"])
 
-    def test_profile_background_rejects_batch(self):
+    @patch("tools.async_delegation.dispatch_async_delegation_batch")
+    def test_profile_background_batch_dispatches_as_one_async_unit(self, mock_dispatch):
+        mock_dispatch.return_value = {"status": "dispatched", "delegation_id": "deleg_batch"}
         parent = _make_mock_parent()
         result = json.loads(
             delegate_task(
@@ -428,9 +430,14 @@ class TestDelegateTask(unittest.TestCase):
             )
         )
 
-        self.assertIn("error", result)
-        self.assertIn("background=true", result["error"])
-        self.assertIn("single-task", result["error"])
+        self.assertEqual(result["status"], "dispatched")
+        self.assertEqual(result["delegation_id"], "deleg_batch")
+        self.assertEqual(result["count"], 2)
+        kwargs = mock_dispatch.call_args.kwargs
+        self.assertEqual(kwargs["goals"], ["A", "B"])
+        self.assertEqual(kwargs["model"], "profile:batch")
+        self.assertTrue(callable(kwargs["runner"]))
+        self.assertTrue(callable(kwargs["interrupt_fn"]))
 
     @patch("tools.delegate_tool._resolve_profile_delegate_env")
     @patch("tools.delegate_tool._resolve_profile_delegate_argv")

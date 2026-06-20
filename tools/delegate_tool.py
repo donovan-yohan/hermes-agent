@@ -2103,6 +2103,26 @@ def _profile_delegate_toolsets_arg(toolsets: Optional[List[str]]) -> Optional[st
     return ",".join(cleaned)
 
 
+def _profile_task_toolsets(
+    task: Dict[str, Any], top_toolsets: Optional[List[str]]
+) -> Optional[List[str]]:
+    raw = task.get("toolsets")
+    return raw if isinstance(raw, list) else top_toolsets
+
+
+def _profile_task_context(task: Dict[str, Any]) -> Optional[str]:
+    raw = task.get("context")
+    return str(raw) if raw is not None else None
+
+
+def _profile_task_goal(task: Dict[str, Any]) -> str:
+    return str(task["goal"])
+
+
+def _profile_task_name(task: Dict[str, Any], top_profile: Optional[str]) -> str:
+    return str(task.get("profile") or top_profile or "").strip()
+
+
 def _terminate_profile_delegate_process(proc: subprocess.Popen) -> None:
     if proc.poll() is not None:
         return
@@ -2257,10 +2277,11 @@ def _run_profile_delegates(
     top_toolsets: Optional[List[str]],
     max_children: int,
     timeout_seconds: int,
+    proc_holders: Optional[dict[int, Dict[str, subprocess.Popen]]] = None,
 ) -> List[Dict[str, Any]]:
     specs: list[tuple[int, Dict[str, Any], str]] = []
     for i, task in enumerate(task_list):
-        profile = (task.get("profile") or top_profile or "").strip()
+        profile = _profile_task_name(task, top_profile)
         if not profile:
             raise ValueError(
                 "profile-backed batch cannot mix profile and in-process tasks; "
@@ -2268,33 +2289,35 @@ def _run_profile_delegates(
             )
         specs.append((i, task, profile))
 
+    holders = proc_holders or {i: {} for i, _, _ in specs}
+
     if len(specs) == 1:
         i, task, profile = specs[0]
         return [
             _run_profile_delegate(
                 task_index=i,
-                goal=task["goal"],
-                context=task.get("context"),
-                toolsets=task.get("toolsets") or top_toolsets,
+                goal=_profile_task_goal(task),
+                context=_profile_task_context(task),
+                toolsets=_profile_task_toolsets(task, top_toolsets),
                 profile=profile,
                 timeout_seconds=timeout_seconds,
+                proc_holder=holders[i],
             )
         ]
 
     results: list[Dict[str, Any]] = []
-    proc_holders: dict[int, Dict[str, subprocess.Popen]] = {i: {} for i, _, _ in specs}
     executor = ThreadPoolExecutor(max_workers=max_children)
     try:
         futures = {
             executor.submit(
                 _run_profile_delegate,
                 task_index=i,
-                goal=task["goal"],
-                context=task.get("context"),
-                toolsets=task.get("toolsets") or top_toolsets,
+                goal=_profile_task_goal(task),
+                context=_profile_task_context(task),
+                toolsets=_profile_task_toolsets(task, top_toolsets),
                 profile=profile,
                 timeout_seconds=timeout_seconds,
-                proc_holder=proc_holders[i],
+                proc_holder=holders[i],
             ): i
             for i, task, profile in specs
         }
@@ -2313,7 +2336,7 @@ def _run_profile_delegates(
                     }
                 )
     except BaseException:
-        for holder in proc_holders.values():
+        for holder in holders.values():
             proc = holder.get("proc")
             if proc is not None:
                 _terminate_profile_delegate_process(proc)
@@ -2480,66 +2503,139 @@ def delegate_task(
             )
         timeout_seconds = _profile_delegate_timeout_seconds(cfg)
         if background:
-            if len(task_list) != 1:
-                return tool_error("background=true with profile is single-task only.")
-            from tools.async_delegation import dispatch_async_delegation
-            from tools.approval import get_current_session_key
+            if len(task_list) == 1:
+                from tools.async_delegation import dispatch_async_delegation
+                from tools.approval import get_current_session_key
 
-            task = task_list[0]
-            task_profile = (task.get("profile") or profile or "").strip()
-            if not task_profile:
-                return tool_error("profile-backed delegation requires a profile.")
-            try:
-                canon_profile, hermes_home = _resolve_profile_delegate_env(task_profile)
-            except Exception as exc:
-                return tool_error(str(exc))
-            proc_holder: Dict[str, subprocess.Popen] = {}
+                task = task_list[0]
+                task_goal = _profile_task_goal(task)
+                task_context = _profile_task_context(task)
+                task_toolsets = _profile_task_toolsets(task, toolsets)
+                task_profile = _profile_task_name(task, profile)
+                if not task_profile:
+                    return tool_error("profile-backed delegation requires a profile.")
+                try:
+                    canon_profile, hermes_home = _resolve_profile_delegate_env(task_profile)
+                except Exception as exc:
+                    return tool_error(str(exc))
+                proc_holder: Dict[str, subprocess.Popen] = {}
 
-            def _async_runner() -> Dict[str, Any]:
-                return _run_profile_delegate(
-                    task_index=0,
-                    goal=task["goal"],
-                    context=task.get("context"),
-                    toolsets=task.get("toolsets") or toolsets,
-                    profile=canon_profile,
-                    timeout_seconds=timeout_seconds,
-                    proc_holder=proc_holder,
-                    resolved_profile=(canon_profile, hermes_home),
+                def _async_runner() -> Dict[str, Any]:
+                    return _run_profile_delegate(
+                        task_index=0,
+                        goal=task_goal,
+                        context=task_context,
+                        toolsets=task_toolsets,
+                        profile=canon_profile,
+                        timeout_seconds=timeout_seconds,
+                        proc_holder=proc_holder,
+                        resolved_profile=(canon_profile, hermes_home),
+                    )
+
+                def _async_interrupt() -> None:
+                    proc = proc_holder.get("proc")
+                    if proc is not None:
+                        _terminate_profile_delegate_process(proc)
+
+                dispatch = dispatch_async_delegation(
+                    goal=task_goal,
+                    context=task_context,
+                    toolsets=task_toolsets,
+                    role=_normalize_role(str(task.get("role") or top_role)),
+                    model=f"profile:{canon_profile}",
+                    session_key=get_current_session_key(default=""),
+                    runner=_async_runner,
+                    interrupt_fn=_async_interrupt,
+                    max_async_children=_get_max_async_children(),
                 )
-
-            def _async_interrupt() -> None:
-                proc = proc_holder.get("proc")
-                if proc is not None:
-                    _terminate_profile_delegate_process(proc)
-
-            dispatch = dispatch_async_delegation(
-                goal=task["goal"],
-                context=task.get("context"),
-                toolsets=task.get("toolsets") or toolsets,
-                role=_normalize_role(task.get("role") or top_role),
-                model=f"profile:{canon_profile}",
-                session_key=get_current_session_key(default=""),
-                runner=_async_runner,
-                interrupt_fn=_async_interrupt,
-                max_async_children=_get_max_async_children(),
-            )
-            if dispatch.get("status") == "dispatched":
-                return json.dumps(
-                    {
-                        "status": "dispatched",
-                        "delegation_id": dispatch["delegation_id"],
-                        "goal": task["goal"],
-                        "profile": canon_profile,
-                        "mode": "background",
-                        "note": (
-                            "Profile delegate is running in the background. "
-                            "The result will re-enter the conversation as a new message when it finishes. "
-                            "Do not wait or poll — just continue."
-                        ),
-                    },
-                    ensure_ascii=False,
+                if dispatch.get("status") == "dispatched":
+                    return json.dumps(
+                        {
+                            "status": "dispatched",
+                            "delegation_id": dispatch["delegation_id"],
+                            "goal": task_goal,
+                            "profile": canon_profile,
+                            "mode": "background",
+                            "note": (
+                                "Profile delegate is running in the background. "
+                                "The result will re-enter the conversation as a new message when it finishes. "
+                                "Do not wait or poll — just continue."
+                            ),
+                        },
+                        ensure_ascii=False,
+                    )
+                logger.info(
+                    "delegate_task: async profile pool rejected single task (%s); running synchronously.",
+                    dispatch.get("error", "rejected"),
                 )
-            return tool_error(dispatch.get("error", "Async profile delegation could not be scheduled."))
+            else:
+                from tools.async_delegation import dispatch_async_delegation_batch
+                from tools.approval import get_current_session_key
+
+                for task in task_list:
+                    if not _profile_task_name(task, profile):
+                        return tool_error(
+                            "profile-backed batch cannot mix profile and in-process tasks; "
+                            "set a top-level profile or a profile on every task."
+                        )
+
+                proc_holders: dict[int, Dict[str, subprocess.Popen]] = {
+                    i: {} for i in range(len(task_list))
+                }
+
+                def _profile_batch_runner() -> Dict[str, Any]:
+                    profile_results = _run_profile_delegates(
+                        task_list=task_list,
+                        top_profile=profile,
+                        top_toolsets=toolsets,
+                        max_children=max_children,
+                        timeout_seconds=timeout_seconds,
+                        proc_holders=proc_holders,
+                    )
+                    return {
+                        "results": profile_results,
+                        "total_duration_seconds": round(time.monotonic() - overall_start, 2),
+                    }
+
+                def _profile_batch_interrupt() -> None:
+                    for holder in proc_holders.values():
+                        proc = holder.get("proc")
+                        if proc is not None:
+                            _terminate_profile_delegate_process(proc)
+
+                _goals = [_profile_task_goal(t) for t in task_list]
+                dispatch = dispatch_async_delegation_batch(
+                    goals=_goals,
+                    context=context,
+                    toolsets=toolsets,
+                    role=top_role,
+                    model=f"profile:{profile.strip()}" if profile else "profile:batch",
+                    session_key=get_current_session_key(default=""),
+                    runner=_profile_batch_runner,
+                    interrupt_fn=_profile_batch_interrupt,
+                    max_async_children=_get_max_async_children(),
+                )
+                if dispatch.get("status") == "dispatched":
+                    return json.dumps(
+                        {
+                            "status": "dispatched",
+                            "mode": "background",
+                            "count": len(_goals),
+                            "delegation_id": dispatch["delegation_id"],
+                            "goals": _goals,
+                            "profile": profile or "per-task",
+                            "note": (
+                                f"{len(_goals)} profile delegates are running in parallel in the background. "
+                                "Their consolidated results will re-enter the conversation when all finish. "
+                                "Do not wait or poll — just continue."
+                            ),
+                        },
+                        ensure_ascii=False,
+                    )
+                logger.info(
+                    "delegate_task: async profile pool rejected batch (%s); running synchronously.",
+                    dispatch.get("error", "rejected"),
+                )
         try:
             profile_results = _run_profile_delegates(
                 task_list=task_list,
