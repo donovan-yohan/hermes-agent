@@ -19,6 +19,7 @@ import { handleDesktopBridgeEvent } from './desktop-bridge'
 import { handleInputRequestEvent } from './input-requests'
 import { handleLifecycleEvent } from './lifecycle'
 import { handleMessageStreamEvent } from './message-stream'
+import { handleParticipantEvent } from './participants'
 import { handleSessionInfoEvent } from './session-info'
 import { handleStatusEvent } from './status'
 import { handleToolEvent } from './tools'
@@ -84,6 +85,7 @@ const HANDLERS: GatewayEventHandler[] = [
   handleLifecycleEvent,
   handleSessionInfoEvent,
   handleMessageStreamEvent,
+  handleParticipantEvent,
   handleToolEvent,
   handleInputRequestEvent,
   handleDesktopBridgeEvent,
@@ -241,11 +243,15 @@ export function useGatewayEventHandler(deps: GatewayEventDeps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       deps.appendAssistantDelta,
+      deps.appendParticipantDelta,
+      deps.appendParticipantUserMessage,
       deps.appendReasoningDelta,
       deps.activeSessionIdRef,
       deps.activeGatewayProfile,
       deps.compactedTurnRef,
+      deps.beginParticipantMessage,
       deps.completeAssistantMessage,
+      deps.completeParticipantMessage,
       deps.failAssistantMessage,
       deps.finalizeInterimAssistantMessage,
       deps.flushQueuedDeltas,

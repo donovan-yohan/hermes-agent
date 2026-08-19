@@ -9523,6 +9523,43 @@ class SessionDB(SessionSearchMixin, SessionSchemaMixin, SessionPortabilityMixin)
 
         return bool(self._execute_write(_do))
 
+    def update_message_row(
+        self,
+        session_id: str,
+        message_row_id: int,
+        *,
+        content: Any,
+        display_metadata: Optional[Dict[str, Any]],
+    ) -> bool:
+        """Rewrite one already-appended row's content and display metadata.
+
+        Deliberately narrow: only these two columns are writable and the row is
+        addressed by id *and* owning session, so no caller can use this to
+        change a message's role, reorder the transcript, or reach into another
+        session. Returns ``False`` when the row does not exist under
+        *session_id*.
+
+        Callers that stream a row's content in (an external participant's reply
+        lands as an empty row, then fills) need this; ordinary turns append a
+        complete row and never come back.
+        """
+        if not session_id or message_row_id is None:
+            return False
+
+        stored_content = self._encode_content(content)
+        metadata_json = self._encode_display_metadata(display_metadata)
+
+        def _do(conn):
+            return conn.execute(
+                "UPDATE messages SET content = ?, display_metadata = ? "
+                "WHERE id = ? AND session_id = ?",
+                (stored_content, metadata_json, message_row_id, session_id),
+            ).rowcount > 0
+
+        return bool(
+            self._execute_write(_do, patience_s=self._TRANSCRIPT_WRITE_PATIENCE_S)
+        )
+
     #: Key under which message reactions live inside ``display_metadata``.
     #: Reactions share the existing per-message JSON column rather than a side
     #: table so they survive rewind/compaction row rewrites with the row itself.

@@ -880,7 +880,12 @@ export {
   type ComposerAtCompletionItem,
   type ComposerAtCompletionSource,
   type ComposerAttachmentProvider,
-  type ComposerMiddleware
+  type ComposerDraft,
+  /** Resolve a `composer.middleware` handler to this to CONSUME the draft:
+   *  the composer clears and no turn starts (`null` still means cancel). */
+  type ComposerDraftHandled,
+  type ComposerMiddleware,
+  type ComposerMiddlewareResult
 } from '@/app/chat/composer/contrib'
 
 // -- ui: the design language --------------------------------------------------

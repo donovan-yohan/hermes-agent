@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { MutableRefObject } from 'react'
 
-import type { GatewayEventPayload } from '@/lib/chat-messages'
+import type { GatewayEventPayload, MessageParticipant } from '@/lib/chat-messages'
 import type { RpcEvent } from '@/types/hermes'
 
 import type { ClientSessionState } from '../../../../types'
@@ -13,7 +13,22 @@ export interface GatewayEventDeps {
   lastCwdInfoSessionRef: MutableRefObject<string | null>
   nativeSubagentSessionsRef: MutableRefObject<Set<string>>
   appendAssistantDelta: (sessionId: string, delta: string, occurredAt?: number) => void
+  appendParticipantDelta: (sessionId: string, participantTurnId: string, delta: string, occurredAt?: number) => void
+  appendParticipantUserMessage: (sessionId: string, text: string, rowId?: number, occurredAt?: number) => void
   appendReasoningDelta: (sessionId: string, delta: string, replace?: boolean, occurredAt?: number) => void
+  beginParticipantMessage: (
+    sessionId: string,
+    participantTurnId: string,
+    participant: MessageParticipant,
+    rowId?: number,
+    occurredAt?: number
+  ) => void
+  completeParticipantMessage: (
+    sessionId: string,
+    participantTurnId: string,
+    completion: { status?: string; text?: string; error?: string },
+    occurredAt?: number
+  ) => void
   completeAssistantMessage: (
     sessionId: string,
     text: string,

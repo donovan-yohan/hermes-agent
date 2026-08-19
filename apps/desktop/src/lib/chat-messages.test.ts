@@ -323,6 +323,150 @@ describe('toChatMessages', () => {
     }
   })
 
+  // External agent participants (docs/contracts/participant-seam-v1.md §5).
+  // A participant reply is an assistant row somebody actually reads — it must
+  // NOT be demoted to a system timeline event the way model_switch et al are.
+  describe('external participant rows', () => {
+    const participantMetadata = {
+      participant: {
+        id: 'claude:default',
+        handle: 'claude',
+        display_name: 'Claude Code',
+        plugin_id: 'hermes-plugin-relay',
+        adapter_id: 'claude-code-stream-json'
+      },
+      participant_turn_id: 'pturn-1',
+      status: 'completed'
+    }
+
+    it.each([
+      ['an object', participantMetadata as SessionMessage['display_metadata']],
+      ['JSON text', JSON.stringify(participantMetadata) as SessionMessage['display_metadata']]
+    ])('keeps the assistant role and parses attribution from %s', (_case, displayMetadata) => {
+      const messages = toChatMessages([
+        { role: 'user', content: '@claude take a look', display_kind: 'participant_directed', timestamp: 1 },
+        {
+          role: 'assistant',
+          content: 'Looked. Ship it.',
+          display_kind: 'participant_message',
+          display_metadata: displayMetadata,
+          timestamp: 2
+        }
+      ])
+
+      expect(messages.map(message => message.role)).toEqual(['user', 'assistant'])
+      expect(messages.map(chatMessageText)).toEqual(['@claude take a look', 'Looked. Ship it.'])
+      // The directed human row is an ORDINARY user bubble — no attribution.
+      expect(messages[0].participant).toBeUndefined()
+      expect(messages[1].participant).toEqual({
+        id: 'claude:default',
+        handle: 'claude',
+        displayName: 'Claude Code'
+      })
+    })
+
+    // The renderer prints displayName unconditionally, so the parser owes it a
+    // non-empty value for every participant it accepts.
+    it.each([
+      ['no display name', { id: 'codex:default', handle: 'codex' }, 'codex', 'codex'],
+      ['a blank display name', { id: 'codex:default', handle: 'codex', display_name: '  ' }, 'codex', 'codex'],
+      ['neither name nor handle', { id: 'codex:default' }, 'codex:default', 'codex:default']
+    ])('always resolves a display name given %s', (_case, participant, displayName, handle) => {
+      const [message] = toChatMessages([
+        {
+          role: 'assistant',
+          content: 'on it',
+          display_kind: 'participant_message',
+          display_metadata: { participant } as SessionMessage['display_metadata'],
+          timestamp: 1
+        }
+      ])
+
+      expect(message.participant).toEqual({ id: 'codex:default', handle, displayName })
+    })
+
+    it.each([
+      ['unparseable text', '{not-json'],
+      ['text that is not an object', '"claude:default"'],
+      ['a participant without an id', { participant: { handle: 'claude' } }],
+      ['no participant at all', { status: 'completed' }]
+    ])('renders an unattributable reply as a plain assistant row given %s', (_case, displayMetadata) => {
+      const read = () =>
+        toChatMessages([
+          {
+            role: 'assistant',
+            content: 'text with no usable attribution',
+            display_kind: 'participant_message',
+            display_metadata: displayMetadata as SessionMessage['display_metadata'],
+            timestamp: 1
+          }
+        ])
+
+      expect(read).not.toThrow()
+      expect(read()[0].role).toBe('assistant')
+      expect(read()[0].participant).toBeUndefined()
+      expect(chatMessageText(read()[0])).toBe('text with no usable attribution')
+    })
+
+    it('surfaces a failed participant turn as a row error beside its partial text', () => {
+      const [message] = toChatMessages([
+        {
+          role: 'assistant',
+          content: 'I got as far as',
+          display_kind: 'participant_message',
+          display_metadata: {
+            ...participantMetadata,
+            status: 'failed',
+            error: 'claude exited with status 1'
+          } as SessionMessage['display_metadata'],
+          timestamp: 1
+        }
+      ])
+
+      expect(message.error).toBe('claude exited with status 1')
+      expect(chatMessageText(message)).toBe('I got as far as')
+    })
+
+    it('never merges a participant reply with the Hermes turn around it', () => {
+      const messages = toChatMessages([
+        {
+          role: 'assistant',
+          content: '',
+          timestamp: 1,
+          tool_calls: [{ id: 'call-1', function: { name: 'read_file', arguments: '{}' } }]
+        },
+        {
+          role: 'assistant',
+          content: "Claude's own answer",
+          display_kind: 'participant_message',
+          display_metadata: participantMetadata as SessionMessage['display_metadata'],
+          timestamp: 2
+        },
+        {
+          role: 'assistant',
+          content: '',
+          timestamp: 3,
+          tool_calls: [{ id: 'call-2', function: { name: 'write_file', arguments: '{}' } }]
+        },
+        { role: 'assistant', content: 'Hermes wraps up', timestamp: 4 }
+      ])
+
+      const participantRow = messages.find(message => message.participant)
+
+      expect(participantRow).toBeDefined()
+      expect(chatMessageText(participantRow!)).toBe("Claude's own answer")
+      // Nobody else's tool calls landed under Claude's name…
+      expect(participantRow!.parts.every(part => part.type === 'text')).toBe(true)
+
+      // …and Hermes's own rows kept theirs.
+      const hermesToolCalls = messages
+        .filter(message => !message.participant)
+        .flatMap(message => message.parts.filter(part => part.type === 'tool-call'))
+
+      expect(hermesToolCalls).toHaveLength(2)
+    })
+  })
+
   it('projects durable timeline kinds without inspecting their text', () => {
     const messages = toChatMessages([
       { role: 'user', content: 'real user turn', timestamp: 1 },

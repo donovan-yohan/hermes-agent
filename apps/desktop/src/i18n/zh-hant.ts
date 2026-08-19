@@ -2628,6 +2628,8 @@ export const zhHant = defineLocale({
       branchNewChat: '在新聊天中分支',
       react: '回應',
       dismissError: '关闭错误',
+      participantAttribution: (name, handle) => `來自 ${name}（@${handle}）的回覆`,
+      participantTurnFailed: '該代理未能完成這則回覆',
       filesChanged: count => `${count} 個檔案已變更`,
       reviewChanges: '檢視',
       readAloudFailed: '朗讀失敗',

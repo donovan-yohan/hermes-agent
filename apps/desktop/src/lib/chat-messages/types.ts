@@ -13,6 +13,18 @@ export interface TimelinePartMetadata {
 
 export type ChatMessagePart = Exclude<ThreadMessageLike['content'], string>[number] & TimelinePartMetadata
 
+/**
+ * The external agent that authored a message, when it wasn't Hermes
+ * (participant-seam-v1 §1.1). The full persisted wire shape stays documented
+ * by `TimelineParticipant` in types/hermes.ts; the transcript only needs the
+ * stable identity and display fields below.
+ */
+export interface MessageParticipant {
+  id: string
+  handle: string
+  displayName: string
+}
+
 export type ChatMessage = {
   id: string
   role: SessionMessage['role']
@@ -37,6 +49,8 @@ export type ChatMessage = {
   rowId?: number
   /** Emoji reactions on this message — one per author (see MessageReaction). */
   reactions?: MessageReaction[]
+  /** Set when an external agent authored this assistant-role row. */
+  participant?: MessageParticipant
 }
 
 export type GatewayEventPayload = {
@@ -127,6 +141,10 @@ export type GatewayEventPayload = {
   row_id?: number
   reactions?: MessageReaction[]
   role?: string
+  // participant.* — external agent participant events. `participant` is the
+  // snake_case attribution object and `participant_turn_id` addresses the row.
+  participant?: unknown
+  participant_turn_id?: string
   // session.title (live auto-title push) — stored session id + generated title
   session_id?: string
   title?: string

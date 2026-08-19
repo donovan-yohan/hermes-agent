@@ -140,6 +140,12 @@ except Exception:
 
 from tui_gateway.render import make_stream_renderer, render_diff, render_message
 
+# Cycle-free: participants.py imports this module lazily, inside its functions.
+from tui_gateway.participants import (
+    PARTICIPANT_DIRECTED_DISPLAY_KIND,
+    PARTICIPANT_MESSAGE_DISPLAY_KIND,
+)
+
 _sessions: dict[str, dict] = {}
 _methods: dict[str, callable] = {}
 _pending: dict[str, tuple[str, threading.Event]] = {}
@@ -4380,6 +4386,43 @@ def _is_pivot_marker(entry: Any) -> bool:
     if _is_model_switch_marker(entry):
         return True
     return isinstance(entry, dict) and entry.get("display_kind") == "personality_switch"
+
+
+def _is_tolerated_mid_turn_row(entry: Any) -> bool:
+    """Whether a history entry is one the gateway itself splices in mid-turn.
+
+    Two classes, identical handling. A pivot marker is injected from the RPC
+    thread by a live model or personality switch; a participant row is
+    published by :mod:`tui_gateway.participants` — and a Hermes tool call that
+    asks a peer agent publishes from inside the very turn it runs in. Either
+    can be the sole reason turn-start and current history differ, so the
+    end-of-turn reconciliation must recognise them instead of reading them as a
+    desync and throwing away the agent's own output.
+    """
+    if _is_pivot_marker(entry):
+        return True
+    return isinstance(entry, dict) and entry.get("display_kind") in (
+        PARTICIPANT_MESSAGE_DISPLAY_KIND,
+        PARTICIPANT_DIRECTED_DISPLAY_KIND,
+    )
+
+
+def _splice_mid_turn_rows(new_messages: list, mid_turn_rows: list) -> list:
+    """Place rows spliced in mid-turn after this turn's user message.
+
+    They landed between the user's ask and the agent's reply, and the durable
+    transcript carries that same order (the user turn is persisted before the
+    API call, the reply after it), so placing them here keeps the live view and
+    a reloaded transcript in agreement.
+    """
+    merged = list(new_messages)
+    if not mid_turn_rows:
+        return merged
+    for idx in range(len(merged) - 1, -1, -1):
+        entry = merged[idx]
+        if isinstance(entry, dict) and entry.get("role") == "user":
+            return merged[: idx + 1] + list(mid_turn_rows) + merged[idx + 1 :]
+    return merged + list(mid_turn_rows)
 
 
 def _append_model_switch_marker(session: dict | None, *, model: str, provider: str) -> None:
@@ -11087,21 +11130,36 @@ def _run_prompt_submit(
                             # in-place then appends a new one, so the delta
                             # is NOT a simple tail-slice — we must compare
                             # content, not indices.
+                            #
+                            # One mechanism covers every row the gateway
+                            # splices in mid-turn (see
+                            # _is_tolerated_mid_turn_row): they are excluded
+                            # from the comparison, and the ones that APPEARED
+                            # since turn start are spliced back into durable
+                            # order below.
                             current_history = list(session["history"])
-                            history_no_markers = [
-                                e for e in history if not _is_pivot_marker(e)
+                            _turn_start_ids = {id(e) for e in history}
+                            mid_turn_rows = [
+                                e for e in current_history
+                                if _is_tolerated_mid_turn_row(e)
+                                and id(e) not in _turn_start_ids
                             ]
-                            current_no_markers = [
-                                e for e in current_history if not _is_pivot_marker(e)
+                            _mid_turn_ids = {id(e) for e in mid_turn_rows}
+                            history_stable = [
+                                e for e in history if not _is_tolerated_mid_turn_row(e)
                             ]
-                            pivot_only = (
-                                current_no_markers == history_no_markers
+                            current_stable = [
+                                e for e in current_history
+                                if not _is_tolerated_mid_turn_row(e)
+                            ]
+                            tolerated_only = (
+                                current_stable == history_stable
                                 and any(
-                                    _is_pivot_marker(e)
+                                    _is_tolerated_mid_turn_row(e)
                                     for e in current_history
                                 )
                             )
-                            if pivot_only:
+                            if tolerated_only:
                                 # The agent's new messages start after the
                                 # turn-start history.  Guard against
                                 # auto-compression making result["messages"]
@@ -11112,7 +11170,9 @@ def _run_prompt_submit(
                                     # Compression rebound the messages list —
                                     # use the full result as the base.
                                     new_messages = list(result["messages"])
-                                session["history"] = current_history + new_messages
+                                session["history"] = [
+                                    e for e in current_history if id(e) not in _mid_turn_ids
+                                ] + _splice_mid_turn_rows(new_messages, mid_turn_rows)
                                 session["history_version"] = current_version + 1
                             else:
                                 # Genuine desync (undo/compress/retry/rollback).

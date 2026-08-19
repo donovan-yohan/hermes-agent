@@ -154,7 +154,10 @@ const COMPARED_FIELDS = [
   'completedAt',
   // Turn wall-clock duration — stamps the visible "⏱ 38s" badge, so a change
   // must re-render (set once at completion; stable afterwards).
-  'durationS'
+  'durationS',
+  // Who authored the row when it wasn't Hermes — paints the attribution
+  // header and gates the action footer, so a change must re-render.
+  'participant'
 ] as const
 
 const IGNORED_FIELDS = ['attachmentRefs', 'parts', 'rowId'] as const
@@ -261,6 +264,9 @@ export function chatMessagesEquivalent(a: ChatMessage, b: ChatMessage): boolean 
     // Interim gates the action footer, so flipping it must repaint (e.g. a
     // previewed final settling onto a sealed interim bubble restores the bar).
     (a.interim ?? false) !== (b.interim ?? false) ||
+    // Attribution paints a header and hides the action footer, so a row
+    // changing hands (rehydration replacing a live participant row) repaints.
+    a.participant?.id !== b.participant?.id ||
     !chatReactionsEquivalent(a.reactions, b.reactions)
   ) {
     return false

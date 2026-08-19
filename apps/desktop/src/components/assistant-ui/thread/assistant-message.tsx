@@ -7,6 +7,7 @@ import {
   useMessageRuntime
 } from '@assistant-ui/react'
 import { useStore } from '@nanostores/react'
+import { Blobatar } from 'blobatar/react'
 import { type FC, useCallback, useMemo, useState } from 'react'
 
 import { useSessionView } from '@/app/chat/session-view'
@@ -28,6 +29,7 @@ import { PreviewAttachment } from '@/components/chat/preview-attachment'
 import { Codicon } from '@/components/ui/codicon'
 import { CopyButton } from '@/components/ui/copy-button'
 import { useI18n } from '@/i18n'
+import type { MessageParticipant } from '@/lib/chat-messages'
 import { triggerHaptic } from '@/lib/haptics'
 import { AudioLines, GitForkIcon, Loader2Icon, RefreshCwIcon, SmilePlusIcon, VolumeXIcon, XIcon } from '@/lib/icons'
 import { extractPreviewTargets } from '@/lib/preview-targets'
@@ -41,6 +43,30 @@ import { $voicePlayback } from '@/store/voice-playback'
 // Stable empty identity for the settled-parts selector — a fresh [] per render
 // would re-derive the changed-files card on every message re-render.
 const EMPTY_PARTS: readonly unknown[] = []
+
+/**
+ * Who spoke, when it wasn't Hermes — the header above an external agent
+ * participant's reply (participant-seam-v1 §5). The row itself stays an
+ * ordinary assistant row: same bubble, same streaming affordances. Only the
+ * name and the deterministic face (seeded from the stable participant id, so
+ * the same agent wears the same face in every session) say it came from
+ * somewhere else.
+ */
+const ParticipantAttribution: FC<{ participant: MessageParticipant }> = ({ participant }) => {
+  const { t } = useI18n()
+
+  return (
+    <div
+      aria-label={t.assistant.thread.participantAttribution(participant.displayName, participant.handle)}
+      className="flex items-center gap-1.5 pb-1 text-[0.6875rem] leading-4 text-(--ui-text-secondary)"
+      data-slot="aui_participant-attribution"
+    >
+      <Blobatar aria-hidden className="size-4 shrink-0 rounded-full" name={participant.id} />
+      <span className="wrap-anywhere font-medium text-foreground/85">{participant.displayName}</span>
+      <span className="wrap-anywhere text-(--ui-text-tertiary)">@{participant.handle}</span>
+    </div>
+  )
+}
 
 interface MessageActionProps {
   messageId: string
@@ -107,6 +133,11 @@ export const AssistantMessage: FC<{
   // tool-heavy turn doesn't grow a copy/refresh bar per paragraph (see
   // ChatMessage.interim).
   const isInterim = useAuiState(s => s.message.metadata?.custom?.interim === true)
+
+  // An EXTERNAL agent authored this row (participant-seam-v1 §5). The object
+  // is written once when the row is created and carried by reference through
+  // every later update, so this selector is stable across the delta stream.
+  const participant = useAuiState(s => s.message.metadata?.custom?.participant as MessageParticipant | undefined)
 
   // Whole-turn wall-clock seconds (set once at completion — referentially
   // stable across the 30 Hz delta stream, so this adds no per-token renders).
@@ -195,6 +226,7 @@ export const AssistantMessage: FC<{
       onDoubleClick={onDoubleClick}
       ref={enterRef}
     >
+      {participant && <ParticipantAttribution participant={participant} />}
       <div
         className="wrap-anywhere min-w-0 max-w-full overflow-hidden text-pretty text-[length:var(--conversation-text-font-size)] leading-(--dt-line-height) text-foreground"
         data-slot="aui_assistant-message-content"
@@ -236,7 +268,11 @@ export const AssistantMessage: FC<{
         </MessagePrimitive.Error>
       </div>
       <MessageTimelineTimestamp className="px-(--message-text-indent) pt-0.5" suppressIfDuplicatePart />
-      {hasVisibleText && !isInterim && (
+      {/* No footer on a participant row: Reload would re-run HERMES's turn,
+          and Read aloud / react are Hermes-turn affordances too. The reply is
+          somebody else's — the transcript shows it, Hermes's own rows keep the
+          controls (same reasoning as the interim gate above). */}
+      {hasVisibleText && !isInterim && !participant && (
         <AssistantFooter
           durationS={turnDurationS}
           getMessageText={getMessageText}

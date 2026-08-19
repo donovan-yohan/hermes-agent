@@ -10945,12 +10945,160 @@ def test_prompt_submit_merges_on_personality_pivot_marker(monkeypatch):
         ]
         assert len(pivots) == 1, f"expected exactly 1 pivot, got {len(pivots)}"
 
+        # A mid-turn pivot lands where it happened: after the ask it followed,
+        # before the reply it preceded — the order its durable row carries, so
+        # the live view and a reloaded transcript agree.
+        user_idx = next(
+            i
+            for i, e in enumerate(final_history)
+            if isinstance(e, dict) and e.get("role") == "user" and e.get("content") == "hi"
+        )
+        assert user_idx < final_history.index(pivots[0])
+        assert final_history.index(pivots[0]) < final_history.index(assistant_msgs[0])
+
         complete_calls = [a for a in emits if a[0] == "message.complete"]
         assert len(complete_calls) == 1
         _, _, payload = complete_calls[0]
         assert "warning" not in payload, "merge path should not surface a warning"
     finally:
         server._sessions.pop("sid", None)
+
+
+def test_prompt_submit_merges_participant_rows_published_mid_turn(monkeypatch, tmp_path):
+    """A peer agent publishing during a turn must not cost us the turn.
+
+    The participant seam appends to live history and bumps ``history_version``
+    from whatever thread publishes — and a Hermes tool call that asks a peer
+    agent publishes from INSIDE the turn that is running. Left unrecognised,
+    that bump reads as a desync and the finished turn is dropped: the user sees
+    the reply and it is never stored (same failure as #76870 / #82756).
+    """
+    import importlib
+
+    from hermes_state import SessionDB
+
+    participants = importlib.import_module("tui_gateway.participants")
+
+    db = SessionDB(db_path=tmp_path / "state.db")
+    db.create_session("session-key", source="tui")
+
+    class _PeerPublishingAgent:
+        def run_conversation(
+            self, prompt, conversation_history=None, stream_callback=None, **_kwargs
+        ):
+            # Exactly what an agent_message tool call does, mid-turn.
+            participants.register_participants(
+                "sid",
+                "plugin-relay",
+                [
+                    {
+                        "id": "peer:default",
+                        "handle": "peer",
+                        "display_name": "Peer Agent",
+                        "adapter_id": "peer-stdio",
+                    }
+                ],
+            )
+            participants.begin_participant_message(
+                "sid", "plugin-relay", "peer:default", "pturn-1"
+            )
+            participants.append_participant_delta(
+                "sid", "plugin-relay", "pturn-1", "peer reply"
+            )
+            participants.complete_participant_message("sid", "plugin-relay", "pturn-1")
+            return {
+                "final_response": "agent reply",
+                "messages": list(conversation_history)
+                + [
+                    {"role": "user", "content": "hi"},
+                    {"role": "assistant", "content": "agent reply"},
+                ],
+            }
+
+    class _ImmediateThread:
+        def __init__(self, target=None, daemon=None, **kw):
+            self._target = target
+
+        def start(self):
+            self._target()
+
+    server._sessions["sid"] = _session(
+        agent=_PeerPublishingAgent(),
+        history=[{"role": "user", "content": "hello"}],
+    )
+    emits: list[tuple] = []
+    try:
+        monkeypatch.setattr(server, "_db", db)
+        monkeypatch.setattr(server.threading, "Thread", _ImmediateThread)
+        monkeypatch.setattr(server, "_get_usage", lambda _a: {})
+        monkeypatch.setattr(server, "render_message", lambda _t, _c: "")
+        monkeypatch.setattr(server, "_session_info", lambda *a, **k: {})
+        monkeypatch.setattr(server, "_emit", lambda *a: emits.append(a))
+
+        resp = server.handle_request(
+            {
+                "id": "1",
+                "method": "prompt.submit",
+                "params": {"session_id": "sid", "text": "hi"},
+            }
+        )
+        assert resp.get("result"), f"got error: {resp.get('error')}"
+
+        final_history = server._sessions["sid"]["history"]
+
+        # The agent's own output survived.
+        assistant_msgs = [
+            e
+            for e in final_history
+            if isinstance(e, dict)
+            and e.get("role") == "assistant"
+            and e.get("content") == "agent reply"
+        ]
+        assert len(assistant_msgs) == 1, (
+            "the mid-turn participant publish discarded the finished turn "
+            f"(got {len(assistant_msgs)} assistant replies)"
+        )
+
+        # …and so did the participant's row.
+        participant_rows = [
+            e
+            for e in final_history
+            if isinstance(e, dict) and e.get("display_kind") == "participant_message"
+        ]
+        assert len(participant_rows) == 1
+        assert participant_rows[0]["role"] == "assistant"
+        assert participant_rows[0]["content"] == "peer reply"
+
+        # Chronological: the ask, then the peer's reply, then Hermes's.
+        user_idx = next(
+            i
+            for i, e in enumerate(final_history)
+            if isinstance(e, dict) and e.get("role") == "user" and e.get("content") == "hi"
+        )
+        peer_idx = final_history.index(participant_rows[0])
+        agent_idx = final_history.index(assistant_msgs[0])
+        assert user_idx < peer_idx < agent_idx
+
+        # No desync warning: nothing was lost, so nothing to warn about.
+        complete_calls = [a for a in emits if a[0] == "message.complete"]
+        assert len(complete_calls) == 1
+        _, _, payload = complete_calls[0]
+        assert "warning" not in payload
+
+        # The durable row is there too.
+        rows = [
+            r for r in db.get_messages("session-key")
+            if r["display_kind"] == "participant_message"
+        ]
+        assert len(rows) == 1
+        assert rows[0]["content"] == "peer reply"
+        assert rows[0]["display_metadata"]["status"] == "completed"
+    finally:
+        server._sessions.pop("sid", None)
+        with participants._registry_lock:
+            participants._rosters.clear()
+            participants._active_turns.clear()
+        db.close()
 
 
 def test_prompt_submit_sanitizes_bracketed_paste_before_agent(monkeypatch):

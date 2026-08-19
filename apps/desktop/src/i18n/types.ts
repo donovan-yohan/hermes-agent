@@ -2633,6 +2633,10 @@ export interface Translations {
       branchNewChat: string
       react: string
       dismissError: string
+      /** Accessible name of an external agent participant's reply header. */
+      participantAttribution: (name: string, handle: string) => string
+      /** Fallback error on a participant turn that failed without a reason. */
+      participantTurnFailed: string
       filesChanged: (count: number) => string
       reviewChanges: string
       readAloudFailed: string

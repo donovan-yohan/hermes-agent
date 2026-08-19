@@ -12,9 +12,11 @@ import {
   completeOpenTimelineParts,
   type GatewayEventPayload,
   mergeFinalAssistantText,
+  type MessageParticipant,
   reasoningPart,
   renderMediaTags,
   sealOpenToolParts,
+  textPart,
   upsertToolPart
 } from '@/lib/chat-messages'
 import {
@@ -53,10 +55,32 @@ interface MessageStreamOptions {
   ) => ClientSessionState
 }
 
-interface QueuedStreamDelta {
+interface QueuedStreamDeltaBase {
   occurredAt: number
   text: string
-  type: 'assistant' | 'reasoning'
+}
+
+/** A chunk bound for the session's own assistant bubble, on either channel. */
+interface QueuedAssistantDelta extends QueuedStreamDeltaBase {
+  kind: 'assistant' | 'reasoning'
+}
+
+/** A chunk bound for ONE external participant row, addressed by message id —
+ *  a participant streams beside Hermes, never into its bubble. */
+interface QueuedParticipantDelta extends QueuedStreamDeltaBase {
+  kind: 'participant'
+  rowId: string
+}
+
+type QueuedStreamDelta = QueuedAssistantDelta | QueuedParticipantDelta
+
+/** Whether two queued chunks feed the same row and channel, and may merge. */
+function sameDeltaTarget(a: QueuedStreamDelta, b: QueuedStreamDelta): boolean {
+  if (a.kind === 'participant' || b.kind === 'participant') {
+    return a.kind === 'participant' && b.kind === 'participant' && a.rowId === b.rowId
+  }
+
+  return a.kind === b.kind
 }
 
 // Date.now() alone can collide when an interim seal and the next segment's
@@ -65,6 +89,20 @@ interface QueuedStreamDelta {
 let streamMessageSeq = 0
 
 const nextStreamMessageId = (prefix: string) => `${prefix}-${Date.now()}-${++streamMessageSeq}`
+
+// External participant rows are addressed by their turn id, not by the
+// session's streamId: a participant turn runs ALONGSIDE Hermes's own turn and
+// must never claim (or be claimed by) the assistant stream bubble. Deriving
+// the row id from the turn id means start/delta/complete need no extra
+// bookkeeping and a remount can't lose the mapping.
+const participantMessageId = (participantTurnId: string) => `participant-${participantTurnId}`
+
+/** Participant seam status values that seal a row (participant-seam-v1 §4.4). */
+interface ParticipantCompletion {
+  status?: string
+  text?: string
+  error?: string
+}
 
 export function useMessageStream({
   activeGatewayProfile = 'default',
@@ -203,6 +241,35 @@ export function useMessageStream({
   // relocating the SAME session (follow it) from a session switch (don't yank).
   const lastCwdInfoSessionRef = useRef<null | string>(null)
 
+  // Patch ONE external participant row in place. Participant rows are never
+  // the session's stream bubble, so they get their own narrow write path: no
+  // streamId/busy/awaitingResponse bookkeeping, and an unknown row leaves the
+  // state object identical so the view sync can skip the publish entirely.
+  const patchParticipantRow = useCallback(
+    (sessionId: string, messageId: string, patch: (message: ChatMessage) => Partial<ChatMessage>) => {
+      updateSessionState(sessionId, state => {
+        let found = false
+
+        const messages = state.messages.map(message => {
+          if (message.id !== messageId) {
+            return message
+          }
+
+          found = true
+
+          return { ...message, ...patch(message) }
+        })
+
+        // No row means the `start` for this turn never landed, so there is no
+        // attribution to render the text under — and an unattributed bubble
+        // reads as Hermes. Dropping is safe: `complete` carries the full final
+        // text, and the persisted row rehydrates on the next resume.
+        return found ? { ...state, messages } : state
+      })
+    },
+    [updateSessionState]
+  )
+
   const flushQueuedDeltas = useCallback(
     (sessionId?: string) => {
       const queue = queuedDeltasRef.current
@@ -217,19 +284,38 @@ export function useMessageStream({
 
         queue.delete(id)
 
-        const applyQueued = (parts: ChatMessagePart[]) =>
-          queued.reduce(
-            (next, delta) =>
-              delta.type === 'assistant'
-                ? dedupeGeneratedImageEchoesInParts(appendAssistantTextPart(next, delta.text, delta.occurredAt))
-                : appendReasoningPart(next, delta.text, delta.occurredAt),
-            parts
-          )
+        // One queue, two destinations: Hermes's own bubble (text and reasoning
+        // interleaved, so order matters and they reduce together) and any
+        // participant rows streaming beside it.
+        const streamDeltas = queued.filter((delta): delta is QueuedAssistantDelta => delta.kind !== 'participant')
 
-        mutateStream(id, applyQueued, () => applyQueued([]), {}, queued[0]?.occurredAt)
+        // Only when Hermes actually produced something — mutateStream SEEDS a
+        // bubble when the session has none, so a participant-only flush would
+        // otherwise paint an empty Hermes row.
+        if (streamDeltas.length) {
+          const applyQueued = (parts: ChatMessagePart[]) =>
+            streamDeltas.reduce(
+              (next, delta) =>
+                delta.kind === 'assistant'
+                  ? dedupeGeneratedImageEchoesInParts(appendAssistantTextPart(next, delta.text, delta.occurredAt))
+                  : appendReasoningPart(next, delta.text, delta.occurredAt),
+              parts
+            )
+
+          mutateStream(id, applyQueued, () => applyQueued([]), {}, streamDeltas[0].occurredAt)
+        }
+
+        for (const delta of queued) {
+          if (delta.kind === 'participant') {
+            patchParticipantRow(id, delta.rowId, message => ({
+              parts: appendAssistantTextPart(message.parts, delta.text, delta.occurredAt),
+              pending: true
+            }))
+          }
+        }
       }
     },
-    [mutateStream]
+    [mutateStream, patchParticipantRow]
   )
 
   const scheduleDeltaFlush = useCallback(() => {
@@ -329,18 +415,18 @@ export function useMessageStream({
   }, [flushQueuedDeltas])
 
   const queueDelta = useCallback(
-    (sessionId: string, key: 'assistant' | 'reasoning', delta: string, occurredAt = Date.now() / 1000) => {
-      if (!delta) {
+    (sessionId: string, entry: QueuedStreamDelta) => {
+      if (!entry.text) {
         return
       }
 
       const queued = queuedDeltasRef.current.get(sessionId) ?? []
       const tail = queued.at(-1)
 
-      if (tail?.type === key) {
-        tail.text += delta
+      if (tail && sameDeltaTarget(tail, entry)) {
+        tail.text += entry.text
       } else {
-        queued.push({ occurredAt, text: delta, type: key })
+        queued.push(entry)
       }
 
       queuedDeltasRef.current.set(sessionId, queued)
@@ -397,12 +483,8 @@ export function useMessageStream({
   }, [flushQueuedDeltas])
 
   const appendAssistantDelta = useCallback(
-    (sessionId: string, delta: string, occurredAt?: number) => {
-      if (!delta) {
-        return
-      }
-
-      queueDelta(sessionId, 'assistant', delta, occurredAt)
+    (sessionId: string, delta: string, occurredAt = Date.now() / 1000) => {
+      queueDelta(sessionId, { kind: 'assistant', occurredAt, text: delta })
     },
     [queueDelta]
   )
@@ -414,7 +496,7 @@ export function useMessageStream({
       }
 
       if (!replace) {
-        queueDelta(sessionId, 'reasoning', delta, occurredAt)
+        queueDelta(sessionId, { kind: 'reasoning', occurredAt, text: delta })
 
         return
       }
@@ -554,6 +636,131 @@ export function useMessageStream({
       })
     },
     [updateSessionState]
+  )
+
+  // ── external agent participants (docs/contracts/participant-seam-v1.md §5) ──
+  //
+  // These four mutators are deliberately inert with respect to turn state:
+  // they touch `messages` and nothing else. A participant turn is not a Hermes
+  // turn — it must not arm busy/awaitingResponse, must not claim `streamId`,
+  // and must not be cancelled by a Stop aimed at Hermes.
+
+  const appendParticipantUserMessage = useCallback(
+    (sessionId: string, text: string, rowId?: number, occurredAt = Date.now() / 1000) => {
+      const body = text.trim()
+
+      if (!body) {
+        return
+      }
+
+      updateSessionState(sessionId, state => {
+        // Keyed by the durable row id when there is one, so a reconnect replay
+        // of the same event can't paint the message twice.
+        const id = rowId === undefined ? nextStreamMessageId('participant-user') : `participant-user-${rowId}`
+
+        if (state.messages.some(message => message.id === id)) {
+          return state
+        }
+
+        return {
+          ...state,
+          messages: [
+            ...state.messages,
+            {
+              id,
+              role: 'user' as const,
+              parts: [textPart(body, occurredAt)],
+              timestamp: occurredAt,
+              ...(rowId !== undefined ? { rowId } : {})
+            }
+          ]
+        }
+      })
+    },
+    [updateSessionState]
+  )
+
+  const beginParticipantMessage = useCallback(
+    (
+      sessionId: string,
+      participantTurnId: string,
+      participant: MessageParticipant,
+      rowId?: number,
+      occurredAt = Date.now() / 1000
+    ) => {
+      updateSessionState(sessionId, state => {
+        const id = participantMessageId(participantTurnId)
+
+        if (state.messages.some(message => message.id === id)) {
+          return state
+        }
+
+        return {
+          ...state,
+          messages: [
+            ...state.messages,
+            {
+              id,
+              role: 'assistant' as const,
+              parts: [],
+              timestamp: occurredAt,
+              pending: true,
+              participant,
+              ...(rowId !== undefined ? { rowId } : {})
+            }
+          ]
+        }
+      })
+    },
+    [updateSessionState]
+  )
+
+  // Participant text rides the SAME coalescer Hermes's own stream uses: one
+  // React commit per flush window instead of one per token. Without it every
+  // chunk is a store write, and since a participant turn never arms `busy`,
+  // the view sync treats each one as a critical transition and commits
+  // synchronously — the exact per-token cost the coalescer exists to avoid.
+  const appendParticipantDelta = useCallback(
+    (sessionId: string, participantTurnId: string, delta: string, occurredAt = Date.now() / 1000) => {
+      queueDelta(sessionId, {
+        kind: 'participant',
+        occurredAt,
+        rowId: participantMessageId(participantTurnId),
+        text: delta
+      })
+    },
+    [queueDelta]
+  )
+
+  const completeParticipantMessage = useCallback(
+    (
+      sessionId: string,
+      participantTurnId: string,
+      completion: ParticipantCompletion,
+      occurredAt = Date.now() / 1000
+    ) => {
+      // Land any buffered chunks first so the authoritative final text merges
+      // against everything the reader already saw.
+      flushQueuedDeltas(sessionId)
+
+      const finalText = (completion.text ?? '').trim()
+
+      const error =
+        completion.status === 'failed'
+          ? completion.error?.trim() || translateNow('assistant.thread.participantTurnFailed')
+          : ''
+
+      patchParticipantRow(sessionId, participantMessageId(participantTurnId), message => ({
+        parts: completeOpenTimelineParts(
+          finalText ? mergeFinalAssistantText(message.parts, finalText, occurredAt) : message.parts,
+          occurredAt
+        ),
+        completedAt: occurredAt,
+        pending: false,
+        ...(error ? { error } : {})
+      }))
+    },
+    [flushQueuedDeltas, patchParticipantRow]
   )
 
   const completeAssistantMessage = useCallback(
@@ -840,9 +1047,13 @@ export function useMessageStream({
   const handleGatewayEvent = useGatewayEventHandler({
     activeGatewayProfile,
     appendAssistantDelta,
+    appendParticipantDelta,
+    appendParticipantUserMessage,
     appendReasoningDelta,
     activeSessionIdRef,
+    beginParticipantMessage,
     compactedTurnRef,
+    completeParticipantMessage,
     lastCwdInfoSessionRef,
     nativeSubagentSessionsRef,
     completeAssistantMessage,
@@ -861,8 +1072,12 @@ export function useMessageStream({
 
   return {
     appendAssistantDelta,
+    appendParticipantDelta,
+    appendParticipantUserMessage,
     appendReasoningDelta,
+    beginParticipantMessage,
     completeAssistantMessage,
+    completeParticipantMessage,
     handleGatewayEvent,
     finalizeInterimAssistantMessage,
     upsertToolCall

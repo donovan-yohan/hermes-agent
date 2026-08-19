@@ -551,6 +551,26 @@ export type TimelineDisplayMetadata =
       duration_seconds?: number
     }
   | { reactions: MessageReaction[] }
+  | {
+      participant: TimelineParticipant
+      participant_turn_id?: string
+      status?: 'completed' | 'failed' | 'interrupted' | 'streaming'
+      error?: string
+    }
+  | { mentions: string[]; plugin_id?: string }
+
+/**
+ * Who an external agent participant IS, as persisted on a
+ * `display_kind: 'participant_message'` row (participant-seam-v1 §1.1). Wire
+ * shape — snake_case, exactly as the backend stores and the gateway emits it.
+ */
+export interface TimelineParticipant {
+  id: string
+  handle: string
+  display_name: string
+  plugin_id?: string
+  adapter_id?: string
+}
 
 /** One emoji reaction on a message. One per author, iOS-Tapback style. */
 export interface MessageReaction {
@@ -575,7 +595,16 @@ export interface SessionMessage {
   reasoning_content?: null | string
   reasoning_details?: unknown
   display_kind?:
-    'async_delegation_complete' | 'auto_continue' | 'hidden' | 'model_switch' | 'personality_switch' | string
+    | 'async_delegation_complete'
+    | 'auto_continue'
+    | 'hidden'
+    | 'model_switch'
+    /** Human text addressed at an external participant, not at Hermes. */
+    | 'participant_directed'
+    /** An external agent participant's reply (participant-seam-v1 §1.1). */
+    | 'participant_message'
+    | 'personality_switch'
+    | string
   /**
    * A backend older than this app can still serve this as unparsed JSON text,
    * so readers must narrow before indexing into it.

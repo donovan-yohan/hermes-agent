@@ -165,6 +165,240 @@ def _maybe_inject_run_budget_wrapup(agent: Any, messages: List[Dict[str, Any]]) 
     return False
 
 
+# ── external participant projection ─────────────────────────────────────────
+# An external participant (another agent speaking into this session through
+# tui_gateway.participants) is persisted as a role="assistant" row tagged
+# display_kind="participant_message", because that is how it must RENDER. It
+# must not be REPLAYED as one: an assistant row is Hermes's own voice, and the
+# alternation repair would happily merge a peer's text into a genuine Hermes
+# turn. The conversation is still canonical — a later ask like "critique the
+# reply above" has to work — so the row is projected into the request as a
+# bounded, attributed user-role envelope instead of being dropped.
+#
+# The envelope is derived only from persisted row fields, so rebuilding the
+# same history yields identical bytes and the provider prompt-cache prefix
+# stays stable.
+_PARTICIPANT_DISPLAY_KIND = "participant_message"
+_PARTICIPANT_ENVELOPE_OPEN = "[external-participant-message"
+_PARTICIPANT_ENVELOPE_CLOSE = "[end-external-participant-message"
+#: Hard cap on projected participant text. Peer replies are untrusted input of
+#: unbounded size; one of them must not be able to evict the rest of the
+#: context window.
+_PARTICIPANT_CONTENT_LIMIT = 16_000
+
+
+#: Header punctuation an attribution field must never be able to emit: quotes
+#: close a header value, brackets open or close a frame. Identity fields are
+#: validated at registration, but the envelope is built from PERSISTED rows —
+#: which any writer, present or past, may have filled in — so the header is
+#: rendered structurally safe here rather than trusting the stored value.
+#: Control characters collapse to spaces so a name cannot break the line.
+_PARTICIPANT_HEADER_TRANSLATION = {
+    **{code: " " for code in range(0x20)},
+    0x7F: " ",
+    ord('"'): "'",
+    ord("["): "(",
+    ord("]"): ")",
+    ord("\\"): "/",
+}
+
+
+def _participant_header_value(value: Any, *, max_len: int) -> str:
+    """Flatten an attribution field into one structurally inert header token."""
+    text = value if isinstance(value, str) else ""
+    return " ".join(text.translate(_PARTICIPANT_HEADER_TRANSLATION).split())[:max_len]
+
+
+def _sanitize_participant_content(content: Any) -> str:
+    """Neutralize frame markers inside untrusted peer text, then bound it.
+
+    Escaping the literal open/close markers means peer text cannot forge or
+    terminate the envelope, so everything between the id-bearing markers is
+    provably one message from one participant.
+    """
+    text = content if isinstance(content, str) else ""
+    text = text.replace(_PARTICIPANT_ENVELOPE_CLOSE, "\\" + _PARTICIPANT_ENVELOPE_CLOSE)
+    text = text.replace(_PARTICIPANT_ENVELOPE_OPEN, "\\" + _PARTICIPANT_ENVELOPE_OPEN)
+    if len(text) > _PARTICIPANT_CONTENT_LIMIT:
+        omitted = len(text) - _PARTICIPANT_CONTENT_LIMIT
+        text = f"{text[:_PARTICIPANT_CONTENT_LIMIT]}\n[truncated: {omitted} more characters]"
+    return text
+
+
+def _participant_display_metadata(msg: Dict[str, Any]) -> Dict[str, Any]:
+    """Read a row's display metadata, tolerating the stored JSON string form."""
+    meta = msg.get("display_metadata")
+    if isinstance(meta, str):
+        try:
+            meta = json.loads(meta)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return {}
+    return meta if isinstance(meta, dict) else {}
+
+
+def _participant_envelope(
+    msg: Dict[str, Any], memo: Optional[Dict[int, tuple]] = None
+) -> Optional[Dict[str, Any]]:
+    """Project one participant row into its user-role envelope message.
+
+    Returns ``None`` for a row that must not enter the request at all (a reply
+    still streaming has no settled text to replay).
+
+    ``memo`` caches per turn: the projection reruns on every API call of a tool
+    loop, and a row's envelope can only change when its content or metadata
+    object does (completion replaces both together), so identity of those two
+    is an exact validity check. ``messages`` holds strong references for the
+    turn, so an id cannot be recycled underneath a live entry.
+    """
+    if memo is not None:
+        cached = memo.get(id(msg))
+        if (
+            cached is not None
+            and cached[0] is msg.get("content")
+            and cached[1] is msg.get("display_metadata")
+        ):
+            return cached[2]
+
+    envelope = _build_participant_envelope(msg)
+    if memo is not None:
+        memo[id(msg)] = (msg.get("content"), msg.get("display_metadata"), envelope)
+    return envelope
+
+
+def _build_participant_envelope(msg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    meta = _participant_display_metadata(msg)
+    participant = meta.get("participant")
+    participant = participant if isinstance(participant, dict) else {}
+    status = str(meta.get("status") or "completed").strip() or "completed"
+    if status == "streaming":
+        return None
+
+    turn_id = _participant_header_value(meta.get("participant_turn_id"), max_len=128) or "unknown"
+    handle = _participant_header_value(participant.get("handle"), max_len=32) or "unknown"
+    name = (
+        _participant_header_value(participant.get("display_name"), max_len=64)
+        or _participant_header_value(participant.get("id"), max_len=64)
+        or "external participant"
+    )
+    header = (
+        f"{_PARTICIPANT_ENVELOPE_OPEN} id={turn_id} from=\"{name}\" "
+        f"handle=@{handle} status={_participant_header_value(status, max_len=32)}"
+    )
+    if status == "failed":
+        error_note = _participant_header_value(meta.get("error"), max_len=256)
+        header += f' error="{error_note}"'
+    body = _sanitize_participant_content(msg.get("content"))
+    return {
+        "role": "user",
+        "content": f"{header}]\n{body}\n{_PARTICIPANT_ENVELOPE_CLOSE} id={turn_id}]",
+    }
+
+
+def _bake_current_turn_request_bytes(
+    msg: Dict[str, Any],
+    *,
+    ext_prefetch_cache: Any,
+    plugin_user_context: Any,
+) -> None:
+    """Materialize this turn's outgoing bytes into a request-copy user row.
+
+    The api_messages build normally injects memory-prefetch / plugin context
+    into the current turn's user message by index, reading the ``api_content``
+    sidecar the turn prologue stamped. The participant projection turns a peer
+    reply into a user row, which hands the alternation repair a user→user run
+    that did not exist in the transcript; its merge pass folds the newer row
+    into the OLDER object and drops the sidecar with it
+    (``drop_stale_api_content``). An index-addressed injection after that merge
+    would find a different object with no sidecar and send clean-only content —
+    the enriched bytes (attachments, context refs, the exact composed prefix
+    the persisted sidecar replays next turn) would silently never be sent.
+
+    So bake the bytes in BEFORE repair, on the request copy, and drop the
+    sidecar key so nothing downstream re-applies or re-drops it. Same bytes,
+    same composition order as the in-loop injection — only earlier.
+
+    DRIFT WARNING: this is the twin of the ``idx == _ctx_inject_idx`` branch in
+    the api_messages build below (the sidecar-or-compose choice). The two MUST
+    stay byte-identical: they are the same turn's request bytes, chosen by
+    whether the session has participant rows, and any divergence would give
+    participant sessions a different prompt-cache prefix than every other
+    session. Change one, change both.
+    """
+    api_content = msg.pop("api_content", None)
+    if isinstance(api_content, str) and api_content:
+        msg["content"] = api_content
+        return
+    composed = compose_user_api_content(
+        msg.get("content", ""), ext_prefetch_cache, plugin_user_context
+    )
+    if composed is not None:
+        msg["content"] = composed
+
+
+def _locate_projected_turn_user(
+    projected: List[Dict[str, Any]], anchor: Optional[Dict[str, Any]]
+) -> int:
+    """Index of this turn's user row after repair rewrote the projected copy.
+
+    Repair preserves object identity for every surviving row, so an identity
+    scan is exact whenever the row itself survived. When the consecutive-user
+    merge folded it into an earlier row, that absorbing row is the surviving
+    tail of the run — and this turn's ask is always the last user row of the
+    projected request, so scanning back for the last user row lands on it.
+    """
+    if anchor is None:
+        return -1
+    for idx, msg in enumerate(projected):
+        if msg is anchor:
+            return idx
+    for idx in range(len(projected) - 1, -1, -1):
+        candidate = projected[idx]
+        if isinstance(candidate, dict) and candidate.get("role") == "user":
+            return idx
+    return -1
+
+
+def _project_participant_messages(
+    messages: List[Dict[str, Any]],
+    memo: Optional[Dict[int, tuple]] = None,
+) -> tuple[List[Dict[str, Any]], List[int]]:
+    """Return the request-side view of *messages* and the indexes it dropped.
+
+    Returns the input list ITSELF (identity, not a copy) when it holds no
+    participant rows, so every session without external participants keeps the
+    exact list object — and therefore the exact behaviour — it had before this
+    projection existed. Envelopes replace their row one-for-one, so only the
+    returned drop list can shift an index into the projected view.
+
+    When the projection IS active every surviving row is shallow-copied: the
+    alternation repair that runs next merges by writing into the message dicts
+    it keeps, and turning a peer reply into a user row creates user→user
+    adjacencies that did not exist in the transcript. Copies keep those merges
+    request-only, exactly like the rest of the outgoing build.
+    """
+    if not any(
+        isinstance(msg, dict) and msg.get("display_kind") == _PARTICIPANT_DISPLAY_KIND
+        for msg in messages
+    ):
+        return messages, []
+
+    projected: List[Dict[str, Any]] = []
+    dropped: List[int] = []
+    for idx, msg in enumerate(messages):
+        if not isinstance(msg, dict):
+            projected.append(msg)
+            continue
+        if msg.get("display_kind") != _PARTICIPANT_DISPLAY_KIND:
+            projected.append(dict(msg))
+            continue
+        envelope = _participant_envelope(msg, memo)
+        if envelope is None:
+            dropped.append(idx)
+            continue
+        projected.append(envelope)
+    return projected, dropped
+
+
 def _restore_user_after_reference_handoff(
     messages: List[Dict[str, Any]], user_message: Any
 ) -> bool:
@@ -1910,6 +2144,11 @@ def run_conversation(
     # turn's flush must not be reported against this turn.
     agent._compression_adoption_failed = False
 
+    # Per-turn cache of projected participant envelopes. The projection reruns
+    # on every API call of a tool loop; a row's envelope bytes only change when
+    # the row does. Turn-scoped, so it cannot outlive the messages it keys on.
+    _participant_envelope_memo: Dict[int, tuple] = {}
+
     # Main conversation loop counters (pure locals consumed by the loop below).
     api_call_count = 0
     final_response = None
@@ -2163,6 +2402,25 @@ def run_conversation(
             )
         ]
 
+        # Project external participant rows into attributed user-role
+        # envelopes BEFORE the alternation repair, so repair heals whatever
+        # adjacency the projection creates and its assistant-merge pass can
+        # never fold a peer agent's text into a genuine Hermes turn. The
+        # projection is request-only: `messages` stays the durable list that
+        # becomes session history and feeds the transcript flush, so the
+        # attributed rows survive for every later turn and every surface.
+        _ctx_messages, _dropped_participant_idxs = _project_participant_messages(
+            messages, _participant_envelope_memo
+        )
+        _ctx_user_idx = current_turn_user_idx - sum(
+            1 for i in _dropped_participant_idxs if i < current_turn_user_idx
+        )
+        # Index the api_messages build injects this turn's ephemeral context at.
+        # The projected path bakes those bytes in below instead of injecting by
+        # index after repair, and then disables this so they cannot be applied
+        # twice.
+        _ctx_inject_idx = _ctx_user_idx
+
         # Defensive: repair malformed role-alternation before API call.
         # Catches cases where the history got wedged into a
         # ``tool → user`` or ``user → user`` tail (e.g. after empty-
@@ -2173,8 +2431,46 @@ def run_conversation(
         # repair_message_sequence_with_cursor also recomputes the SessionDB
         # flush cursor (_last_flushed_db_idx) when repair compacts the list,
         # so the turn-end flush doesn't skip the assistant/tool chain (#44837).
-        from agent.agent_runtime_helpers import repair_message_sequence_with_cursor
-        repaired_seq = repair_message_sequence_with_cursor(agent, messages)
+        if _ctx_messages is messages:
+            from agent.agent_runtime_helpers import repair_message_sequence_with_cursor
+            repaired_seq = repair_message_sequence_with_cursor(agent, messages)
+        else:
+            _turn_user_row = (
+                _ctx_messages[_ctx_user_idx]
+                if 0 <= _ctx_user_idx < len(_ctx_messages)
+                and isinstance(_ctx_messages[_ctx_user_idx], dict)
+                and _ctx_messages[_ctx_user_idx].get("role") == "user"
+                else None
+            )
+            if _turn_user_row is not None:
+                _bake_current_turn_request_bytes(
+                    _turn_user_row,
+                    ext_prefetch_cache=_ext_prefetch_cache,
+                    plugin_user_context=_plugin_user_context,
+                )
+            # This path never injects by index: repair can merge and shrink the
+            # projected copy, so a pre-repair index may address a DIFFERENT row
+            # afterwards. Either the bytes were baked into the identified row
+            # above, or no current-turn row could be identified and there is
+            # nothing to inject into.
+            _ctx_inject_idx = -1
+            # The projected copy is not the flush list, so the cursor must NOT
+            # be recomputed against it — `messages` itself is unchanged and its
+            # cursor still valid.
+            #
+            # Accepted trade for slice 1: repairing the copy means the DURABLE
+            # list no longer gets repaired in place for sessions that have
+            # participant rows, so orphan tool results / stale empty
+            # ``tool_calls`` arrays can persist in those transcripts (the
+            # persisted-trajectory half of #58755 / #77921). Every request is
+            # still repaired, so no malformed sequence reaches a provider; the
+            # cost is that such a session's stored trajectory is not
+            # self-healed by this pass.
+            from agent.agent_runtime_helpers import repair_message_sequence
+            repaired_seq = repair_message_sequence(agent, _ctx_messages)
+            # Repair can merge and shrink the copy, so the pre-repair index is
+            # no longer addressable — re-anchor on the surviving row.
+            _ctx_user_idx = _locate_projected_turn_user(_ctx_messages, _turn_user_row)
         if repaired_seq > 0:
             request_logger.info(
                 "Repaired %s message-alternation violations before request (session=%s)",
@@ -2183,7 +2479,7 @@ def run_conversation(
             )
 
         api_messages = []
-        for idx, msg in enumerate(messages):
+        for idx, msg in enumerate(_ctx_messages):
 
             # Structural clone, NOT msg.copy(): every in-place transform
             # below (canonicalize/repair, surrogate + non-ASCII sanitizers,
@@ -2238,7 +2534,7 @@ def run_conversation(
             # API-call-time only — the original message in `messages` is
             # never mutated beyond the api_content stamp, so nothing leaks
             # into the clean transcript content.
-            if idx == current_turn_user_idx and msg.get("role") == "user":
+            if idx == _ctx_inject_idx and msg.get("role") == "user":
                 if isinstance(_api_content, str) and _api_content:
                     # Stamped by the prologue from the same composition —
                     # reuse it so the persisted sidecar and the wire cannot
@@ -2409,14 +2705,14 @@ def run_conversation(
         # caching/sanitization below operate on whatever the engine selected.
         # Fail-open (see _apply_context_engine_selection).
         _sel_incoming = (
-            messages[current_turn_user_idx]
-            if 0 <= current_turn_user_idx < len(messages)
+            _ctx_messages[_ctx_user_idx]
+            if 0 <= _ctx_user_idx < len(_ctx_messages)
             else None
         )
         api_messages = _apply_context_engine_selection(
             agent,
             api_messages,
-            messages,
+            _ctx_messages,
             _sel_incoming,
             logger=request_logger,
         )

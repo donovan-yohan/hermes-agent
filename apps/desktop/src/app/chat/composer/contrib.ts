@@ -45,10 +45,29 @@ export interface ComposerDraft {
   attachments?: ComposerAttachment[]
 }
 
+/**
+ * "I took this draft — send nothing." The composer clears exactly as if the
+ * message had been sent, but no turn starts: the middleware already routed the
+ * text somewhere else (an external agent participant, a plugin-owned side
+ * channel). Distinct from `null`, which CANCELS and restores the draft.
+ */
+export interface ComposerDraftHandled {
+  handled: true
+}
+
+/** What one middleware handler (and the chain as a whole) may resolve to. */
+export type ComposerMiddlewareResult = ComposerDraft | ComposerDraftHandled | null
+
 /** Payload of a `composer.middleware` data contribution. */
 export interface ComposerMiddleware {
-  /** Rewrite (return a draft), pass through (same draft), or cancel (null). */
-  handler: (draft: ComposerDraft) => ComposerDraft | null | Promise<ComposerDraft | null>
+  /** Rewrite (return a draft), pass through (same draft), consume it
+   *  (`{ handled: true }`), or cancel the send (null). */
+  handler: (draft: ComposerDraft) => ComposerMiddlewareResult | Promise<ComposerMiddlewareResult>
+}
+
+/** Narrow a middleware result to the "consumed, send nothing" outcome. */
+export function isComposerDraftHandled(result: ComposerMiddlewareResult): result is ComposerDraftHandled {
+  return Boolean(result) && (result as ComposerDraftHandled).handled === true
 }
 
 /** One row a `composer.atCompletions` source offers for the current query. */
@@ -88,10 +107,13 @@ export interface ComposerAttachmentProvider {
 /**
  * Run the ordered middleware chain over a draft. Contributions execute in
  * registry order (`order`, then registration order); the first `null` wins
- * and cancels the send. A throwing handler is treated as pass-through so a
- * broken plugin can't eat messages.
+ * and cancels the send, and the first `{ handled: true }` wins and consumes
+ * it — either way the rest of the chain is skipped, because a draft that is
+ * already spoken for must not be rewritten (or dispatched again) behind the
+ * consumer's back. A throwing handler is treated as pass-through so a broken
+ * plugin can't eat messages.
  */
-export async function runComposerMiddleware(draft: ComposerDraft): Promise<ComposerDraft | null> {
+export async function runComposerMiddleware(draft: ComposerDraft): Promise<ComposerMiddlewareResult> {
   let current = draft
 
   for (const contribution of registry.getArea(COMPOSER_AREAS.middleware)) {
@@ -106,6 +128,10 @@ export async function runComposerMiddleware(draft: ComposerDraft): Promise<Compo
 
       if (next === null) {
         return null
+      }
+
+      if (isComposerDraftHandled(next)) {
+        return next
       }
 
       current = next

@@ -3063,6 +3063,8 @@ export const en: Translations = {
       branchNewChat: 'Branch in new chat',
       react: 'React',
       dismissError: 'Dismiss error',
+      participantAttribution: (name, handle) => `Reply from ${name} (@${handle})`,
+      participantTurnFailed: 'The agent could not finish this reply',
       filesChanged: count => (count === 1 ? '1 file changed' : `${count} files changed`),
       reviewChanges: 'Review',
       readAloudFailed: 'Read aloud failed',

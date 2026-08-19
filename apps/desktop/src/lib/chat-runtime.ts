@@ -481,6 +481,10 @@ export function toRuntimeMessage(message: ChatMessage): ThreadMessage {
       // Carries ChatMessage.interim to AssistantMessage's footer gate.
       custom: {
         ...(message.interim ? { interim: true } : {}),
+        // Who actually spoke, when it wasn't Hermes. The role stays
+        // `assistant` (participant-seam-v1 §5 — no new role); the renderer
+        // reads this to attribute the row.
+        ...(message.participant ? { participant: message.participant } : {}),
         ...timelineMeta,
         ...(message.completedAt !== undefined ? { timelineCompletedAt: message.completedAt } : {}),
         ...(message.durationS !== undefined ? { durationS: message.durationS } : {}),

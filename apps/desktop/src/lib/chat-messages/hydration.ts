@@ -13,7 +13,7 @@ import {
   toolPartFromStoredCall,
   withUniqueToolCallIds
 } from './tool-parts'
-import type { ChatMessage, ChatMessagePart } from './types'
+import type { ChatMessage, ChatMessagePart, MessageParticipant } from './types'
 
 const ATTACHED_CONTEXT_MARKER_RE = /(?:^|\n)--- Attached Context ---\s*\n/
 const CONTEXT_WARNINGS_MARKER_RE = /(?:^|\n)--- Context Warnings ---[\s\S]*$/
@@ -79,8 +79,8 @@ function timelineTaskCount(metadata: SessionMessage['display_metadata']): number
   return typeof count === 'number' ? count : undefined
 }
 
-function messageReactions(metadata: SessionMessage['display_metadata']): MessageReaction[] {
-  const reactions = parseDisplayMetadata(metadata)?.reactions
+function parsedReactions(parsed: null | Record<string, unknown>): MessageReaction[] {
+  const reactions = parsed?.reactions
 
   if (!Array.isArray(reactions)) {
     return []
@@ -89,6 +89,34 @@ function messageReactions(metadata: SessionMessage['display_metadata']): Message
   return reactions.filter(
     (r): r is MessageReaction => Boolean(r) && typeof r === 'object' && typeof (r as MessageReaction).emoji === 'string'
   )
+}
+
+const participantString = (value: unknown): string => (typeof value === 'string' ? value.trim() : '')
+
+/** Normalize live or persisted participant attribution into the UI shape. */
+export function toMessageParticipant(value: unknown): MessageParticipant | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined
+  }
+
+  const raw = value as Record<string, unknown>
+  const id = participantString(raw.id)
+
+  if (!id) {
+    return undefined
+  }
+
+  const handle = participantString(raw.handle) || id
+
+  return { id, handle, displayName: participantString(raw.display_name) || handle }
+}
+
+function participantError(parsed: null | Record<string, unknown>): string | undefined {
+  if (parsed?.status !== 'failed') {
+    return undefined
+  }
+
+  return participantString(parsed.error) || undefined
 }
 
 function timelineDisplayContent(message: SessionMessage, content: string): string {
@@ -196,6 +224,11 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
       timelineDisplayContent(message, displayContentForMessage(message.role, content))
     )
 
+    const displayMetadata = parseDisplayMetadata(message.display_metadata)
+
+    const participant =
+      message.display_kind === 'participant_message' ? toMessageParticipant(displayMetadata?.participant) : undefined
+
     const displayRole =
       message.display_kind === 'model_switch' ||
       message.display_kind === 'async_delegation_complete' ||
@@ -259,7 +292,9 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
       return
     }
 
-    if (message.role === 'assistant') {
+    // Participant replies are standalone rows: neither their content nor
+    // Hermes's adjacent tool output may merge across the attribution boundary.
+    if (message.role === 'assistant' && !participant) {
       if (pendingToolParts.length) {
         if (!appendPartsToActiveAssistant(pendingToolParts, message.timestamp ?? pendingToolTimestamp)) {
           parts.unshift(...pendingToolParts)
@@ -290,11 +325,12 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
       flushPendingTools(index)
     }
 
-    const reactions = messageReactions(message.display_metadata)
+    const reactions = parsedReactions(displayMetadata)
     // Gateway resume names the durable row id `row_id`; the REST transcript
     // prefetch ships the same messages.id as a numeric `id`. Either one lets
     // reactions address this exact row later.
     const rowId = message.row_id ?? (typeof message.id === 'number' ? message.id : undefined)
+    const error = participant ? participantError(displayMetadata) : undefined
 
     result.push({
       id: `${message.timestamp || Date.now()}-${index}-${displayRole}`,
@@ -303,10 +339,12 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
       timestamp: earliestTimestamp(message.timestamp, ...parts.map(part => part.timestamp)),
       ...(rowId !== undefined ? { rowId } : {}),
       ...(reactions.length ? { reactions } : {}),
+      ...(participant ? { participant } : {}),
+      ...(error ? { error } : {}),
       ...(extractedAttachmentRefs ? { attachmentRefs: extractedAttachmentRefs } : {})
     })
 
-    activeAssistantIndex = message.role === 'assistant' ? result.length - 1 : null
+    activeAssistantIndex = message.role === 'assistant' && !participant ? result.length - 1 : null
   })
   flushPendingTools(messages.length)
 

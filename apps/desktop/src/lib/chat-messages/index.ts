@@ -1,4 +1,4 @@
-export { toChatMessages } from './hydration'
+export { toChatMessages, toMessageParticipant } from './hydration'
 export {
   appendAssistantTextPart,
   appendReasoningPart,
@@ -15,4 +15,4 @@ export {
 export type { UnspokenTurnSpeech } from './parts'
 export { branchGroupForUser, preserveLocalAssistantErrors } from './reconciliation'
 export { sealOpenToolParts, upsertToolPart } from './tool-parts'
-export type { ChatMessage, ChatMessagePart, GatewayEventPayload, TimelinePartMetadata } from './types'
+export type { ChatMessage, ChatMessagePart, GatewayEventPayload, MessageParticipant, TimelinePartMetadata } from './types'

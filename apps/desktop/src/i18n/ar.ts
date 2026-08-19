@@ -2425,6 +2425,8 @@ export const ar = defineLocale({
       branchNewChat: 'تفريع إلى محادثة جديدة',
       react: 'تفاعل',
       dismissError: 'تجاهل الخطأ',
+      participantAttribution: (name, handle) => `رد من ${name} (@${handle})`,
+      participantTurnFailed: 'تعذر على الوكيل إكمال هذا الرد',
       filesChanged: count => `${count} ملفات تم تغييرها`,
       reviewChanges: 'مراجعة',
       readAloudFailed: 'فشلت القراءة بصوت عال',

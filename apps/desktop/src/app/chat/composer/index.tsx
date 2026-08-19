@@ -34,7 +34,7 @@ import {
   slashArgStage
 } from './composer-utils'
 import { ContextMenu } from './context-menu'
-import { COMPOSER_AREAS, runComposerMiddleware } from './contrib'
+import { COMPOSER_AREAS, isComposerDraftHandled, runComposerMiddleware } from './contrib'
 import { ComposerControls } from './controls'
 import { ComposerDirectiveActions } from './directive-actions'
 import { COMPOSER_DROP_ACTIVE_CLASS, COMPOSER_DROP_FADE_CLASS } from './drop-affordance'
@@ -139,6 +139,14 @@ export function ChatBar({
 
       if (!draft) {
         return false
+      }
+
+      // Consumed by a middleware (e.g. a draft addressed only at an external
+      // agent participant): the text was already routed, so report accepted —
+      // the composer clears — but start no Hermes turn. Same "consumed, not
+      // rejected" contract as the typed voice-stop above.
+      if (isComposerDraftHandled(draft)) {
+        return true
       }
 
       return onSubmitProp(draft.text, { ...options, attachments: draft.attachments })

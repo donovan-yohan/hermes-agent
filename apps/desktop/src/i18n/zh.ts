@@ -3229,6 +3229,8 @@ export const zh: Translations = {
       branchNewChat: '在新对话中分支',
       react: '回应',
       dismissError: '关闭错误',
+      participantAttribution: (name, handle) => `来自 ${name}（@${handle}）的回复`,
+      participantTurnFailed: '该智能体未能完成这条回复',
       filesChanged: count => `${count} 个文件已更改`,
       reviewChanges: '查看',
       readAloudFailed: '朗读失败',

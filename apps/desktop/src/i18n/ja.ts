@@ -2717,6 +2717,8 @@ export const ja = defineLocale({
       branchNewChat: '新しいチャットでブランチ',
       react: 'リアクション',
       dismissError: 'エラーを閉じる',
+      participantAttribution: (name, handle) => `${name}（@${handle}）からの返信`,
+      participantTurnFailed: 'このエージェントは返信を完了できませんでした',
       filesChanged: count => `${count} 件のファイルを変更`,
       reviewChanges: 'レビュー',
       readAloudFailed: '読み上げに失敗しました',
