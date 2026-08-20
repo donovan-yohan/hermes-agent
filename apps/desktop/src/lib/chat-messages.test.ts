@@ -427,6 +427,29 @@ describe('toChatMessages', () => {
       expect(chatMessageText(message)).toBe('I got as far as')
     })
 
+    it('retains an empty streaming row under the live participant turn id', () => {
+      const [message] = toChatMessages([
+        {
+          role: 'assistant',
+          content: '',
+          display_kind: 'participant_message',
+          display_metadata: {
+            ...participantMetadata,
+            status: 'streaming'
+          } as SessionMessage['display_metadata'],
+          timestamp: 1
+        }
+      ])
+
+      expect(message).toMatchObject({
+        id: 'participant-pturn-1',
+        pending: true,
+        role: 'assistant'
+      })
+      expect(message.parts).toEqual([])
+      expect(message.participant).toBeDefined()
+    })
+
     it('never merges a participant reply with the Hermes turn around it', () => {
       const messages = toChatMessages([
         {

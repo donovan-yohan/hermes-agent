@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClientSessionState } from '@/app/types'
-import { type ChatMessage, chatMessageText } from '@/lib/chat-messages'
+import { type ChatMessage, chatMessageText, toChatMessages } from '@/lib/chat-messages'
 import { createClientSessionState } from '@/lib/chat-runtime'
 import type { RpcEvent } from '@/types/hermes'
 
@@ -33,9 +33,13 @@ const PARTICIPANT = {
 let handleEvent: ((event: RpcEvent) => void) | null = null
 let latestState: ClientSessionState | null = null
 
-function Harness() {
+function Harness({ initialState }: { initialState?: ClientSessionState }) {
   const activeSessionIdRef = useRef<string | null>(SID)
-  const sessionStateByRuntimeIdRef = useRef(new Map<string, ClientSessionState>())
+
+  const sessionStateByRuntimeIdRef = useRef(
+    new Map<string, ClientSessionState>(initialState ? [[SID, initialState]] : [])
+  )
+
   const queryClientRef = useRef(new QueryClient())
 
   const stream = useMessageStream({
@@ -62,8 +66,11 @@ function Harness() {
   return null
 }
 
-function mountStream() {
-  render(<Harness />)
+function mountStream(initialMessages: ChatMessage[] = []) {
+  const initialState = { ...createClientSessionState(), messages: initialMessages }
+
+  latestState = initialState
+  render(<Harness initialState={initialState} />)
   expect(handleEvent).not.toBeNull()
 }
 
@@ -175,6 +182,34 @@ describe('participant.* gateway events', () => {
 
     expect(chatMessageText(participantRow()!)).toBe('One shot, whole answer.')
     expect(participantRow()).toMatchObject({ pending: false })
+  })
+
+  it('completes a participant row hydrated while its durable content was still empty', async () => {
+    const hydrated = toChatMessages([
+      {
+        role: 'assistant',
+        content: '',
+        display_kind: 'participant_message',
+        display_metadata: {
+          participant: PARTICIPANT,
+          participant_turn_id: TURN,
+          status: 'streaming'
+        },
+        row_id: 42,
+        timestamp: 10
+      }
+    ])
+
+    mountStream(hydrated)
+    emit('participant.message.complete', {
+      participant_turn_id: TURN,
+      status: 'completed',
+      text: 'Arrived after hydration.',
+      timestamp: 12
+    })
+
+    expect(participantRow()).toMatchObject({ id: 'participant-pturn-1', pending: false, rowId: 42 })
+    expect(chatMessageText(participantRow()!)).toBe('Arrived after hydration.')
   })
 
   it('never arms Hermes turn state for a participant turn', async () => {

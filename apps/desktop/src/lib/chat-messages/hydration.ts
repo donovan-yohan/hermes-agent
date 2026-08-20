@@ -13,7 +13,7 @@ import {
   toolPartFromStoredCall,
   withUniqueToolCallIds
 } from './tool-parts'
-import type { ChatMessage, ChatMessagePart, MessageParticipant } from './types'
+import { type ChatMessage, type ChatMessagePart, type MessageParticipant, participantMessageId } from './types'
 
 const ATTACHED_CONTEXT_MARKER_RE = /(?:^|\n)--- Attached Context ---\s*\n/
 const CONTEXT_WARNINGS_MARKER_RE = /(?:^|\n)--- Context Warnings ---[\s\S]*$/
@@ -229,6 +229,9 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
     const participant =
       message.display_kind === 'participant_message' ? toMessageParticipant(displayMetadata?.participant) : undefined
 
+    const participantTurnId = participant ? participantString(displayMetadata?.participant_turn_id) : ''
+    const participantPending = Boolean(participantTurnId && displayMetadata?.status === 'streaming')
+
     const displayRole =
       message.display_kind === 'model_switch' ||
       message.display_kind === 'async_delegation_complete' ||
@@ -273,7 +276,7 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
       )
     }
 
-    if (!parts.length && !extractedAttachmentRefs?.length) {
+    if (!parts.length && !extractedAttachmentRefs?.length && !participantPending) {
       if (message.role !== 'assistant') {
         flushPendingTools(index)
         activeAssistantIndex = null
@@ -333,10 +336,13 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
     const error = participant ? participantError(displayMetadata) : undefined
 
     result.push({
-      id: `${message.timestamp || Date.now()}-${index}-${displayRole}`,
+      id: participantTurnId
+        ? participantMessageId(participantTurnId)
+        : `${message.timestamp || Date.now()}-${index}-${displayRole}`,
       role: displayRole,
       parts,
       timestamp: earliestTimestamp(message.timestamp, ...parts.map(part => part.timestamp)),
+      ...(participantPending ? { pending: true } : {}),
       ...(rowId !== undefined ? { rowId } : {}),
       ...(reactions.length ? { reactions } : {}),
       ...(participant ? { participant } : {}),
@@ -356,7 +362,11 @@ export function toChatMessages(messages: SessionMessage[]): ChatMessage[] {
 
   return withUniqueToolCallIds(
     withoutGeneratedImageEchoes.filter(
-      m => chatMessageText(m).trim() || m.parts.some(part => part.type !== 'text') || m.attachmentRefs?.length
+      m =>
+        chatMessageText(m).trim() ||
+        m.parts.some(part => part.type !== 'text') ||
+        m.attachmentRefs?.length ||
+        (m.participant && m.pending)
     )
   )
 }

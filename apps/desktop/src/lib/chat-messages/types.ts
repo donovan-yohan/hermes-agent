@@ -25,6 +25,9 @@ export interface MessageParticipant {
   displayName: string
 }
 
+/** Stable row identity shared by hydration and live participant events. */
+export const participantMessageId = (participantTurnId: string): string => `participant-${participantTurnId}`
+
 export type ChatMessage = {
   id: string
   role: SessionMessage['role']

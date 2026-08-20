@@ -13,6 +13,7 @@ import {
   type GatewayEventPayload,
   mergeFinalAssistantText,
   type MessageParticipant,
+  participantMessageId,
   reasoningPart,
   renderMediaTags,
   sealOpenToolParts,
@@ -89,13 +90,6 @@ function sameDeltaTarget(a: QueuedStreamDelta, b: QueuedStreamDelta): boolean {
 let streamMessageSeq = 0
 
 const nextStreamMessageId = (prefix: string) => `${prefix}-${Date.now()}-${++streamMessageSeq}`
-
-// External participant rows are addressed by their turn id, not by the
-// session's streamId: a participant turn runs ALONGSIDE Hermes's own turn and
-// must never claim (or be claimed by) the assistant stream bubble. Deriving
-// the row id from the turn id means start/delta/complete need no extra
-// bookkeeping and a remount can't lose the mapping.
-const participantMessageId = (participantTurnId: string) => `participant-${participantTurnId}`
 
 /** Participant seam status values that seal a row (participant-seam-v1 §4.4). */
 interface ParticipantCompletion {
