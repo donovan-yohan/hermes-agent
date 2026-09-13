@@ -71,6 +71,37 @@ def test_worker_for_served_profile_gets_its_own_env_and_toolset_pin(served, monk
     assert "--toolsets" in spawned["argv"]
 
 
+def test_worker_env_passthrough_resolves_under_assignee_scope(served, monkeypatch):
+    """The detached dispatcher must not read an allowlisted secret without X's scope."""
+    (served.alpha / ".env").write_text("GH_CONFIG_DIR=/alpha/gh\n")
+    (served.alpha / "config.yaml").write_text(
+        "terminal:\n  env_passthrough:\n    - GH_CONFIG_DIR\n"
+    )
+    monkeypatch.setenv("GH_CONFIG_DIR", "/default/gh")
+    kb.init_db()
+    conn = kbc.connect()
+    try:
+        tid = kb.create_task(conn, title="scoped env", assignee="alpha")
+        task = kb.get_task(conn, tid)
+    finally:
+        conn.close()
+    assert task is not None
+
+    spawned = {}
+
+    def fake_popen(argv, **kwargs):
+        spawned["env"] = kwargs["env"]
+        return SimpleNamespace(pid=4242)
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(kbd, "_open_worker_log", lambda task, board: open("/dev/null", "w"))
+    monkeypatch.setattr(kbd, "_hermes_argv", lambda: ["hermes"], raising=False)
+
+    kbd._default_spawn(task, str(served.alpha), board=None)
+
+    assert spawned["env"]["GH_CONFIG_DIR"] == "/alpha/gh"
+
+
 class RecordingAdapter:
     def __init__(self):
         self.sent = []
