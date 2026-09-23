@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { registry } from '@/contrib/registry'
+import { group, split, findGroupOfPane } from '@/components/pane-shell/tree/model'
+import { $layoutTree, $dismissedPanes, adoptContributedPanes, isPaneVisible } from '@/components/pane-shell/tree/store'
 import { createClientSessionState } from '@/lib/chat-runtime'
 import { host } from '@/sdk'
 import { setActiveSessionId, setAwaitingResponse, setBusy } from '@/store/session'
@@ -27,6 +30,51 @@ vi.mock('@/store/pool-limits', async () => {
   const { atom } = await import('nanostores')
 
   return { $poolLimits: atom({ idleMs: 600_000, maxBackends: 3 }) }
+})
+
+describe('host.togglePane', () => {
+  it('fronts an inactive tab, hides the visible pane, and keeps explicit reveal idempotent', () => {
+    const oldTree = $layoutTree.get()
+    const oldDismissed = $dismissedPanes.get()
+    const disposers = [
+      registry.register({ area: 'panes', id: 'toggle:main', data: { placement: 'main' } }),
+      registry.register({ area: 'panes', id: 'toggle:files', data: { placement: 'right' } }),
+      registry.register({
+        area: 'panes',
+        id: 'toggle:pane',
+        source: 'plugin:toggle',
+        data: { placement: 'right', closeBehavior: 'hide', dock: { pane: 'toggle:files', pos: 'center' } }
+      })
+    ]
+    try {
+      $dismissedPanes.set(new Set())
+      $layoutTree.set(
+        split('row', [group(['toggle:main']), group(['toggle:files', 'toggle:pane'], { active: 'toggle:files' })])
+      )
+      host.togglePane('toggle:pane')
+      expect(isPaneVisible('toggle:pane')).toBe(true)
+      host.togglePane('toggle:pane')
+      expect(isPaneVisible('toggle:pane')).toBe(false)
+      expect($dismissedPanes.get()).toContain('toggle:pane')
+      adoptContributedPanes()
+      expect(isPaneVisible('toggle:pane')).toBe(false)
+      host.togglePane('toggle:pane')
+      expect(isPaneVisible('toggle:pane')).toBe(true)
+      host.revealPane('toggle:pane')
+      host.revealPane('toggle:pane')
+      expect(isPaneVisible('toggle:pane')).toBe(true)
+      expect(findGroupOfPane($layoutTree.get()!, 'toggle:pane')?.id).toBe(
+        findGroupOfPane($layoutTree.get()!, 'toggle:files')?.id
+      )
+      const before = $layoutTree.get()
+      host.togglePane('  ')
+      expect($layoutTree.get()).toBe(before)
+    } finally {
+      disposers.forEach(dispose => dispose())
+      $layoutTree.set(oldTree)
+      $dismissedPanes.set(oldDismissed)
+    }
+  })
 })
 
 describe('host.warmProfile pool-saturation contract', () => {

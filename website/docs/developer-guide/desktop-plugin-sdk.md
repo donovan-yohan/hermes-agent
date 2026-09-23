@@ -285,6 +285,14 @@ re-adopts the pane using its layout hints, and reveals/fronts it; **Reset layout
 also restores dismissed panes. This does not promise the pane's React component
 stays mounted. Registered core pane closers retain precedence.
 
+**Toggle versus Open:** use `host.togglePane(id)` for a titlebar toggle and
+`host.revealPane(id)` for an idempotent Open action. Toggle consults actual tree
+visibility, so a pane behind another tab is fronted rather than closed. It uses
+the same close policy as the native tab close; it does not independently opt a
+plugin into hide-only behavior. Feature-detect `host.togglePane` on older builds.
+The legacy `hermes:pane-toggle-reveal` event only serves narrow overlays, not a
+wide-screen pane toggle.
+
 **Compatibility:** this opt-in requires a desktop build that supports
 `PaneData.closeBehavior`. Older builds ignore the field and still disable a
 single-pane plugin on Close; the existence of `host.revealPane` alone does not
@@ -559,6 +567,8 @@ host.newChat(profile?)                     // fresh chat draft, optionally in an
 host.openWorkspace(id, { render, title?, minWidth?, onClose? })
                                            // dock a plugin-rendered tab into the MAIN
                                            //   workspace zone and reveal it; returns a disposer
+host.togglePane(paneId)                    // user toggle: front/restore when not visible,
+                                           //   otherwise close using the pane's close policy
 host.paneVisibility(paneId)                // ReadableAtom<boolean> — is a contributed pane
                                            //   actually on screen (its zone's active tab)?
 host.onEvent(type, fn)                     // gateway event stream ('*' = all); returns disposer.

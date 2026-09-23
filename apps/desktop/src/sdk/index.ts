@@ -34,6 +34,7 @@ import {
   registerPaneCloser,
   removeTreePane,
   revealTreePane,
+  togglePaneVisible,
   undismissTreePanes
 } from '@/components/pane-shell/tree/store'
 import {
@@ -1363,6 +1364,17 @@ export const host = {
 
     undismissTreePanes([id])
     adoptContributedPanes()
+  },
+
+  /** Toggle a pane using its on-screen visibility, not plugin-local state.
+   *  Closing follows the pane's normal policy (including closeBehavior: 'hide').
+   *  Explicit Open actions should keep using revealPane. */
+  togglePane: (paneId: string): void => {
+    const id = (paneId ?? '').trim()
+
+    if (id) {
+      togglePaneVisible(id)
+    }
   },
 
   /** Reveal a contributed pane and its zone from an explicit user action. */
