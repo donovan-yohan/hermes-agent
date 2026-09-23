@@ -258,11 +258,40 @@ data: {
 `'top' | 'bottom' | 'left' | 'right' | 'center'`. Declare a `width`/`height` so
 the pane doesn't claim half the zone.
 
-Closing the only pane contributed by a plugin disables that plugin, which can
-be re-enabled from **Capabilities → Plugins**. When a plugin contributes multiple
-panes, closing one dismisses only that pane and leaves the plugin's other panes,
-commands, and middleware active. **Reset layout** restores dismissed contributed
-panes.
+By default, closing the only pane contributed by a plugin disables that plugin,
+which can be re-enabled from **Capabilities → Plugins**. When a plugin contributes
+multiple panes, closing one dismisses only that pane and leaves the plugin's other
+panes, commands, and middleware active.
+
+For a plugin with persistent navigation or background work, opt into pane-only
+closing with `data.closeBehavior: 'hide'` (`PaneData` is exported as an SDK type):
+
+```javascript
+ctx.register({
+  id: 'pane',
+  area: 'panes',
+  title: 'My tool',
+  data: { placement: 'right', closeBehavior: 'hide' },
+  render: () => jsx(MyPane, {})
+})
+// In a navigation or palette action, invoked explicitly by the user:
+host.revealPane('my-plugin:pane') // <plugin id>:<contribution id>
+```
+
+`'hide'` dismisses the tab from the layout without disabling the plugin or
+unregistering its contributions. Dismissal is persisted and ordinary adoption or
+plugin re-registration does not reopen it. `host.revealPane` clears the dismissal,
+re-adopts the pane using its layout hints, and reveals/fronts it; **Reset layout**
+also restores dismissed panes. This does not promise the pane's React component
+stays mounted. Registered core pane closers retain precedence.
+
+**Compatibility:** this opt-in requires a desktop build that supports
+`PaneData.closeBehavior`. Older builds ignore the field and still disable a
+single-pane plugin on Close; the existence of `host.revealPane` alone does not
+prove support. There is no equivalent close-policy override in the older public
+SDK. Plugins opting in must provide a discoverable reopen action and document
+this desktop capability requirement rather than adding dummy panes or changing
+host internals.
 
 ### Pages and sidebar nav
 

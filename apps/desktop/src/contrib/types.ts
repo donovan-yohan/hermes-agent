@@ -17,6 +17,30 @@ export type ContributionSource = 'core' | (string & {})
  */
 export type WorkspaceMode = 'sessions' | 'bots'
 
+/** Public layout payload for a `panes` contribution. */
+export interface PaneData {
+  /** Semantic role; stacks with panes of the same role unless dock is supplied. */
+  placement?: 'left' | 'right' | 'top' | 'bottom' | 'main' | 'floating'
+  dock?: {
+    pane: string
+    pos: 'top' | 'bottom' | 'left' | 'right' | 'center'
+    before?: null | string
+    enforce?: boolean
+  }
+  width?: string
+  height?: string
+  minWidth?: string
+  maxWidth?: string
+  minHeight?: string
+  maxHeight?: string
+  /** Close dismisses only this pane, even when it is the plugin's sole pane.
+   *  The plugin stays enabled; provide a user action calling host.revealPane
+   *  with the scoped pane id to reopen it. Omit to preserve default behavior:
+   *  single-pane plugins disable, multi-pane plugins dismiss only this pane.
+   *  Registered core closers still take precedence. */
+  closeBehavior?: 'hide'
+}
+
 /**
  * The single, uniform primitive every surface consumes. A bar renders these as
  * inline items via `<Slot>`; a dock renders them as stacked/tabbed panes via

@@ -9,6 +9,7 @@ import { atom, computed, type ReadableAtom } from 'nanostores'
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '@/app/layout-constants'
 import { setPluginEnabled } from '@/contrib/plugins-store'
 import { $registryVersion, registry } from '@/contrib/registry'
+import type { PaneData } from '@/contrib/types'
 import { translateNow } from '@/i18n'
 import { readJson, readKey, writeJson, writeKey } from '@/lib/storage'
 import { notify } from '@/store/notifications'
@@ -185,10 +186,11 @@ function frontPaneInGroup(paneId: string) {
  *  - a registered closer (core panes whose visibility an app store owns:
  *    review/terminal/preview/sessions) closes through that store, so the
  *    titlebar/statusbar toggles stay truthful;
- *  - unbound core panes and panes from multi-pane plugins are DISMISSED:
+ *  - unbound core panes, multi-pane plugins, and closeBehavior: 'hide' panes
+ *    are DISMISSED:
  *    removed from the tree and remembered so adoption doesn't re-add them.
  *    Reveal intent (a preview target, ⌘G) or a layout reset un-dismisses;
- *  - closing the sole pane from a plugin disables that plugin, preserving the
+ *  - otherwise closing the sole pane from a plugin disables it, preserving the
  *    discoverable Capabilities → Plugins recovery path for single-pane plugins.
  */
 const DISMISSED_KEY = 'hermes.desktop.dismissedPanes.v1'
@@ -954,15 +956,17 @@ export function closeTreePane(paneId: string) {
   }
 
   const panes = registry.getArea('panes')
-  const source = panes.find(c => c.id === paneId)?.source
+  const pane = panes.find(c => c.id === paneId)
+  const source = pane?.source
+  const closeBehavior = (pane?.data as PaneData | undefined)?.closeBehavior
 
   if (source?.startsWith('plugin:')) {
     // A plugin may own several independent panes. Closing one of them must not
     // unload every contribution from that plugin (for example, closing Bot
     // Mode's Cronjobs pane must leave its Bots roster and composer middleware
-    // alive). Dismiss just that pane; Layout reset remains the explicit way to
-    // restore dismissed contributed panes.
-    if (panes.filter(c => c.source === source).length > 1) {
+    // alive). Single-pane plugins can opt into the same dismissal when they
+    // provide a reopen action. Reveal or Layout reset restores the pane.
+    if (closeBehavior === 'hide' || panes.filter(c => c.source === source).length > 1) {
       dismissTreePane(paneId)
 
       return
