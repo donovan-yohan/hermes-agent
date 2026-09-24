@@ -9,6 +9,27 @@ import type { ReactNode } from 'react'
  */
 export type ContributionSource = 'core' | (string & {})
 
+/** Public layout payload for a panes contribution. */
+export interface PaneData {
+  placement?: 'left' | 'right' | 'top' | 'bottom' | 'main' | 'floating'
+  dock?: {
+    pane: string
+    pos: 'top' | 'bottom' | 'left' | 'right' | 'center'
+    before?: null | string
+    enforce?: boolean
+  }
+  width?: string
+  height?: string
+  minWidth?: string
+  maxWidth?: string
+  minHeight?: string
+  maxHeight?: string
+  /** Dismiss only this pane, retaining the plugin and its other contributions.
+   * Provide an explicit host.revealPane action to reopen it. Omit to preserve
+   * single-pane disable / multi-pane dismiss defaults. Registered closers win. */
+  closeBehavior?: 'hide'
+}
+
 /**
  * The single, uniform primitive every surface consumes. A bar renders these as
  * inline items via `<Slot>`; a dock renders them as stacked/tabbed panes via

@@ -9,6 +9,7 @@ import { atom, computed, type ReadableAtom } from 'nanostores'
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '@/app/layout-constants'
 import { setPluginEnabled } from '@/contrib/plugins-store'
 import { registry } from '@/contrib/registry'
+import type { PaneData } from '@/contrib/types'
 import { translateNow } from '@/i18n'
 import { readJson, readKey, writeJson, writeKey } from '@/lib/storage'
 import { notify } from '@/store/notifications'
@@ -856,15 +857,17 @@ export function closeTreePane(paneId: string) {
   }
 
   const panes = registry.getArea('panes')
-  const source = panes.find(c => c.id === paneId)?.source
+  const pane = panes.find(c => c.id === paneId)
+  const source = pane?.source
+  const closeBehavior = (pane?.data as PaneData | undefined)?.closeBehavior
 
   if (source?.startsWith('plugin:')) {
     // A plugin may own several independent panes. Closing one of them must not
     // unload every contribution from that plugin (for example, closing Bot
     // Mode's Cronjobs pane must leave its Bots roster and composer middleware
-    // alive). Dismiss just that pane; Layout reset remains the explicit way to
-    // restore dismissed contributed panes.
-    if (panes.filter(c => c.source === source).length > 1) {
+    // alive). Single-pane plugins may opt into dismissal too, retaining their
+    // navigation. Explicit reveal or Layout reset restores dismissed panes.
+    if (closeBehavior === 'hide' || panes.filter(c => c.source === source).length > 1) {
       dismissTreePane(paneId)
 
       return
@@ -939,9 +942,10 @@ export function layoutHasRootSide(side: TreeSide): boolean {
 }
 
 /**
- * Un-dismiss + re-adopt every registered pane whose placement maps to `side`
- * (the same semantic mapping as `rootChildSide`: 'left' panes ⇔ ⌘B, everything
- * else non-main ⇔ ⌘J). Dismissal records for core chrome panes only exist as
+ * Un-dismiss + re-adopt registered panes whose placement maps to `side`, except
+ * plugin panes opting into persistent hide-on-close. The semantic mapping is
+ * the same as `rootChildSide`: 'left' panes ⇔ ⌘B, everything else non-main ⇔ ⌘J.
+ * Dismissal records for core chrome panes only exist as
  * legacy state (they all register closers now), but they must not strand the
  * pane where only a layout reset can recover it.
  */
@@ -959,7 +963,15 @@ function restoreDismissedSidePanes(side: TreeSide) {
       continue
     }
 
-    const placement = (pane.data as { placement?: string } | undefined)?.placement
+    const data = pane.data as PaneData | undefined
+
+    // Opted-in plugin closes are deliberate, persistent dismissals, not stale
+    // chrome state. Only an explicit reveal (or layout reset) restores them.
+    if (pane.source?.startsWith('plugin:') && data?.closeBehavior === 'hide') {
+      continue
+    }
+
+    const placement = data?.placement
     const paneSide = placement === 'left' ? 'left' : placement === 'main' ? null : 'right'
 
     if (paneSide === side) {
@@ -1708,7 +1720,9 @@ export function isPaneVisible(paneId: string): boolean {
 
   const group = paneGroup(paneId)
 
-  return Boolean(group && !group.minimized && group.active === paneId)
+  const side = paneRootSide(paneId)
+
+  return Boolean(group && !group.minimized && group.active === paneId && !(side && $collapsedTreeSides.get().has(side)))
 }
 
 const paneVisibleCache = new Map<string, ReadableAtom<boolean>>()
@@ -1720,7 +1734,9 @@ export function $paneVisible(paneId: string): ReadableAtom<boolean> {
   let cached = paneVisibleCache.get(paneId)
 
   if (!cached) {
-    cached = computed([$layoutTree, $dismissedPanes, $hiddenTreePanes], () => isPaneVisible(paneId))
+    cached = computed([$layoutTree, $dismissedPanes, $hiddenTreePanes, $collapsedTreeSides], () =>
+      isPaneVisible(paneId)
+    )
     paneVisibleCache.set(paneId, cached)
   }
 

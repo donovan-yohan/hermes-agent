@@ -215,6 +215,21 @@ Import the area constants from the SDK; each area has its own `data` payload.
 
 ### Panes
 
+Pane contributions can opt into `data.closeBehavior: 'hide'` to dismiss only
+that pane while keeping the plugin and its navigation enabled. Provide an
+explicit Open action calling `host.revealPane('<pluginId>:<paneId>')` to reopen
+it. Dismissal survives registry refresh and restart until explicit reveal or
+layout reset. Without this opt-in, closing a single-pane plugin disables it;
+closing one pane of a multi-pane plugin dismisses only that pane. Registered
+host closers take precedence.
+
+Use `host.togglePane('<pluginId>:<paneId>')` for Toggle controls: it reveals an
+inactive, minimized, hidden, or side-collapsed pane, and closes a visible pane
+through its normal policy. Use `host.revealPane` for idempotent Open controls.
+Both accept contribution-scoped IDs and ignore blank IDs. Feature-detect these
+methods on older clients; `closeBehavior` requires host support. `PaneData` is
+exported from `@hermes/plugin-sdk` for typed pane payloads.
+
 A pane is a tile in the layout tree. `placement` is the semantic role — the pane
 stacks (as tabs) with existing panes of that role; the user can drag it anywhere
 afterward.
@@ -499,7 +514,7 @@ takeover when available, in-panel view otherwise).
 
 `host.paneVisibility(paneId)` returns a readonly reactive atom that is `true`
 while a contributed pane is actually on screen: present in the layout tree,
-not dismissed or hidden, its zone un-minimized, and holding its zone's active
+not dismissed or hidden, its side expanded, its zone un-minimized, and holding its zone's active
 tab slot (a lone pane in its own zone counts). The id is the
 contribution-scoped pane id, `<pluginId>:<paneId>`. Atoms are memoized per id,
 so calling it in render is safe. Use it to register companion UI only while

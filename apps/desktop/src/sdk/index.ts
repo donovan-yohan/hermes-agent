@@ -29,7 +29,8 @@ import {
   $paneVisible,
   registerPaneCloser,
   removeTreePane,
-  revealTreePane
+  revealTreePane,
+  togglePaneVisible
 } from '@/components/pane-shell/tree/store'
 import { onGatewayEvent } from '@/contrib/events'
 import { registry } from '@/contrib/registry'
@@ -800,12 +801,30 @@ export const host = {
   },
 
   /** Reactive on-screen visibility of a contributed pane: true while it is in
-   *  the layout tree, not dismissed/hidden, its zone un-minimized, AND holding
+   *  the layout tree, not dismissed/hidden, its side expanded, its zone un-minimized, AND holding
    *  its zone's active tab slot (a lone pane in its own zone counts). The
    *  contribution-scoped pane id is `<pluginId>:<paneId>`. Memoized per id —
    *  safe to call in render. Feature-detect on older desktops
    *  (`typeof host.paneVisibility === 'function'`). */
   paneVisibility: (paneId: string): ReadableAtom<boolean> => $paneVisible(paneId),
+
+  /** Toggle on-screen visibility through the pane's normal close policy. */
+  togglePane: (paneId: string): void => {
+    const id = (paneId ?? '').trim()
+
+    if (id) {
+      togglePaneVisible(id)
+    }
+  },
+
+  /** Explicit Open action: reveal without toggling an already visible pane. */
+  revealPane: (paneId: string): void => {
+    const id = (paneId ?? '').trim()
+
+    if (id) {
+      revealTreePane(id)
+    }
+  },
 
   /** HEAR the gateway stream (message deltas, session lifecycle, tool
    *  activity, …) by event type — `'*'` for everything. Returns a disposer.
@@ -1000,7 +1019,7 @@ export { Contribute, type ContributeProps } from '@/contrib/react/contribute'
 
 // -- contracts ----------------------------------------------------------------
 
-export type { Contribution } from '@/contrib/types'
+export type { Contribution, PaneData } from '@/contrib/types'
 /** The live gateway instance type — for typing the `gateway` prop `McpTab`
  *  takes; obtain the instance from `host.getGateway()`. */
 export type { HermesGateway } from '@/hermes'
