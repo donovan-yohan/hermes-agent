@@ -1855,7 +1855,7 @@ export function restoreTreePane(paneId: string) {
 }
 
 /** Is a pane actually ON SCREEN? In the tree, not dismissed, not chrome
- *  hidden, its zone un-minimized, and holding its stack's active slot.
+ *  hidden, its side expanded, its zone un-minimized, and holding its stack's active slot.
  *  True for every pane class — tool panels and hide-style panes alike. */
 export function isPaneVisible(paneId: string): boolean {
   if ($dismissedPanes.get().has(paneId) || $hiddenTreePanes.get().has(paneId)) {
@@ -1863,8 +1863,9 @@ export function isPaneVisible(paneId: string): boolean {
   }
 
   const group = paneGroup(paneId)
+  const side = paneRootSide(paneId)
 
-  return Boolean(group && !group.minimized && group.active === paneId)
+  return Boolean(group && !group.minimized && group.active === paneId && !(side && $collapsedTreeSides.get().has(side)))
 }
 
 const paneVisibleCache = new Map<string, ReadableAtom<boolean>>()
@@ -1876,7 +1877,7 @@ export function $paneVisible(paneId: string): ReadableAtom<boolean> {
   let cached = paneVisibleCache.get(paneId)
 
   if (!cached) {
-    cached = computed([$layoutTree, $dismissedPanes, $hiddenTreePanes], () => isPaneVisible(paneId))
+    cached = computed([$layoutTree, $dismissedPanes, $hiddenTreePanes, $collapsedTreeSides], () => isPaneVisible(paneId))
     paneVisibleCache.set(paneId, cached)
   }
 
