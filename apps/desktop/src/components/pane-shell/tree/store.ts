@@ -942,9 +942,10 @@ export function layoutHasRootSide(side: TreeSide): boolean {
 }
 
 /**
- * Un-dismiss + re-adopt every registered pane whose placement maps to `side`
- * (the same semantic mapping as `rootChildSide`: 'left' panes ⇔ ⌘B, everything
- * else non-main ⇔ ⌘J). Dismissal records for core chrome panes only exist as
+ * Un-dismiss + re-adopt registered panes whose placement maps to `side`, except
+ * plugin panes opting into persistent hide-on-close. The semantic mapping is
+ * the same as `rootChildSide`: 'left' panes ⇔ ⌘B, everything else non-main ⇔ ⌘J.
+ * Dismissal records for core chrome panes only exist as
  * legacy state (they all register closers now), but they must not strand the
  * pane where only a layout reset can recover it.
  */
@@ -962,7 +963,15 @@ function restoreDismissedSidePanes(side: TreeSide) {
       continue
     }
 
-    const placement = (pane.data as { placement?: string } | undefined)?.placement
+    const data = pane.data as PaneData | undefined
+
+    // Opted-in plugin closes are deliberate, persistent dismissals, not stale
+    // chrome state. Only an explicit reveal (or layout reset) restores them.
+    if (pane.source?.startsWith('plugin:') && data?.closeBehavior === 'hide') {
+      continue
+    }
+
+    const placement = data?.placement
     const paneSide = placement === 'left' ? 'left' : placement === 'main' ? null : 'right'
 
     if (paneSide === side) {
