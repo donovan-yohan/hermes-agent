@@ -7,7 +7,6 @@
 import { atom, computed, type ReadableAtom } from 'nanostores'
 
 import { SIDEBAR_COLLAPSE_MEDIA_QUERY } from '@/app/layout-constants'
-import { setPluginEnabled } from '@/contrib/plugins-store'
 import { registry } from '@/contrib/registry'
 import type { PaneData } from '@/contrib/types'
 import { translateNow } from '@/i18n'
@@ -173,11 +172,9 @@ function frontPaneInGroup(paneId: string) {
  *  - a registered closer (core panes whose visibility an app store owns:
  *    review/terminal/preview/sessions) closes through that store, so the
  *    titlebar/statusbar toggles stay truthful;
- *  - unbound core panes and panes from multi-pane plugins are DISMISSED:
- *    removed from the tree and remembered so adoption doesn't re-add them.
- *    Reveal intent (a preview target, ⌘G) or a layout reset un-dismisses;
- *  - closing the sole pane from a plugin disables that plugin, preserving the
- *    discoverable Settings → Plugins recovery path for single-pane plugins.
+ *  - unbound core panes and plugin panes are DISMISSED: removed from the tree
+ *    and remembered so adoption doesn't re-add them. Reveal intent or a layout
+ *    reset un-dismisses. Close never changes plugin enablement.
  */
 const DISMISSED_KEY = 'hermes.desktop.dismissedPanes.v1'
 
@@ -856,37 +853,9 @@ export function closeTreePane(paneId: string) {
     return
   }
 
-  const panes = registry.getArea('panes')
-  const pane = panes.find(c => c.id === paneId)
-  const source = pane?.source
-  const closeBehavior = (pane?.data as PaneData | undefined)?.closeBehavior
-
-  if (source?.startsWith('plugin:')) {
-    // A plugin may own several independent panes. Closing one of them must not
-    // unload every contribution from that plugin (for example, closing Bot
-    // Mode's Cronjobs pane must leave its Bots roster and composer middleware
-    // alive). Single-pane plugins may opt into dismissal too, retaining their
-    // navigation. Explicit reveal or Layout reset restores dismissed panes.
-    if (closeBehavior === 'hide' || panes.filter(c => c.source === source).length > 1) {
-      dismissTreePane(paneId)
-
-      return
-    }
-
-    // A single-pane plugin keeps the existing symmetric behavior: Close uses
-    // the same switch as Settings → Plugins. Its contribution unregisters but
-    // the pane id stays in the tree, so re-enabling restores its exact place.
-    const pluginId = source.slice('plugin:'.length)
-    void setPluginEnabled(pluginId, false)
-    notify({
-      kind: 'info',
-      title: translateNow('zones.pluginDisabled', pluginId),
-      message: translateNow('zones.pluginDisabledBody')
-    })
-
-    return
-  }
-
+  // Close changes layout visibility, never plugin enablement. Keep navigation,
+  // commands and titlebar controls registered so explicit Open/Toggle can restore
+  // the pane. Disabling a plugin is an explicit Settings → Plugins action.
   dismissTreePane(paneId)
 }
 
@@ -943,7 +912,7 @@ export function layoutHasRootSide(side: TreeSide): boolean {
 
 /**
  * Un-dismiss + re-adopt registered panes whose placement maps to `side`, except
- * plugin panes opting into persistent hide-on-close. The semantic mapping is
+ * plugin panes, whose hide-on-close dismissal is persistent. The semantic mapping is
  * the same as `rootChildSide`: 'left' panes ⇔ ⌘B, everything else non-main ⇔ ⌘J.
  * Dismissal records for core chrome panes only exist as
  * legacy state (they all register closers now), but they must not strand the
@@ -965,9 +934,9 @@ function restoreDismissedSidePanes(side: TreeSide) {
 
     const data = pane.data as PaneData | undefined
 
-    // Opted-in plugin closes are deliberate, persistent dismissals, not stale
-    // chrome state. Only an explicit reveal (or layout reset) restores them.
-    if (pane.source?.startsWith('plugin:') && data?.closeBehavior === 'hide') {
+    // Plugin closes are deliberate, persistent dismissals, not stale chrome
+    // state. Only an explicit reveal (or layout reset) restores them.
+    if (pane.source?.startsWith('plugin:')) {
       continue
     }
 
