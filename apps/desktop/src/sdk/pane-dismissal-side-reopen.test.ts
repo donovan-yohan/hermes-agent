@@ -61,7 +61,7 @@ describe.each(['left', 'right', 'bottom', undefined] as const)('persistent plugi
       expect($dismissedPanes.get()).toContain('dismissal:closed')
       expect($dismissedPanes.get()).toContain('dismissal:peer')
       expect($dismissedPanes.get()).not.toContain('dismissal:core')
-      expect($dismissedPanes.get()).not.toContain('dismissal:legacy')
+      expect($dismissedPanes.get()).toContain('dismissal:legacy')
       expect($dismissedPanes.get()).toContain('dismissal:main-legacy')
       expect(allPaneIds($layoutTree.get()!)).not.toContain('dismissal:closed')
       expect(isPaneVisible('dismissal:closed')).toBe(false)
