@@ -139,13 +139,14 @@ describe('closing plugin panes', () => {
     expect(setPluginEnabled).not.toHaveBeenCalled()
   })
 
-  it('keeps disabling a plugin whose only pane is closed', () => {
+  it('dismisses a sole plugin pane even without close metadata', () => {
     registerPluginPane('single', 'single:pane')
-    $layoutTree.set(group(['single:pane'], { active: 'single:pane', id: 'g-single' }))
+    $layoutTree.set(group(['workspace', 'single:pane'], { active: 'single:pane', id: 'g-single' }))
 
     closeTreePane('single:pane')
 
-    expect(setPluginEnabled).toHaveBeenCalledWith('single', false)
-    expect(allPaneIds($layoutTree.get()!)).toContain('single:pane')
+    expect(setPluginEnabled).not.toHaveBeenCalled()
+    expect(allPaneIds($layoutTree.get()!)).not.toContain('single:pane')
+    expect($dismissedPanes.get()).toContain('single:pane')
   })
 })

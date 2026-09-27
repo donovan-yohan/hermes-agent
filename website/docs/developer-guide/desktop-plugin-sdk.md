@@ -215,13 +215,13 @@ Import the area constants from the SDK; each area has its own `data` payload.
 
 ### Panes
 
-Pane contributions can opt into `data.closeBehavior: 'hide'` to dismiss only
-that pane while keeping the plugin and its navigation enabled. Provide an
-explicit Open action calling `host.revealPane('<pluginId>:<paneId>')` to reopen
+Closing a pane dismisses only that pane, keeping the plugin and its navigation
+enabled. Only the explicit **Settings → Plugins** toggle disables a plugin.
+Provide an Open action calling `host.revealPane('<pluginId>:<paneId>')` to reopen
 it. Dismissal survives registry refresh and restart until explicit reveal or
-layout reset. Without this opt-in, closing a single-pane plugin disables it;
-closing one pane of a multi-pane plugin dismisses only that pane. Registered
-host closers take precedence.
+layout reset. Registered host closers take precedence. Keep
+`data.closeBehavior: 'hide'` for compatibility with older hosts that require
+this opt-in; hosts predating that support still disable single-pane plugins.
 
 Use `host.togglePane('<pluginId>:<paneId>')` for Toggle controls: it reveals an
 inactive, minimized, hidden, or side-collapsed pane, and closes a visible pane
@@ -262,11 +262,9 @@ data: {
 `'top' | 'bottom' | 'left' | 'right' | 'center'`. Declare a `width`/`height` so
 the pane doesn't claim half the zone.
 
-Closing the only pane contributed by a plugin disables that plugin, which can
-be re-enabled from **Settings → Plugins**. When a plugin contributes multiple
-panes, closing one dismisses only that pane and leaves the plugin's other panes,
-commands, and middleware active. **Reset layout** restores dismissed contributed
-panes.
+Tab X, context-menu Close/Close Others/Close to the Right/Close All, and pane
+toggles never disable a plugin. They leave its other panes, navigation, commands,
+and middleware active. **Reset layout** also restores dismissed contributed panes.
 
 ### Pages and sidebar nav
 

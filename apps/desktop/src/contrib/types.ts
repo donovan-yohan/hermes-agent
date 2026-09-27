@@ -24,9 +24,9 @@ export interface PaneData {
   maxWidth?: string
   minHeight?: string
   maxHeight?: string
-  /** Dismiss only this pane, retaining the plugin and its other contributions.
-   * Provide an explicit host.revealPane action to reopen it. Omit to preserve
-   * single-pane disable / multi-pane dismiss defaults. Registered closers win. */
+  /** Compatibility hint for older hosts with opt-in hide-on-close support.
+   * Current hosts always dismiss plugin panes without disabling the plugin.
+   * Provide host.revealPane/host.togglePane to reopen. Registered closers win. */
   closeBehavior?: 'hide'
 }
 

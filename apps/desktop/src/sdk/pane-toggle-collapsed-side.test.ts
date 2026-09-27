@@ -62,17 +62,12 @@ describe.each(['left', 'right'] as const)('host.togglePane behind the collapsed 
       expect(setPluginEnabled).not.toHaveBeenCalled()
       expect($layoutTree.get()).toEqual(collapsedTree)
 
-      // Once visible, existing close policy still applies: hide takes precedence
-      // over disabling a single-pane plugin; the default remains disabling it.
+      // Once visible, Toggle hides without changing plugin enablement.
       host.togglePane(paneId)
 
-      if (closeBehavior === 'hide') {
-        expect($dismissedPanes.get().has(paneId)).toBe(true)
-        expect(isPaneVisible(paneId)).toBe(false)
-        expect(setPluginEnabled).not.toHaveBeenCalled()
-      } else {
-        expect(setPluginEnabled).toHaveBeenCalledWith('collapsed', false)
-      }
+      expect($dismissedPanes.get().has(paneId)).toBe(true)
+      expect(isPaneVisible(paneId)).toBe(false)
+      expect(setPluginEnabled).not.toHaveBeenCalled()
     } finally {
       unsubscribe()
       disposers.forEach(dispose => dispose())
