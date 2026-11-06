@@ -460,6 +460,46 @@ describe('useGatewayRequest', () => {
     expect(primary.connect).not.toHaveBeenCalled()
   })
 
+  it.each(['session.steer', 'session.redirect'])(
+    'does not replay %s after the correction landed but its acknowledgement was lost',
+    async method => {
+      const desktop = installPrimaryDesktop('oauth')
+      const primary = makePrimaryGateway()
+      const failure = new Error('Hermes gateway connection closed')
+      const params = { session_id: 'live', text: 'Preserve café 🧭\nthen continue.' }
+      const accepted: unknown[] = []
+      primary.request.mockImplementation(async (verb: string, payload: unknown) => {
+        if (verb === method) {
+          accepted.push(payload)
+
+          if (accepted.length === 1) {
+            primary.connectionState = 'closed'
+            throw failure
+          }
+
+          return { status: 'queued' }
+        }
+
+        return { sessions: [] }
+      })
+      primary.connect.mockImplementation(async () => { primary.connectionState = 'open' })
+      setPrimaryGateway(primary as unknown as HermesGateway, 'default')
+      $gateway.set(primary as unknown as HermesGateway)
+      $gatewayState.set('open')
+      const { result } = renderHook(() => useGatewayRequest())
+
+      await expect(result.current.requestGateway(method, params)).rejects.toBe(failure)
+      expect(accepted).toEqual([params])
+      expect(primary.request).toHaveBeenCalledTimes(1)
+
+      // Refusing to replay a correction must not disable ordinary read recovery.
+      primary.request.mockRejectedValueOnce(new Error('Hermes gateway is not connected'))
+      await expect(result.current.requestGateway('session.list')).resolves.toEqual({ sessions: [] })
+      expect(desktop.getConnection).toHaveBeenCalledWith()
+      expect(accepted).toEqual([params])
+    }
+  )
+
   it('does not reconnect for a non-transport request failure', async () => {
     const { desktop, gateway } = await activateRemoteGateway()
     const failure = Object.assign(new Error('request rejected'), { code: 'EVALIDATION' })
