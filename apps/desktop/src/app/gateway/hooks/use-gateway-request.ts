@@ -181,6 +181,13 @@ export function useGatewayRequest() {
           throw error
         }
 
+        // Corrections have no per-message replay identity. A lost acknowledgement
+        // may follow delivery, even when the socket now reports disconnected.
+        // Let the caller retain the uncertain outcome; never issue a second write.
+        if (method === 'session.steer' || method === 'session.redirect') {
+          throw error
+        }
+
         // Primary keeps the OAuth-aware reconnect (remote gateways re-mint a
         // single-use ticket). Background profiles stay on the registry's
         // connection-owned reconnect path, including composite remote/SSH
