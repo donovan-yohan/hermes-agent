@@ -460,11 +460,15 @@ describe('useGatewayRequest', () => {
     expect(primary.connect).not.toHaveBeenCalled()
   })
 
-  it.each(['session.steer', 'session.redirect'])(
-    'does not replay %s after the correction landed but its acknowledgement was lost',
-    async method => {
-      const desktop = installPrimaryDesktop('oauth')
-      const primary = makePrimaryGateway()
+  it.each(['session.steer', 'session.redirect'].flatMap(method =>
+    ['primary', 'secondary'].map(route => ({ method, route }))
+  ))(
+    'does not replay $method on $route after delivery but before acknowledgement',
+    async ({ method, route }) => {
+      const { desktop, gateway: primary } = route === 'secondary'
+        ? await activateRemoteGateway()
+        : { desktop: installPrimaryDesktop('oauth'), gateway: makePrimaryGateway() }
+
       const failure = new Error('Hermes gateway connection closed')
       const params = { session_id: 'live', text: 'Preserve café 🧭\nthen continue.' }
       const accepted: unknown[] = []
@@ -483,8 +487,12 @@ describe('useGatewayRequest', () => {
         return { sessions: [] }
       })
       primary.connect.mockImplementation(async () => { primary.connectionState = 'open' })
-      setPrimaryGateway(primary as unknown as HermesGateway, 'default')
-      $gateway.set(primary as unknown as HermesGateway)
+
+      if (route === 'primary') {
+        setPrimaryGateway(primary as unknown as HermesGateway, 'default')
+        $gateway.set(primary as unknown as HermesGateway)
+      }
+
       $gatewayState.set('open')
       const { result } = renderHook(() => useGatewayRequest())
 
@@ -495,7 +503,13 @@ describe('useGatewayRequest', () => {
       // Refusing to replay a correction must not disable ordinary read recovery.
       primary.request.mockRejectedValueOnce(new Error('Hermes gateway is not connected'))
       await expect(result.current.requestGateway('session.list')).resolves.toEqual({ sessions: [] })
-      expect(desktop.getConnection).toHaveBeenCalledWith()
+
+      if (route === 'primary') {
+        expect(desktop.getConnection).toHaveBeenCalledWith()
+      } else {
+        expect(desktop.getConnectionFor).toHaveBeenLastCalledWith({ connectionId: 'ssh-source', profile: 'research' })
+      }
+
       expect(accepted).toEqual([params])
     }
   )
